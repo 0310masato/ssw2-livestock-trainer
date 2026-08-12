@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 420" role="img" aria-labelledby="title desc">
+  <title id="title">1000倍液20リットルの希釈計算</title>
+  <desc id="desc">20リットルを1000で割り、原液20ミリリットルを使う計算を示した独自作成の図</desc>
+  <rect width="760" height="420" rx="28" fill="#f6fbff"/>
+  <text x="380" y="55" font-family="system-ui,sans-serif" font-size="29" font-weight="850" text-anchor="middle" fill="#173f5f">1,000倍液を20L作る</text>
+  <g transform="translate(70 100)">
+    <rect x="0" y="78" width="190" height="154" rx="24" fill="#dff2ff" stroke="#2a6f97" stroke-width="5"/>
+    <path d="M30 79 C35 49 58 34 91 34 L120 34 C153 34 176 49 181 79" fill="none" stroke="#2a6f97" stroke-width="5"/>
+    <text x="95" y="150" font-family="system-ui,sans-serif" font-size="40" font-weight="900" text-anchor="middle" fill="#174a69">20 L</text>
+    <text x="95" y="193" font-family="system-ui,sans-serif" font-size="18" text-anchor="middle" fill="#456d83">作る薬液の量</text>
+  </g>
+  <g transform="translate(300 120)" font-family="system-ui,sans-serif" text-anchor="middle" fill="#173f5f">
+    <text x="80" y="65" font-size="31" font-weight="800">20 L</text>
+    <line x1="25" y1="82" x2="135" y2="82" stroke="#173f5f" stroke-width="4"/>
+    <text x="80" y="126" font-size="31" font-weight="800">1,000</text>
+    <text x="80" y="178" font-size="34" font-weight="900" fill="#e06f2f">= 0.02 L</text>
+    <text x="80" y="220" font-size="23" font-weight="800" fill="#e06f2f">= 20 mL</text>
+  </g>
+  <g transform="translate(535 100)">
+    <path d="M58 28 L112 28 L112 244 C112 269 58 269 58 244 Z" fill="#ffffff" stroke="#2a6f97" stroke-width="5"/>
+    <rect x="61" y="201" width="48" height="46" fill="#f4a261" opacity=".85"/>
+    <g stroke="#2a6f97" stroke-width="3"><line x1="112" y1="70" x2="132" y2="70"/><line x1="112" y1="114" x2="132" y2="114"/><line x1="112" y1="158" x2="132" y2="158"/><line x1="112" y1="202" x2="132" y2="202"/></g>
+    <text x="85" y="183" font-family="system-ui,sans-serif" font-size="25" font-weight="900" text-anchor="middle" fill="#d55e20">20</text>
+    <text x="146" y="208" font-family="system-ui,sans-serif" font-size="20" font-weight="700" fill="#173f5f">mL</text>
+    <text x="85" y="302" font-family="system-ui,sans-serif" font-size="18" text-anchor="middle" fill="#456d83">必要な原液</text>
+  </g>
+  <text x="380" y="390" font-family="system-ui,sans-serif" font-size="18" text-anchor="middle" fill="#527286">独自作成の計算模式図</text>
+</svg>

@@ -1,0 +1,92 @@
+{
+  "generatedAt": "2026-08-11",
+  "officialDocuments": [
+    {
+      "sourceId": "livestock-textbook-2023-09",
+      "title": "農業技能測定試験2号 学習用テキスト 畜産農業全般",
+      "publisher": "一般社団法人 全国農業会議所",
+      "edition": "2023-09",
+      "localReference": "技能測定試験（畜産農業）.pdf",
+      "pageCount": 163,
+      "sha256": "60853642f4c8191da4e565fc9f0456c2961f22dc48b72fc90f658032d6ef3169",
+      "rightsNotice": "◎無断転写を禁ず / All rights reserved",
+      "usageRule": "事実・数値・手順を要約して知識カード化。本文・図・写真・確認問題を転載しない。"
+    },
+    {
+      "sourceId": "safety-textbook-2023-09",
+      "title": "農業技能測定試験2号 学習用テキスト 安全衛生管理",
+      "publisher": "一般社団法人 全国農業会議所",
+      "edition": "2023-09",
+      "localReference": "衛生管理（畜産農業）.pdf",
+      "pageCount": 49,
+      "sha256": "215e465dcf69aa5c1fe0248fbeb48b6cac3267452330ff9459e6015b1cbef9b0",
+      "rightsNotice": "◎無断転写を禁ず / All rights reserved",
+      "usageRule": "事実・数値・手順を要約して知識カード化。本文・図・写真・確認問題を転載しない。"
+    }
+  ],
+  "sourcePriority": [
+    "Prometric・全国農業会議所の最新試験仕様",
+    "全国農業会議所の最新公式テキスト",
+    "公式E-learning",
+    "公的講座・受験者調査",
+    "民間対策サイト（UX研究のみ）"
+  ],
+  "webSources": [
+    {
+      "name": "農業技能測定試験2号（Prometric）",
+      "url": "https://www.prometric-jp.com/ssw/test_list/archives/11i",
+      "role": "current_official_exam_spec",
+      "verified": "2026-08-11",
+      "notes": "日本語、CBT、50問程度、60分、学科・実技、再受験45日。"
+    },
+    {
+      "name": "農業技能測定試験2号（ASAT）",
+      "url": "https://asat-nca.jp/asat2",
+      "role": "official_exam_and_text_index",
+      "verified": "2026-08-11",
+      "notes": "学習用テキストの正本確認先。"
+    },
+    {
+      "name": "日本の農業をまなぼう E-learning",
+      "url": "https://navi.jpagriculture-el.jp/",
+      "role": "official_learning_benchmark",
+      "verified": "2026-08-11",
+      "notes": "スマホ、動画、9言語教材、説明→問題→回答解説。"
+    },
+    {
+      "name": "SSW Japan Study Portal 農業2号",
+      "url": "https://sswjapanstudyportal.com/ja/agriculture_02/",
+      "role": "competitor_benchmark",
+      "verified": "2026-08-11",
+      "notes": "畜産専用カテゴリ約481問、復習・進捗。利用規約上スクレイピング・無断転載禁止。"
+    },
+    {
+      "name": "日本語カフェ 特定技能2号農業",
+      "url": "https://nihongocafe.jp/course_agriculture_02/",
+      "role": "competitor_benchmark",
+      "verified": "2026-08-11",
+      "notes": "動画→ワークシート→演習、畜産4h19m58s・70問・202頁、LMS。"
+    },
+    {
+      "name": "特定技能サプリ",
+      "url": "https://aisapuri.jp/",
+      "role": "competitor_benchmark",
+      "verified": "2026-08-11",
+      "notes": "AI適応出題、管理者ダッシュボード、多言語注釈、月額1,000円/人（税抜、最低6か月、初期費用別）。"
+    },
+    {
+      "name": "JaviNaLink 畜産農業2号",
+      "url": "https://javinalink.net/combo-quiz/2--nncn-2",
+      "role": "competitor_benchmark",
+      "verified": "2026-08-11",
+      "notes": "50問・60分・自動採点・解説。75%表記は公式合格基準として扱わない。"
+    },
+    {
+      "name": "ずっとにほんではたらく 農業2号",
+      "url": "https://zuttonihon.jp/fields/agriculture/",
+      "role": "competitor_benchmark",
+      "verified": "2026-08-11",
+      "notes": "10問、20問PDF、VN/ID/日本語/ルビ、母語→日本語の段階学習。試験範囲は公式資料で再確認する。"
+    }
+  ]
+}

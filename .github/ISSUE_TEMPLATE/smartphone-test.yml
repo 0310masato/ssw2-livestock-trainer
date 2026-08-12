@@ -1,0 +1,58 @@
+name: スマホ実機テスト報告
+about: Android / iPhoneでのAlpha動作確認を記録します
+title: "[実機テスト] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        個人情報や試験結果の詳細を書きすぎないでください。問題文の誤りは問題IDを記録してください。
+  - type: dropdown
+    id: device
+    attributes:
+      label: 端末
+      options:
+        - Android
+        - iPhone
+        - iPad
+        - その他
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: 機種・OS
+      placeholder: "例：Pixel 7 / Android 17"
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: ホーム画面へ追加できましたか
+      options:
+        - できた
+        - できなかった
+        - 未確認
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 確認した機能
+      options:
+        - label: 今日の10問を開始・完了できた
+        - label: 日本語／やさしい日本語／インドネシア語を切り替えられた
+        - label: 模擬試験を開始できた
+        - label: 画面を閉じた後も履歴が残った
+        - label: オフラインで再起動できた
+        - label: 横方向にはみ出さず読めた
+  - type: textarea
+    id: issue
+    attributes:
+      label: 問題・迷った点
+      placeholder: "発生した画面、操作、問題ID、再現手順を書いてください。"
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: スクリーンショット等
+      description: 必要な場合のみ添付してください。個人情報が写らないようにしてください。

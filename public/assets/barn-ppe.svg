@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 420" role="img" aria-labelledby="title desc">
+  <title id="title">畜舎に入るときの服装確認</title>
+  <desc id="desc">専用作業着、帽子、マスク、手袋、長靴を示した独自作成の模式図</desc>
+  <rect width="760" height="420" rx="28" fill="#f5fbf7"/>
+  <text x="380" y="50" font-family="system-ui,sans-serif" font-size="28" font-weight="850" text-anchor="middle" fill="#214d3c">畜舎に入る前の服装確認</text>
+  <g transform="translate(118 72)" stroke="#265b49" stroke-width="5" stroke-linejoin="round">
+    <circle cx="145" cy="62" r="42" fill="#f4c9a8"/>
+    <path d="M103 48 C111 4 179 4 187 48 Z" fill="#5aa78a"/>
+    <path d="M113 62 Q145 82 177 62 L173 91 Q145 109 117 91 Z" fill="#d9edf0"/>
+    <path d="M82 130 C93 101 118 92 145 92 C172 92 197 101 208 130 L228 262 L185 273 L176 182 L176 322 L114 322 L114 182 L105 273 L62 262 Z" fill="#8fcbb6"/>
+    <path d="M114 322 L105 376 L138 376 L145 322 Z" fill="#386f5d"/>
+    <path d="M176 322 L185 376 L152 376 L145 322 Z" fill="#386f5d"/>
+    <circle cx="73" cy="267" r="16" fill="#f0b969"/>
+    <circle cx="217" cy="267" r="16" fill="#f0b969"/>
+  </g>
+  <g transform="translate(420 92)" font-family="system-ui,sans-serif">
+    <g><circle cx="22" cy="18" r="15" fill="#1f8a70"/><path d="M14 18 l6 6 12 -13" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><text x="55" y="25" font-size="24" font-weight="750" fill="#214d3c">専用作業着</text></g>
+    <g transform="translate(0 56)"><circle cx="22" cy="18" r="15" fill="#1f8a70"/><path d="M14 18 l6 6 12 -13" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><text x="55" y="25" font-size="24" font-weight="750" fill="#214d3c">帽子・マスク</text></g>
+    <g transform="translate(0 112)"><circle cx="22" cy="18" r="15" fill="#1f8a70"/><path d="M14 18 l6 6 12 -13" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><text x="55" y="25" font-size="24" font-weight="750" fill="#214d3c">手袋</text></g>
+    <g transform="translate(0 168)"><circle cx="22" cy="18" r="15" fill="#1f8a70"/><path d="M14 18 l6 6 12 -13" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><text x="55" y="25" font-size="24" font-weight="750" fill="#214d3c">専用長靴</text></g>
+    <g transform="translate(0 232)"><rect x="0" y="0" width="270" height="64" rx="16" fill="#fff3e8" stroke="#ef8a4b" stroke-width="3"/><text x="135" y="27" text-anchor="middle" font-size="18" font-weight="800" fill="#944714">畜舎外の服・靴を</text><text x="135" y="50" text-anchor="middle" font-size="18" font-weight="800" fill="#944714">持ち込まない</text></g>
+  </g>
+  <text x="380" y="397" font-family="system-ui,sans-serif" font-size="18" text-anchor="middle" fill="#55796a">独自作成の学習用模式図</text>
+</svg>

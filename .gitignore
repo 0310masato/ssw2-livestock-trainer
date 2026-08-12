@@ -1,0 +1,6 @@
+node_modules/
+build/
+dist/
+reports/screenshots/*.png
+*.log
+.DS_Store

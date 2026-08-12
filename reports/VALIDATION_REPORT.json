@@ -1,0 +1,150 @@
+{
+  "generatedAt": "2026-08-12",
+  "overall": "PASS",
+  "releaseMeaning": "PASS means the Alpha v0.4 review build is structurally and source-reference valid. It does not mean questions are approved for public use.",
+  "counts": {
+    "facts": 100,
+    "questions": 80,
+    "glossary": 60,
+    "visualAssets": 5
+  },
+  "statusCounts": {
+    "source_checked": 80
+  },
+  "questionCountsByCategory": {
+    "畜産共通": 4,
+    "乳用牛": 8,
+    "肉用牛": 7,
+    "豚": 15,
+    "採卵鶏": 10,
+    "肉用鶏": 19,
+    "安全衛生": 15,
+    "軽種馬": 1,
+    "養蜂": 1
+  },
+  "factCountsBySubject": {
+    "畜産共通": 6,
+    "乳用牛": 10,
+    "肉用牛": 9,
+    "豚": 18,
+    "採卵鶏": 13,
+    "肉用鶏": 20,
+    "安全衛生": 18,
+    "軽種馬": 3,
+    "養蜂": 3
+  },
+  "indonesianReviewCounts": {
+    "pending_native_review": 80
+  },
+  "anchorVerification": {
+    "anchoredFacts": 50,
+    "passed": 50,
+    "failed": 0,
+    "legacyManualPageReferences": 50
+  },
+  "checks": [
+    {
+      "name": "JSON Schema validation",
+      "pass": true,
+      "detail": "0 error(s)"
+    },
+    {
+      "name": "Knowledge-card count",
+      "pass": true,
+      "detail": "100 / 100"
+    },
+    {
+      "name": "Alpha-question count",
+      "pass": true,
+      "detail": "80 / 80"
+    },
+    {
+      "name": "Glossary count",
+      "pass": true,
+      "detail": "60 / 60"
+    },
+    {
+      "name": "Unique question IDs",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Unique fact IDs",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Unique glossary IDs",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "All question-to-fact references resolve",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Every correctChoiceId exists",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "All source documents and PDF pages exist",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Rights flags prohibit official/competitor reuse",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "All questions remain source_checked (not auto-approved)",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "All multilingual fields are populated",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "All declared original visual assets exist",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Official-source hashes and page counts match ledger",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Automated PDF anchor verification",
+      "pass": true,
+      "detail": "50/50 anchored facts passed; 50 legacy facts retain manual page references"
+    },
+    {
+      "name": "No exact duplicate question wording",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Near-duplicate review queue",
+      "pass": true,
+      "detail": "0 pair(s) at similarity >= 0.92",
+      "warning": false
+    }
+  ],
+  "nearDuplicates": [],
+  "issues": [],
+  "approvalGate": {
+    "sourceChecked": 80,
+    "approved": 0,
+    "nativeIndonesianReviewed": 0,
+    "remaining": [
+      "インドネシア語ネイティブ確認",
+      "利用者操作テスト",
+      "マサトさん最終承認"
+    ]
+  }
+}

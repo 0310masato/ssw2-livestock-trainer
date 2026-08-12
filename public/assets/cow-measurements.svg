@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" role="img" aria-labelledby="title desc">
+  <title id="title">牛の主な測定部位の模式図</title>
+  <desc id="desc">牛の体長、体高、十字部高を矢印で示した独自作成の模式図</desc>
+  <rect width="720" height="420" rx="28" fill="#f5fbfa"/>
+  <g fill="#d8ede8" stroke="#356b66" stroke-width="5" stroke-linejoin="round">
+    <path d="M175 155 C195 118 250 105 315 116 L456 125 C491 129 527 146 546 171 L607 177 C621 178 630 190 626 204 C622 219 606 223 592 221 L551 218 C540 244 516 261 479 267 L282 267 C235 262 200 247 180 219 L140 217 C123 216 114 202 118 188 C122 174 139 169 154 174 Z"/>
+    <path d="M245 256 L233 350 L272 350 L287 260 Z"/>
+    <path d="M449 261 L455 350 L493 350 L492 252 Z"/>
+    <path d="M188 185 C164 160 155 136 159 115" fill="none"/>
+    <path d="M605 189 L638 177 L622 199 Z"/>
+    <path d="M540 169 C552 145 568 133 592 131 C579 148 571 163 571 178"/>
+  </g>
+  <g stroke="#ef7f37" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M194 112 L548 112"/>
+    <path d="M194 112 l18 -12 M194 112 l18 12 M548 112 l-18 -12 M548 112 l-18 12"/>
+    <path d="M517 126 L517 350"/>
+    <path d="M517 126 l-12 18 M517 126 l12 18 M517 350 l-12 -18 M517 350 l12 -18"/>
+    <path d="M277 122 L277 350"/>
+    <path d="M277 122 l-12 18 M277 122 l12 18 M277 350 l-12 -18 M277 350 l12 -18"/>
+  </g>
+  <g font-family="system-ui, sans-serif" font-weight="700" fill="#123d39" text-anchor="middle">
+    <text x="371" y="86" font-size="27">体長</text>
+    <text x="560" y="242" font-size="27" transform="rotate(90 560 242)">体高</text>
+    <text x="232" y="240" font-size="25" transform="rotate(-90 232 240)">十字部高</text>
+    <text x="360" y="392" font-size="18" fill="#557974">独自作成の学習用模式図</text>
+  </g>
+</svg>

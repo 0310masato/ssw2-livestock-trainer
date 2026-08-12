@@ -1,0 +1,93 @@
+
+> ssw2-livestock-trainer@0.4.0-alpha-review verify
+> npm run validate:content && npm test && npm run test:e2e
+
+
+> ssw2-livestock-trainer@0.4.0-alpha-review validate:content
+> python scripts/validate_content.py
+
+{"overall": "PASS", "checks": 18, "issues": 0, "anchors": {"anchoredFacts": 50, "passed": 50, "failed": 0, "legacyManualPageReferences": 50}, "nearDuplicates": 0}
+
+> ssw2-livestock-trainer@0.4.0-alpha-review test
+> npm run build && node --test tests/*.test.mjs
+
+
+> ssw2-livestock-trainer@0.4.0-alpha-review build
+> node scripts/build.mjs
+
+Built /mnt/data/ssw2-livestock-trainer-alpha-v0.4/dist
+TAP version 13
+# Subtest: content counts and IDs are stable
+ok 1 - content counts and IDs are stable
+  ---
+  duration_ms: 1.269791
+  type: 'test'
+  ...
+# Subtest: questions preserve approval gate and source traceability
+ok 2 - questions preserve approval gate and source traceability
+  ---
+  duration_ms: 1.653992
+  type: 'test'
+  ...
+# Subtest: internal review build exposes all 80 source-checked questions
+ok 3 - internal review build exposes all 80 source-checked questions
+  ---
+  duration_ms: 2.538992
+  type: 'test'
+  ...
+# Subtest: daily queue returns ten unique questions
+ok 4 - daily queue returns ten unique questions
+  ---
+  duration_ms: 1.965734
+  type: 'test'
+  ...
+# Subtest: wrong answer schedules near-term review and records reason-ready history
+ok 5 - wrong answer schedules near-term review and records reason-ready history
+  ---
+  duration_ms: 2.21847
+  type: 'test'
+  ...
+# Subtest: independent correct answers raise mastery and reduce support
+ok 6 - independent correct answers raise mastery and reduce support
+  ---
+  duration_ms: 5.182825
+  type: 'test'
+  ...
+# Subtest: mock exam uses 50 unique questions and grades answers
+ok 7 - mock exam uses 50 unique questions and grades answers
+  ---
+  duration_ms: 3.224805
+  type: 'test'
+  ...
+# Subtest: web app manifest is installable and icons exist
+ok 8 - web app manifest is installable and icons exist
+  ---
+  duration_ms: 11.440222
+  type: 'test'
+  ...
+# Subtest: service worker caches the complete app shell
+ok 9 - service worker caches the complete app shell
+  ---
+  duration_ms: 3.592223
+  type: 'test'
+  ...
+# Subtest: standalone review build contains code, styles, and embedded visual assets
+ok 10 - standalone review build contains code, styles, and embedded visual assets
+  ---
+  duration_ms: 8.027759
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 252.909386
+
+> ssw2-livestock-trainer@0.4.0-alpha-review test:e2e
+> python e2e/smoke.py
+
+{"overall": "PASS", "method": "Playwright Chromium using set_content against the standalone review build; local URL navigation is blocked by the execution environment administrator.", "viewportMobile": "390x844", "viewportDesktop": "1280x900", "checks": {"home_render": true, "category_navigation": true, "mobile_tap_targets": true, "mobile_no_horizontal_overflow": true, "daily_session": true, "answer_and_explanation": true, "error_reason_gate": true, "original_visual_asset": true, "manager_dashboard": true, "review_screen": true, "review_state": true, "glossary_search": true, "mock_50_60": true, "mock_navigation": true, "desktop_render": true, "desktop_no_horizontal_overflow": true, "no_runtime_errors": true}, "failed": [], "pageErrors": [], "screenshots": ["alpha-home-desktop.png", "alpha-home-mobile.png", "alpha-manager-mobile.png", "alpha-review-mobile.png", "alpha-study-mobile.png", "alpha-visual-mobile.png"]}

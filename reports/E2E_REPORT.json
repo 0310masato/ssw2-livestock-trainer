@@ -1,0 +1,35 @@
+{
+  "overall": "PASS",
+  "method": "Playwright Chromium using set_content against the standalone review build; local URL navigation is blocked by the execution environment administrator.",
+  "viewportMobile": "390x844",
+  "viewportDesktop": "1280x900",
+  "checks": {
+    "home_render": true,
+    "category_navigation": true,
+    "mobile_tap_targets": true,
+    "mobile_no_horizontal_overflow": true,
+    "daily_session": true,
+    "answer_and_explanation": true,
+    "error_reason_gate": true,
+    "original_visual_asset": true,
+    "manager_dashboard": true,
+    "review_screen": true,
+    "review_state": true,
+    "glossary_search": true,
+    "mock_50_60": true,
+    "mock_navigation": true,
+    "desktop_render": true,
+    "desktop_no_horizontal_overflow": true,
+    "no_runtime_errors": true
+  },
+  "failed": [],
+  "pageErrors": [],
+  "screenshots": [
+    "alpha-home-desktop.png",
+    "alpha-home-mobile.png",
+    "alpha-manager-mobile.png",
+    "alpha-review-mobile.png",
+    "alpha-study-mobile.png",
+    "alpha-visual-mobile.png"
+  ]
+}

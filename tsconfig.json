@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "none",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "outFile": "build/app.js",
+    "strict": true,
+    "noUncheckedIndexedAccess": false,
+    "useDefineForClassFields": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "removeComments": false,
+    "sourceMap": true
+  },
+  "files": [
+    "src/types.ts",
+    "src/data.ts",
+    "src/utils.ts",
+    "src/storage.ts",
+    "src/engine.ts",
+    "src/mock.ts",
+    "src/views.ts",
+    "src/app.ts"
+  ]
+}

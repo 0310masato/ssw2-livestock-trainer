@@ -1,0 +1,29 @@
+畜産2号トレーナー Alpha v0.4.1
+================================
+
+すぐ確認する：
+  dist/standalone-review.html
+
+PWAとして確認する：
+  1. npm run build
+  2. npm run serve
+  3. http://localhost:4173 を開く
+
+全検査：
+  npm run verify
+
+重要：
+  ・内部レビュー版です。
+  ・80問はsource_checkedで、approvedは0問です。
+  ・インドネシア語はネイティブ確認前です。
+  ・一般公開版ではapprovedだけを出題してください。
+
+読む順番：
+  README.md
+  docs/ALPHA_STATUS.md
+  reports/VERIFICATION_SUMMARY.md
+  docs/NEXT_PHASE.md
+
+GitHub登録後：
+  docs/DEPLOYMENT.md
+  docs/SMARTPHONE_TEST.md
