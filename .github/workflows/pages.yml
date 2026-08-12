@@ -1,9 +1,14 @@
 name: Deploy review build to GitHub Pages
 
-# Deliberately manual: this Alpha contains source-checked but not yet approved
-# learning content. Run only when the repository owner accepts the public-URL risk.
+# Internal review build. The Alpha contains source-checked but not yet approved
+# learning content. It is excluded from search indexing, but Pages is not an
+# authentication boundary.
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/pages.yml"
 
 permissions:
   contents: read
@@ -26,7 +31,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
@@ -38,7 +42,7 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: ./dist
 
