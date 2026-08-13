@@ -443,6 +443,21 @@ with sync_playwright() as p:
     # A paused mock keeps its absolute deadline, but its timer must not replace
     # an unrelated learning session. The expired mock is graded only when the
     # learner explicitly resumes it.
+    page.evaluate("""() => {
+      const nativeSetInterval = window.setInterval.bind(window);
+      const nativeClearInterval = window.clearInterval.bind(window);
+      const activeIntervals = new Set();
+      window.__activeMockIntervals = activeIntervals;
+      window.setInterval = (callback, delay, ...args) => {
+        const handle = nativeSetInterval(callback, delay, ...args);
+        activeIntervals.add(handle);
+        return handle;
+      };
+      window.clearInterval = (handle) => {
+        activeIntervals.delete(handle);
+        nativeClearInterval(handle);
+      };
+    }""")
     page.evaluate("LivestockApp.runtime.session = null; LivestockApp.runtime.lastMockResult = null; LivestockApp.runtime.view = 'home'; LivestockApp.render()")
     page.wait_for_timeout(80)
     check(dom_click(page, '[data-start="mock"]'), 'paused_mock_timer_fixture_started', checks)
@@ -476,14 +491,29 @@ with sync_playwright() as p:
       sessionKind: LivestockApp.runtime.session?.kind,
       sessionCompleted: LivestockApp.runtime.session?.completed,
       mockHistoryCount: LivestockApp.runtime.state.mockHistory.length,
+      activeTickerCount: window.__activeMockIntervals.size,
     })""")
     check(
         expired_resume_state['draftCleared']
         and expired_resume_state['resultShown']
         and expired_resume_state['sessionKind'] == 'mock'
         and expired_resume_state['sessionCompleted']
-        and expired_resume_state['mockHistoryCount'] == paused_mock_boundary['mockHistoryCount'] + 1,
+        and expired_resume_state['mockHistoryCount'] == paused_mock_boundary['mockHistoryCount'] + 1
+        and expired_resume_state['activeTickerCount'] == 0,
         'expired_mock_grades_on_explicit_resume',
+        checks,
+    )
+    page.wait_for_timeout(1_200)
+    expired_resume_stable = page.evaluate("""() => ({
+      draftCleared: LivestockApp.runtime.state.mockDraft === null,
+      mockHistoryCount: LivestockApp.runtime.state.mockHistory.length,
+      activeTickerCount: window.__activeMockIntervals.size,
+    })""")
+    check(
+        expired_resume_stable['draftCleared']
+        and expired_resume_stable['mockHistoryCount'] == expired_resume_state['mockHistoryCount']
+        and expired_resume_stable['activeTickerCount'] == 0,
+        'expired_mock_leaves_no_ticker_or_repeat_processing',
         checks,
     )
 

@@ -59,6 +59,7 @@
     "expired_paused_mock_does_not_replace_normal_study": true,
     "expired_mock_resumed_via_dom": true,
     "expired_mock_grades_on_explicit_resume": true,
+    "expired_mock_leaves_no_ticker_or_repeat_processing": true,
     "desktop_render": true,
     "desktop_no_horizontal_overflow": true,
     "no_runtime_errors": true

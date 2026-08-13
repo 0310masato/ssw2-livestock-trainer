@@ -111,6 +111,14 @@ namespace LivestockApp {
       }
     };
     update();
+    const activeDraft = runtime.state.mockDraft;
+    if (
+      !activeDraft
+      || runtime.view !== 'study'
+      || runtime.session?.kind !== 'mock'
+      || runtime.lastMockResult
+      || mockSecondsRemaining(activeDraft) <= 0
+    ) return;
     mockTimerHandle = window.setInterval(update, 1_000);
   }
 
@@ -143,6 +151,29 @@ namespace LivestockApp {
     };
   }
 
+  function easyJapaneseVisibleBeforeAnswer(session: SessionState, question: Question): boolean {
+    if (session.answered || session.kind === 'mock' || session.supportLevel === 0 || session.isRetryWithoutSupport) {
+      return false;
+    }
+    const questionEasyJapaneseVisible = session.easyJapaneseVisible
+      && question.question.easyJa.trim().length > 0;
+    const policy = supportPolicyForLevel(session.supportLevel);
+    const keywordEasyJapaneseVisible = runtime.state.settings.showVocabulary
+      && session.keywordsVisible
+      && policy.compactKeywordHints
+      && question.learningSupport.keyTermIds.some((id) => {
+        const term = GLOSSARY.find((item) => item.id === id);
+        return Boolean(term?.easyJa.trim());
+      });
+    return questionEasyJapaneseVisible || keywordEasyJapaneseVisible;
+  }
+
+  function recordVisibleEasyJapanese(session: SessionState, question: Question): void {
+    if (easyJapaneseVisibleBeforeAnswer(session, question)) {
+      session.supportUsage.easyJapaneseUsed = true;
+    }
+  }
+
   function questionSupport(session: SessionState, question: Question): void {
     const policy = resolveSupportPolicy(runtime.state, question, session.kind, session.isRetryWithoutSupport);
     session.supportLevel = policy.level;
@@ -154,12 +185,13 @@ namespace LivestockApp {
     session.answerIndonesianVisible = false;
     session.supportUsage = {
       furiganaUsed: session.furiganaVisible,
-      easyJapaneseUsed: session.easyJapaneseVisible,
+      easyJapaneseUsed: false,
       keywordsOpened: session.keywordsVisible,
       questionTranslationOpened: session.indonesianVisible,
       choiceTranslationsOpened: session.choiceTranslationsVisible,
       answerIndonesianOpened: false,
     };
+    recordVisibleEasyJapanese(session, question);
   }
 
   function createSession(kind: SessionKind, questionIds: string[]): SessionState {
@@ -362,12 +394,13 @@ namespace LivestockApp {
     }
     if (kind === 'easy' && session.supportLevel === 3) {
       session.easyJapaneseVisible = !session.easyJapaneseVisible;
-      if (session.easyJapaneseVisible) session.supportUsage.easyJapaneseUsed = true;
     }
     if (kind === 'keywords' && session.supportLevel > 0) {
       session.keywordsVisible = !session.keywordsVisible;
       if (session.keywordsVisible) session.supportUsage.keywordsOpened = true;
     }
+    const question = questionById(session.questionIds[session.index]);
+    if (question) recordVisibleEasyJapanese(session, question);
     if ((kind === 'id' || kind === 'question-id') && policy.allowQuestionTranslation) {
       session.indonesianVisible = !session.indonesianVisible;
       if (session.indonesianVisible) session.supportUsage.questionTranslationOpened = true;
@@ -492,7 +525,7 @@ namespace LivestockApp {
   function exportProgressCsv(): void {
     const header = [
       '日時', '問題ID', '分野', 'トピック', '正誤', '回答時間秒', '誤答原因', '支援レベル',
-      'ふりがな', 'やさしい日本語', '重要語', '全文インドネシア語', '選択肢訳', '回答後インドネシア語',
+      'ふりがな', 'やさしい日本語（回答前に実表示）', '重要語', '全文インドネシア語', '選択肢訳', '回答後インドネシア語',
       '知識不足', '日本語不足', '日本語のみ再挑戦',
     ];
     const rows = runtime.state.history.map((entry) => {

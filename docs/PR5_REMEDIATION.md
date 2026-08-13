@@ -17,7 +17,7 @@
 | REV-002 | P0再是正・自動検証済み | `e2e/pedagogy_smoke.py` | placeholder正規化だけに依存せず、選択肢の内容差と正答位置の相関、および回答前後のDOM非搭載を検査する | 代表16問×4 Levelの回答前後、明示4問、レビュー画面の回帰検査 |
 | REV-003 | 対応・自動検証済み | `src/engine.ts`, `src/views.ts`, `src/pedagogy.ts` | guided/adaptive/japanese_onlyのLevel決定規則を単一化した | mode・mastery・Levelの単体/E2E |
 | REV-004 | Issueへ延期 | [Issue #6](https://github.com/0310masato/ssw2-livestock-trainer/issues/6) | 複数タブのlost updateはPR #5で実装せず、Alphaを単一タブ利用に限定 | Issueの2ページE2E受入条件 |
-| REV-005 | 対応・自動検証済み | `src/app.ts`, `e2e/smoke.py` | 模試timerを表示中のmock sessionだけで動かす | 模試中断→通常学習→期限→模試再開 |
+| REV-005 | P2再是正・自動検証済み | `src/app.ts`, `e2e/smoke.py` | 模試timerを表示中かつ未採点のmock sessionだけで動かし、期限切れ採点後にintervalを作らない | 模試中断→期限切れ→再開→採点後1.2秒、active ticker 0・履歴1件 |
 | REV-006 | 対応・自動検証済み | `src/storage.ts`, `src/app.ts` | import stateを明示検証・再構成し、20 MiB上限を含め不正入力を全体拒否する | HTML相当、未知key、過大配列、無効ID/日時/数値 |
 | REV-007 | 対応・自動検証済み | `src/utils.ts` | CSVの式開始文字をquote処理とは別に無害化する | `=`, `+`, `-`, `@`, tab/CR/LFテスト |
 | REV-008 | 対応・自動検証済み | `src/utils.ts`, `public/question.schema.json`, `scripts/validate_content.py` | approved条件をSchema・validator・runtimeで共通化した | 各gateと不正日時のnegative fixture |
@@ -50,6 +50,12 @@ PR #5の技術的な境界修正は、選択肢の `easyJa` を学習者向け�
 独立再監査で、fresh buildでは選択肢easyJaが消えていても、固定cache名を共有する旧PWAから同一originで更新すると、旧`app.js`がcache-firstで継続配信されることを確認した。固定値の手動更新を廃止し、App Shellの相対パスと内容をSHA-256へ入力した先頭16桁をbuild IDとする。`app.js`と`styles.css`のURL、Service Workerのcache名、APP_SHELLを同じbuild IDで区別し、installではHTTP cacheを再利用せず必須responseを検査する。
 
 正式な回帰では旧HEAD `a6533c3a4dd194f48cc5186ed061b06b06019e6f`を別buildとして作成し、同じoriginの配信rootを新buildへ切り替える。旧漏えいfixtureの存在、新buildへの切替、旧owned cache削除、foreign cache保持、offline起動、およびproduction経路の回答前64件・回答後64件を一続きで検査する。更新workerが見つかっても学習途中を自動reloadせず、現在画面を維持して次回reloadで切り替える。
+
+## P2再是正: 支援利用履歴と模試timer
+
+`usedEasyJapanese` は、回答前に学習者へ実際に表示された問題文または重要語のやさしい日本語だけを記録する。Level 1の短い重要語ヒントを含み、一度表示した後に閉じても使用済みを維持する。選択肢のレビュー用`easyJa`と、回答後に初めて現れる解説は対象外である。Level 1の初期表示・非表示・開閉、Level 2の読みのみ、Level 3の問題文表示をproduction event経路で検査する。
+
+期限切れ模試を再開したときは、最初のtimer更新で採点された後にdraft、画面、session、結果、残り時間を再確認する。すでに結果画面へ移った場合は1秒intervalを登録せず、履歴が一度だけ増えた状態を待機後も維持する。
 
 ## 人が再確認する事項
 

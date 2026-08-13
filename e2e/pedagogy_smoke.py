@@ -35,6 +35,34 @@ def fits_mobile_width(page, selectors: list[str]) -> bool:
     }""", selectors))
 
 
+def start_support_usage_case(page, level: int, show_vocabulary: bool) -> None:
+    page.evaluate("""({level, showVocabulary}) => {
+      LivestockApp.runtime.session = null;
+      LivestockApp.runtime.lastMockResult = null;
+      LivestockApp.runtime.view = 'home';
+      Object.assign(LivestockApp.runtime.state.settings, {
+        studySupportMode: 'guided',
+        preferredSupportLevel: level,
+        showVocabulary,
+        showQuestionPattern: true,
+      });
+      LivestockApp.render();
+      document.querySelector('[data-start="daily"]')?.click();
+    }""", {'level': level, 'showVocabulary': show_vocabulary})
+    page.wait_for_timeout(80)
+
+
+def answer_current_question(page) -> bool:
+    return bool(page.evaluate("""() => {
+      const session = LivestockApp.runtime.session;
+      const question = session && LivestockApp.questionById(session.questionIds[session.index]);
+      if (!question) return false;
+      document.querySelector(`[data-choice="${question.correctChoiceId}"]`)?.click();
+      document.querySelector('[data-answer]')?.click();
+      return LivestockApp.runtime.state.history.at(-1)?.questionId === question.id;
+    }"""))
+
+
 checks: dict[str, bool] = {}
 page_errors: list[str] = []
 
@@ -677,6 +705,84 @@ with sync_playwright() as p:
         'legacyControls': False,
     })
 
+    # usedEasyJapanese records only easy Japanese that was actually visible
+    # before answering. It is sticky after closing and excludes answer-only text.
+    start_support_usage_case(page, 1, True)
+    record(
+        checks,
+        'level1_keyword_easy_japanese_visible_before_answer',
+        page.locator('.compact-keyword-hints .vocabulary-card > p[lang="ja"]').count() >= 1,
+    )
+    record(checks, 'level1_keyword_easy_japanese_on_answered', answer_current_question(page))
+    record(checks, 'level1_keyword_easy_japanese_on_records_usage', page.evaluate(
+        'LivestockApp.runtime.state.history.at(-1).usedEasyJapanese === true',
+    ))
+
+    start_support_usage_case(page, 1, False)
+    record(checks, 'level1_keyword_easy_japanese_off_before_answer',
+           page.locator('.compact-keyword-hints .vocabulary-card > p[lang="ja"]').count() == 0)
+    record(checks, 'level1_keyword_easy_japanese_off_answered', answer_current_question(page))
+    page.evaluate("""() => {
+      LivestockApp.runtime.state.settings.showVocabulary = true;
+      LivestockApp.render();
+      document.querySelector('[data-session-toggle="keywords"]')?.click();
+    }""")
+    record(
+        checks,
+        'level1_keyword_easy_japanese_off_excludes_answer_only_text',
+        page.locator('[data-learning-component="keyword-glossary"] .vocabulary-card > p[lang="ja"]').count() >= 1
+        and page.evaluate('LivestockApp.runtime.state.history.at(-1).usedEasyJapanese === false'),
+    )
+
+    start_support_usage_case(page, 1, False)
+    page.evaluate("""() => {
+      LivestockApp.runtime.state.settings.showVocabulary = true;
+      LivestockApp.render();
+    }""")
+    record(checks, 'level1_keyword_easy_japanese_starts_closed',
+           page.locator('[data-session-toggle="keywords"][aria-pressed="false"]').count() == 1)
+    page.locator('[data-session-toggle="keywords"]').click()
+    record(
+        checks,
+        'level1_keyword_easy_japanese_open_records_usage',
+        page.locator('.compact-keyword-hints .vocabulary-card > p[lang="ja"]').count() >= 1
+        and page.evaluate('LivestockApp.runtime.session.supportUsage.easyJapaneseUsed === true'),
+    )
+    page.locator('[data-session-toggle="keywords"]').click()
+    record(
+        checks,
+        'level1_keyword_easy_japanese_close_keeps_usage',
+        page.locator('.compact-keyword-hints').count() == 0
+        and page.evaluate('LivestockApp.runtime.session.supportUsage.easyJapaneseUsed === true'),
+    )
+    record(checks, 'level1_keyword_easy_japanese_sticky_answered', answer_current_question(page))
+    record(checks, 'level1_keyword_easy_japanese_sticky_history', page.evaluate(
+        'LivestockApp.runtime.state.history.at(-1).usedEasyJapanese === true',
+    ))
+
+    start_support_usage_case(page, 2, True)
+    record(
+        checks,
+        'level2_keyword_reading_without_easy_japanese',
+        page.locator('[data-learning-component="keyword-glossary"] ruby rt').count() >= 1
+        and page.locator('[data-learning-component="keyword-glossary"] .vocabulary-card > p[lang="ja"]').count() == 0,
+    )
+    record(checks, 'level2_keyword_reading_answered', answer_current_question(page))
+    record(checks, 'level2_keyword_reading_does_not_record_easy_japanese', page.evaluate(
+        'LivestockApp.runtime.state.history.at(-1).usedEasyJapanese === false',
+    ))
+
+    start_support_usage_case(page, 3, False)
+    record(
+        checks,
+        'level3_question_easy_japanese_visible_before_answer',
+        page.locator('.meaning-stage .support-box:not(.id) p[lang="ja"]').count() == 1,
+    )
+    record(checks, 'level3_question_easy_japanese_answered', answer_current_question(page))
+    record(checks, 'level3_question_easy_japanese_records_usage', page.evaluate(
+        'LivestockApp.runtime.state.history.at(-1).usedEasyJapanese === true',
+    ))
+
     # Level 2 starts with furigana, terminology, and intent. Full-question and
     # choice translations are available but remain closed until the learner asks.
     page.evaluate("""() => {
@@ -765,6 +871,14 @@ with sync_playwright() as p:
         isRetryWithoutSupport: false,
         retryOfHistoryId: null,
       });
+      session.supportUsage = {
+        furiganaUsed: true,
+        easyJapaneseUsed: false,
+        keywordsOpened: true,
+        questionTranslationOpened: false,
+        choiceTranslationsOpened: false,
+        answerIndonesianOpened: false,
+      };
       LivestockApp.render();
     }""")
     page.wait_for_timeout(150)

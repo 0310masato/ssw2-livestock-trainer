@@ -143,6 +143,7 @@ test('compiled application contains persistent bilingual UI support', async () =
   assert.match(app, /renderJapaneseOnlyQuestionCard/);
   assert.match(app, /畜産2号トレーナー_学習データ_v0\.5\.json/);
   assert.match(app, /畜産2号トレーナー_学習履歴_v0\.5\.csv/);
+  assert.match(app, /やさしい日本語（回答前に実表示）/);
   assert.match(app, /畜産2号トレーナー_80問レビュー_v0\.5\.json/);
   assert.match(app, /updateViaCache:\s*['"]none['"]/);
   assert.match(app, /registration\.update\(\)/);
