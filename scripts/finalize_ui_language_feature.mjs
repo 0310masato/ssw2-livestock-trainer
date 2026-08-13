@@ -51,4 +51,9 @@ await update('e2e/smoke.py', (source) => source.replace(
     browser = p.chromium.launch(**launch_options)`,
 ));
 
+await update('e2e/smoke.py', (source) => source.replace(
+  "    page.locator('[data-mock-next]').click()",
+  "    page.locator('[data-mock-next]').dispatch_event('click')",
+));
+
 await rm('scripts/finalize_ui_language_feature.mjs', { force: true });
