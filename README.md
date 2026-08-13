@@ -97,7 +97,7 @@ GitHub CIには公式PDFを配置しません。Pull Requestと`main`へのpush�
 - TypeScript、ビルド、Node単体テスト
 - 学習支援Level 0〜3、保存、模試の日本語限定と終了後の言語復帰
 - Playwright 360px表示、横方向オーバーフロー、JavaScript page error
-- PWA配布ファイルと内部レビューartifact
+- PWA配布ファイルと期限付きPRレビューartifact
 
 CI内の `validate:content` は、出典IDと台帳ページ範囲を検査します。ただし公式PDFバイナリがないため、次の2項目はレポート上で明示的に `SKIPPED` になります。
 
@@ -117,7 +117,7 @@ PowerShell例：
 
 ```powershell
 $env:SSW2_SOURCE_DIR = 'C:\controlled-source-review'
-npm run verify
+npm run verify:pdf
 ```
 
 `reports/VALIDATION_REPORT.json` の `anchorVerification.available=true`、`skipped=false`、`passed=50` を確認します。レポートの扱いと過去版の分離は [reports/README.md](reports/README.md) を参照してください。GitHub CIの成功証跡は、対象commitに紐づくActions Run URLです。
@@ -146,7 +146,7 @@ dist/                配布可能なビルド
 
 ## 次の段階
 
-1. Draft PR #5のCIと内部レビューartifactを確認
+1. Draft PR #5のCIと期限付きPRレビューartifactを確認
 2. 代表16問を4問×4セットで人手レビュー
 3. 代表16問の指摘と既存機能の回帰だけをPR #5内で修正
 4. Android／iPhoneで内部レビュー用実機テスト
@@ -156,14 +156,18 @@ dist/                配布可能なビルド
 
 ## PRレビュー用ビルドとスマホ実機テスト
 
-Draft PR #5の成功したPull Request CI Runから、名前が `internal-review-build-7d-` で始まるActions artifactを取得できます。PR番号とRun attemptを含み、PR #5の初回実行なら `internal-review-build-7d-5-attempt-1` です。保持期間は7日間で、`main` push CIでは生成しません。
+Draft PR #5の成功したPull Request CI Runから、名前が `temporary-pr-review-build-7d-pr-` で始まるActions artifactを取得できます。PR番号とRun attemptを含みます。保持期間は7日間で、`main` push CIでは生成しません。
 
 - CI: `.github/workflows/ci.yml`
 - artifact: `dist`相当のビルド一式と `standalone-review.html`
 - 実機手順: `docs/SMARTPHONE_TEST.md`
 - バージョン表記: `docs/VERSIONING.md`
 
-artifactはGitHubへログインできる内部レビュアー向けの期限付き確認物です。正式な配布物、長期保管物、公開済み教材ではありません。`standalone-review.html` は単体表示確認に利用できますが、Service WorkerとPWAインストールの確認にはHTTP(S)配信が必要です。PR #5のレビューでは既存Pages、本番URL、一般公開ホストへ反映しません。
+このリポジトリはpublicであり、artifactは指定レビュアーだけに制限された保管場所ではありません。未確認翻訳を含む期限付きPR確認物で、正式な配布物、長期保管物、承認済み教材ではありません。`standalone-review.html` は単体表示確認に利用できますが、Service WorkerとPWAインストールの確認にはHTTP配信とsecure contextが必要です。PR #5のレビューでは既存Pages、本番URL、一般公開ホストへ反映しません。
+
+## 既知の制約
+
+端末内stateの連続saveは一つの画面内で順序を保ちますが、複数タブ・複数ウィンドウ・ブラウザ版とインストール版を同時に使った競合更新は未対応です。[Issue #6](https://github.com/0310masato/ssw2-livestock-trainer/issues/6) が完了するまで、学習履歴を記録するときは一つのタブまたはウィンドウだけを使用してください。
 
 ### 表示言語
 

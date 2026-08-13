@@ -4,17 +4,6 @@ name: Prepare smartphone review branch
 # GitHub Pages is configured as Deploy from a branch: gh-pages / root.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/publish-gh-pages-branch.yml"
-      - "src/**"
-      - "scripts/**"
-      - "public/**"
-      - "tests/**"
-      - "package.json"
-      - "package-lock.json"
-      - "tsconfig.json"
 
 permissions:
   contents: write

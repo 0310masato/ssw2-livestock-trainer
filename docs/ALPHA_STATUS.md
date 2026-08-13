@@ -28,7 +28,7 @@
 - IndexedDBとlocalStorageの保存、旧state移行、連続saveのrevision保護
 - PWAマニフェスト、Service Worker、単体レビューHTML
 - TypeScript、Node、Playwright、コンテンツ検証
-- Pull Request CI用の7日間保持内部レビューartifact
+- Pull Request CI用の7日間保持PRレビューartifact（public repository上でアクセス制限なし）
 
 ## 人手レビュー待ち
 
@@ -59,4 +59,4 @@ GitHub CIは、データ同期、構造、TypeScript、ビルド、単体テス�
 
 ## リリース判断
 
-この版は期限付きartifactで人手レビューを始められる内部Alphaです。正式公開版、翻訳確認済み教材、全80問の新形式版ではありません。次の順序はPR #5 → 代表16問レビュー → 実機テスト → 別途承認後のPhase 6です。
+この版は期限付きartifactで独立再レビューを行うAlphaです。正式公開版、翻訳確認済み教材、全80問の新形式版ではありません。是正後HEADの独立再レビューに合格するまで、人手レビューと実機テストを開始しません。その後の順序はPR #5独立再レビュー → 代表16問レビュー → 実機テスト → 別途承認後のPhase 6です。

@@ -44,7 +44,7 @@ PR #5は、人による代表16問レビューと実機テストを始められ�
 - 360px前後の横スクロール
 - JavaScriptエラー
 
-PRレビュー用artifactを使い、既存Pagesや本番URLへ公開しない。PWAインストール・Service Workerの確認にHTTPSが必要な場合は、別途承認されたアクセス制限付き環境を用意する。
+`temporary-pr-review-build-7d-pr-` で始まる期限付きPRレビューartifactを使い、既存Pagesや本番URLへ公開しない。public repository上のartifactはアクセス制限ではないため、正式配布物や承認済み教材として案内しない。PWAインストール・Service Workerの確認はAndroidの端末localhost（`adb reverse`）または別途承認されたアクセス制限付き環境で行う。
 
 ### 4. PR #5内の整合修正
 

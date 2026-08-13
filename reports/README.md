@@ -4,7 +4,7 @@
 
 | ファイル | 生成元 | 示す範囲 |
 |---|---|---|
-| `VALIDATION_REPORT.md` / `.json` | `npm run validate:content` | 問題・用語・出典メタデータの構造検査。公式PDFが配置されている場合だけ、PDFハッシュ・ページ数・本文アンカーも含む。 |
+| `VALIDATION_REPORT.md` / `.json` | `npm run validate:content` または `npm run validate:content:pdf` | 問題・用語・出典メタデータの構造検査。`SSW2_SOURCE_DIR`未設定の構造検査ではPDFを`SKIPPED`、設定時またはPDF必須commandでは不足を含め必須検査。実行scopeはレポート冒頭を参照。 |
 | `E2E_REPORT.json` | `npm run test:e2e:core` | 主要画面、模試、保存言語、360px幅、JavaScript page error。 |
 | `PEDAGOGY_E2E_REPORT.json` | `npm run test:e2e:pedagogy` | 支援Level 0〜3、翻訳表示境界、日本語のみ再挑戦、解説表示。 |
 | `screenshots/` | Playwright実行 | 自動画面検査時の参考画像。人による実機確認の代替ではない。 |
@@ -18,7 +18,7 @@ GitHub CIには公式PDFを配置しない。CIの `npm run validate:content` �
 - 公式PDFバイナリのハッシュとページ数
 - PDF本文を用いる50件の根拠アンカー照合
 
-許可済みローカル環境で `SSW2_SOURCE_DIR` に公式PDF 2冊を配置して実行した場合だけ、上記を含む完全照合になる。レポートJSONでは `anchorVerification.available` と `anchorVerification.skipped`、Markdownでは各検査行の `SKIPPED` 表示を確認する。
+許可済みローカル環境で `SSW2_SOURCE_DIR` に公式PDF 2冊を配置し、別の `npm run verify:pdf` を実行した場合だけ、上記を含む完全照合になる。PDF必須commandは、環境変数未設定、PDF不足、PyMuPDF不足、hash・ページ数・本文アンカー不一致のいずれもFAILする。構造検査のPASSとPDF検査のSKIPを混同しない。
 
 「All source IDs and ledger page ranges resolve」のPASSは、PDF未配置時には台帳のdocument IDとページ範囲が有効であることを示す。実際のPDFファイル、ハッシュ、本文アンカーの照合済みという意味ではない。
 

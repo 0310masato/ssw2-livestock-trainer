@@ -29,7 +29,7 @@
 | 出典確認 | `status` と `review.content` |
 | インドネシア語確認 | `review.languageId` |
 | 表示レベル | `settings.preferredSupportLevel` |
-| 自動支援 | `settings.automaticSupport` と `studySupportMode` |
+| 支援方式 | `settings.studySupportMode` |
 | 既存利用履歴 | `usedFurigana` / `usedEasyJapanese` / `usedIndonesian` / `elapsedMs` / `reason` |
 
 新設が必要な場合も既存構造へ最小限追加する。パイロット問題のreviewでは `review.furigana`、`review.japaneseLearning`、`review.answerLeak`、日本語ポイントでは `learningSupport.languagePointKeys` を用いる。履歴では `openedKeywords`、`openedQuestionTranslation`、`openedChoiceTranslations`、`openedAnswerIndonesian` を用い、既存履歴の読み込み時は未定義を `false` とみなす。
@@ -49,10 +49,12 @@ Level 0は学習セッション用の「補助なし挑戦」であり、模擬�
 
 ## 4. 既存設定との対応
 
-- `guided`: 初期値はLevel 3。利用者が明示変更したレベルを尊重する。
-- `adaptive`: `automaticSupport=true` とし、習熟度・過去の誤答原因・補助利用に基づきLevel 0〜3を決める。
+- `guided`: `preferredSupportLevel` を固定Levelとして使用する。初期値はLevel 3で、利用者が明示変更したレベルを尊重する。
+- `adaptive`: `preferredSupportLevel` を参照せず、習熟度・過去の誤答原因・補助利用に基づきLevel 3→2→1→0を決める。自動支援を別checkboxでは持たず、このmode自体を自動支援の指定とする。
 - `japanese_only`: Level 0相当。ただし学習セッションなので採点後の解説は利用できる。
 - `mock`: 強制的に日本語のみ。保存済み設定、UI言語、現在レベルを参照して補助を復活させてはならない。
+
+旧stateの `automaticSupport`、`showFurigana`、`showEasyJapanese`、`showIndonesian` はmigration入力としてだけ読む。現行設定UIや保存stateの独立制御には使わず、最も近い `studySupportMode` とLevelへ変換する。
 
 自動支援は、補助を使った正解を「補助なしの正解」と同じ習得として扱わない。日本語不足で誤答した場合は知識不足と区別し、次回支援を強める判断材料にする。
 補助を使った正解では、同じ支援レベルで2回続けて正解したときだけ次のレベルへ進める。Level 3だけでLevel 1相当以上、Level 2だけでLevel 0相当まで習得したとは判定しない。

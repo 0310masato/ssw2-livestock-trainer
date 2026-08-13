@@ -43,10 +43,11 @@
 ## 5. セット開始前の準備
 
 1. PR #5のレビュー対象HEADを記録する。途中でHEADが変わった場合は、未確認差分を確認してから再開する。
-2. GitHub Actionsから内部レビュー用artifactを取得し、展開した `dist` または `standalone-review.html` を使用する。公開Pagesは使用・更新しない。
+2. GitHub Actionsから `temporary-pr-review-build-7d-pr-` で始まる期限付きPRレビューartifactを取得し、展開した `dist` または `standalone-review.html` を使用する。public repository上のartifactはアクセス制限ではなく、未確認翻訳を含む正式配布前の確認物である。公開Pagesは使用・更新しない。
 3. artifact名、HEAD、端末名、OS、ブラウザとバージョン、画面幅、確認日をレビュー記録へ残す。
 4. CSVを表計算ソフトで開き、`pilot_set` を対象セットへ、`schema_version` を `0.4.0` へ絞り込む。
 5. 出典担当だけが必要な公式PDFをローカルの `SSW2_SOURCE_DIR` から開く。PDFをartifact、レビュー共有ファイル、Git差分へ含めない。
+6. 学習履歴の競合を避けるため、レビュー中はアプリを一つのタブまたはウィンドウだけで開く。複数タブ対応は [Issue #6](https://github.com/0310masato/ssw2-livestock-trainer/issues/6) で追跡する。
 
 ## 6. 1問ごとのレビュー手順
 

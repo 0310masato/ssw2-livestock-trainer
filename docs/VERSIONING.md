@@ -10,7 +10,7 @@
 | 保存キー名の `v0.4` | `state-v0.4` / `livestock2-state-v0.4` | 既存端末データを見つけるための永続キー名。アプリ版ではない。 | migrationを用意して保存先を意図的に切り替えるときだけ |
 | 問題 `schemaVersion` | パイロット16問 `0.4.0`、残り64問 `0.3.0` | 問題1件ごとのデータ構造。`0.4.0` は新しい学習支援構造、`0.3.0` は従来構造。 | その問題を人手管理下で新構造へ変換するとき |
 | JSON Schema | `livestock2-question-v0.4.schema.json` | `0.3.0` と `0.4.0` の問題を同時検証するSchema定義版。 | 検証契約を変更するとき |
-| Service Worker cache | `livestock2-v0.5.0-pedagogy-review-ready` | 古いApp Shell cacheを破棄するための技術的識別子。レビューartifactのアプリ差分を既存cacheより優先する。 | 配布ファイルを更新し、既存cacheを確実に切り替えるとき |
+| Service Worker cache | `livestock2-v0.5.0-pr5-remediation` | 古いApp Shell cacheを破棄するための技術的識別子。PR #5是正後のレビューartifactを既存cacheより優先する。 | 配布ファイルを更新し、既存cacheを確実に切り替えるとき |
 | exportファイル名 | `..._v0.5.json` / `..._v0.5.csv` | 人が複数の出力を見分けるためのアプリ版ラベル。stateや問題Schemaの版ではない。 | アプリ版ラベルを更新するとき |
 | レポート見出し | `Alpha v0.5` | どのアプリ系列の検証スナップショットかを示す。 | 別のアプリ系列を検証するとき |
 

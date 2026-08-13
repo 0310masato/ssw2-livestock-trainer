@@ -6,9 +6,9 @@
   代表16問の人手レビュー・実機テスト準備
 
 すぐ確認する：
-  ・成功したPR CI Runから、名前がinternal-review-build-7d-で始まるartifactを取得する
+  ・成功したPR CI Runから、名前がtemporary-pr-review-build-7d-pr-で始まるartifactを取得する
   ・artifact内の standalone-review.html を開く
-  ・artifactは7日間保持の内部レビュー用で、公開版ではない
+  ・artifactはpublic repository上で7日間保持される一時確認物で、正式配布版ではない
 
 ローカルでPWAとして確認する：
   1. npm run build
@@ -20,11 +20,12 @@
 
 公式PDFを含む完全照合：
   ・許可済みローカル環境だけで SSW2_SOURCE_DIR を設定する
+  ・SSW2_SOURCE_DIR設定後に npm run verify:pdf を実行する
   ・GitHub CIではPDFハッシュ、ページ数、本文アンカーをSKIPする
   ・PDF自体はGitへ追加しない
 
 重要：
-  ・内部レビュー版です。
+  ・未確認翻訳を含む一時PRレビュー版です。
   ・代表16問だけが問題schemaVersion 0.4.0です。
   ・残り64問は0.3.0のままです。
   ・80問はsource_checkedで、approvedは0問です。
