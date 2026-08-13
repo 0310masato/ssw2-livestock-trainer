@@ -1,6 +1,6 @@
 name: Apply pedagogical Indonesian learning redesign
 
-# One-time feature-branch migration. Removed after verified generated files are committed.
+# One-time feature-branch migration. This run verifies the final deterministic browser interactions.
 on:
   push:
     branches:
