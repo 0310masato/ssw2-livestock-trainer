@@ -1,0 +1,60 @@
+name: Apply pedagogical Indonesian learning redesign
+
+on:
+  push:
+    branches:
+      - feat/pedagogical-indonesian-learning
+    paths:
+      - .github/workflows/apply-pedagogy.yml
+
+permissions:
+  contents: write
+
+jobs:
+  migrate-test-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/pedagogical-indonesian-learning
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install project dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Install one-time Japanese tokenizer
+        run: npm install --no-save --package-lock=false --no-audit --no-fund kuromoji
+
+      - name: Generate furigana and pedagogical question data
+        run: node scripts/apply_pedagogy_rework.mjs
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Build and run unit tests
+        run: npm test
+
+      - name: Install browser test runtime
+        run: |
+          python3 -m pip install --disable-pip-version-check playwright
+          python3 -m playwright install chromium
+
+      - name: Run mobile and desktop learning-flow checks
+        run: python3 e2e/smoke.py
+
+      - name: Commit verified redesign
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git restore .github/workflows
+          rm -f scripts/apply_pedagogy_rework.mjs
+          git add -A
+          git commit -m "feat: redesign as Indonesian Japanese-learning material"
+          git push origin HEAD:feat/pedagogical-indonesian-learning
