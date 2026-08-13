@@ -50,8 +50,10 @@ jobs:
           test -f dist/sw.js
           test -f dist/.nojekyll
           test -f dist/robots.txt
-          grep -q "Pelatih Peternakan Tingkat 2" dist/index.html
+          grep -q "Belajar Bahasa Jepang untuk Peternakan 2" dist/index.html
           grep -q "uiLanguage" dist/app.js
+          grep -q "studySupportMode" dist/app.js
+          grep -q "Baca soal bahasa Jepang" dist/app.js
 
       - name: Publish dist to gh-pages branch
         env:
