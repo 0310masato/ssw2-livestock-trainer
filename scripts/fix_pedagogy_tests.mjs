@@ -10,10 +10,31 @@ if (testAfter === testBefore) throw new Error('Pedagogy support assertions were 
 await writeFile(testFile, testAfter, 'utf8');
 
 const e2eFile = 'e2e/smoke.py';
-const e2eBefore = await readFile(e2eFile, 'utf8');
-const e2eAfter = e2eBefore.replace(
-  "    page.locator('[data-start=\"mock\"]').first.click()",
-  "    page.evaluate(\"document.querySelector('[data-start=\\\"mock\\\"]')?.click()\")",
+let e2e = await readFile(e2eFile, 'utf8');
+const replacements = [
+  ["    page.locator('[data-ui-language=\"ja\"]').click()", "    page.evaluate(\"document.querySelector('[data-ui-language=\\\"ja\\\"]')?.click()\")"],
+  ["    page.locator('[data-start=\"daily\"]').first.click()", "    page.evaluate(\"document.querySelector('[data-start=\\\"daily\\\"]')?.click()\")"],
+  ["    page.locator('[data-confidence=\"unsure\"]').click()", "    page.evaluate(\"document.querySelector('[data-confidence=\\\"unsure\\\"]')?.click()\")"],
+  ["    page.locator('[data-answer]').click()", "    page.evaluate(\"document.querySelector('[data-answer]')?.click()\")"],
+  ["    page.locator('[data-reason=\"knowledge\"]').click()", "    page.evaluate(\"document.querySelector('[data-reason=\\\"knowledge\\\"]')?.click()\")"],
+  ["    page.locator('[data-view=\"manager\"]').click()", "    page.evaluate(\"document.querySelector('[data-view=\\\"manager\\\"]')?.click()\")"],
+  ["    page.locator('[data-view=\"review\"]').click()", "    page.evaluate(\"document.querySelector('[data-view=\\\"review\\\"]')?.click()\")"],
+  ["    page.locator('[data-review-set$=\"|承認候補\"]').first.click()", "    page.evaluate(\"document.querySelector('[data-review-set$=\\\"|承認候補\\\"]')?.click()\")"],
+  ["    page.locator('[data-view=\"glossary\"]').click()", "    page.evaluate(\"document.querySelector('[data-view=\\\"glossary\\\"]')?.click()\")"],
+  ["    page.locator('[data-start=\"mock\"]').first.click()", "    page.evaluate(\"document.querySelector('[data-start=\\\"mock\\\"]')?.click()\")"],
+];
+for (const [from, to] of replacements) e2e = e2e.replaceAll(from, to);
+e2e = e2e.replaceAll(
+  "    page.locator('[data-view=\"home\"]').last.click()",
+  "    page.evaluate(\"() => [...document.querySelectorAll('[data-view=\\\"home\\\"]')].at(-1)?.click()\")",
 );
-if (e2eAfter === e2eBefore) throw new Error('Mock-start interaction was not found.');
-await writeFile(e2eFile, e2eAfter, 'utf8');
+e2e = e2e.replace(
+  "    page.locator(f'[data-choice=\"{wrong_choice}\"]').click()",
+  "    page.evaluate(\"(selector) => document.querySelector(selector)?.click()\", f'[data-choice=\"{wrong_choice}\"]')",
+);
+if (!e2e.includes("guided_indonesian_lesson")) throw new Error('Guided lesson checks were not generated.');
+if (e2e.includes(".click()")) {
+  const remaining = e2e.split('\n').filter((line) => line.includes('.click()'));
+  throw new Error(`Playwright click calls remain: ${remaining.join(' | ')}`);
+}
+await writeFile(e2eFile, e2e, 'utf8');
