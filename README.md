@@ -4,6 +4,8 @@
 
 このリポジトリは **v0.5.0 Alpha・学習支援パイロット版** です。代表16問だけを新しい日本語学習支援形式へ移行し、残り64問は従来形式のまま保持しています。搭載する80問は公式教材との根拠照合済みですが、インドネシア語ネイティブ確認と利用者最終承認前です。問題状態は `source_checked` のままで、正式な `approved` は0問です。
 
+アプリ版、学習state、問題Schema、Service Worker cacheは別々の互換性境界です。各番号の役割は [バージョン表記の役割](docs/VERSIONING.md) を参照してください。
+
 ## この版で動く機能
 
 - 今日の10問：復習、弱点、新規を組み合わせて出題
@@ -86,21 +88,39 @@ npm run test:e2e
 npm run verify
 ```
 
-`validate:content` は公式PDFのハッシュ、ページ数、根拠アンカーを確認します。既定値は `/mnt/data` です。別の保存場所を使う場合は、2ファイルを同じフォルダーに置いて `SSW2_SOURCE_DIR` を指定します（PDF自体はGitへ追加しません）。
+### GitHub CIの検査範囲
+
+GitHub CIには公式PDFを配置しません。Pull Requestと`main`へのpushでは次を検査します。
+
+- 生成データ同期、JSON Schema、件数、ID、参照整合、権利フラグ
+- 代表16問の必須翻訳、ふりがな、正答理由、不正解理由、出典、レビューゲート
+- TypeScript、ビルド、Node単体テスト
+- 学習支援Level 0〜3、保存、模試の日本語限定と終了後の言語復帰
+- Playwright 360px表示、横方向オーバーフロー、JavaScript page error
+- PWA配布ファイルと内部レビューartifact
+
+CI内の `validate:content` は、出典IDと台帳ページ範囲を検査します。ただし公式PDFバイナリがないため、次の2項目はレポート上で明示的に `SKIPPED` になります。
+
+- 公式PDFのハッシュとページ数
+- PDF本文を使う50件の根拠アンカー照合
+
+### 許可済みローカル環境のPDF検査
+
+上記2項目を含む完全照合は、公式PDF 2冊を同じフォルダーに置き、`SSW2_SOURCE_DIR` を設定したローカル環境だけで実行します。PDF自体はGitへ追加しません。PyMuPDFを利用でき、次のファイル名が必要です。
 
 ```text
-/mnt/data/技能測定試験（畜産農業）.pdf
-/mnt/data/衛生管理（畜産農業）.pdf
+<SSW2_SOURCE_DIR>/技能測定試験（畜産農業）.pdf
+<SSW2_SOURCE_DIR>/衛生管理（畜産農業）.pdf
 ```
 
 PowerShell例：
 
 ```powershell
 $env:SSW2_SOURCE_DIR = 'C:\controlled-source-review'
-npm run validate:content
+npm run verify
 ```
 
-GitHub CIでは著作権上PDFをリポジトリへ含めず、データ同期、構造、型、ビルド、学習ロジック、360px Playwright、模試の日本語限定、PWA構成を検査します。公式PDFとの完全照合は、許可されたローカル環境で実行します。
+`reports/VALIDATION_REPORT.json` の `anchorVerification.available=true`、`skipped=false`、`passed=50` を確認します。レポートの扱いと過去版の分離は [reports/README.md](reports/README.md) を参照してください。GitHub CIの成功証跡は、対象commitに紐づくActions Run URLです。
 
 ## ディレクトリ
 
@@ -126,23 +146,24 @@ dist/                配布可能なビルド
 
 ## 次の段階
 
-1. イカデさんによる20問テスト結果を反映
-2. インドネシア語ネイティブ確認
-3. 問題を `language_checked` へ昇格
-4. マサトさん最終承認後に `approved` へ昇格
-5. GitHub正本へ登録し、React＋Vite版または本構成の継続をADRで決定
-6. URL公開・Android／iPhone実機テスト
+1. Draft PR #5のCIと内部レビューartifactを確認
+2. 代表16問を4問×4セットで人手レビュー
+3. 代表16問の指摘と既存機能の回帰だけをPR #5内で修正
+4. Android／iPhoneで内部レビュー用実機テスト
+5. 結果を確認後、Phase 6を別途計画
 
-## GitHub正本とスマホ実機テスト
+この順序の詳細は [次段階の実施順序](docs/NEXT_PHASE.md) と [代表16問レビュー計画](docs/PILOT_REVIEW_PLAN.md) を参照してください。Phase 6開始、`approved` 昇格、Draft解除、merge、公開はそれぞれ別判断です。
 
-v0.4.1ではGitHub登録後の検証に必要なCI、手動Pages workflow、Android／iPhone手順を追加しています。
+## PRレビュー用ビルドとスマホ実機テスト
+
+Draft PR #5の成功したPull Request CI Runから、名前が `internal-review-build-7d-` で始まるActions artifactを取得できます。PR番号とRun attemptを含み、PR #5の初回実行なら `internal-review-build-7d-5-attempt-1` です。保持期間は7日間で、`main` push CIでは生成しません。
 
 - CI: `.github/workflows/ci.yml`
-- Pages（手動実行のみ）: `.github/workflows/pages.yml`
+- artifact: `dist`相当のビルド一式と `standalone-review.html`
 - 実機手順: `docs/SMARTPHONE_TEST.md`
-- 配信上の注意: `docs/DEPLOYMENT.md`
+- バージョン表記: `docs/VERSIONING.md`
 
-未承認問題の意図しない公開を防ぐため、Pagesはpushでは起動しません。`workflow_dispatch` を明示的に実行した場合だけ配信します。`robots.txt` と `noindex` は検索回避の補助であり、アクセス制限ではありません。
+artifactはGitHubへログインできる内部レビュアー向けの期限付き確認物です。正式な配布物、長期保管物、公開済み教材ではありません。`standalone-review.html` は単体表示確認に利用できますが、Service WorkerとPWAインストールの確認にはHTTP(S)配信が必要です。PR #5のレビューでは既存Pages、本番URL、一般公開ホストへ反映しません。
 
 ### 表示言語
 

@@ -4,9 +4,56 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import { randomUUID, webcrypto } from 'node:crypto';
 
+function createIndexedDbStub(records) {
+  let initialized = false;
+  const clone = (value) => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+  return {
+    open() {
+      const request = {};
+      queueMicrotask(() => {
+        const database = {
+          objectStoreNames: { contains: () => initialized },
+          createObjectStore: () => { initialized = true; },
+          close: () => {},
+          transaction: () => {
+            const transaction = {};
+            transaction.objectStore = () => ({
+              get: (key) => {
+                const getRequest = {};
+                queueMicrotask(() => {
+                  getRequest.result = clone(records.get(key));
+                  getRequest.onsuccess?.();
+                  queueMicrotask(() => transaction.oncomplete?.());
+                });
+                return getRequest;
+              },
+              put: (value, key) => {
+                // Make revision 1 slower so this test detects unordered writes:
+                // without the production write queue, revision 1 would win last.
+                const delay = value.revision === 1 ? 10 : 0;
+                setTimeout(() => {
+                  records.set(key, clone(value));
+                  transaction.oncomplete?.();
+                }, delay);
+              },
+            });
+            return transaction;
+          },
+        };
+        request.result = database;
+        if (!initialized) request.onupgradeneeded?.();
+        request.onsuccess?.();
+      });
+      return request;
+    },
+  };
+}
+
 async function loadApp() {
   const source = await readFile(new URL('../build/app.js', import.meta.url), 'utf8');
   const storage = new Map();
+  const indexedDbRecords = new Map();
+  const indexedDB = createIndexedDbStub(indexedDbRecords);
   const noop = () => {};
   const windowStub = {
     addEventListener: noop,
@@ -16,6 +63,7 @@ async function loadApp() {
     scrollTo: noop,
     confirm: () => true,
     prompt: () => null,
+    indexedDB,
   };
   const sandbox = {
     console,
@@ -47,6 +95,7 @@ async function loadApp() {
     performance: { now: () => 1000 },
     navigator: { onLine: true },
     location: { protocol: 'http:' },
+    indexedDB,
     window: windowStub,
     document: {
       addEventListener: noop,
@@ -65,10 +114,10 @@ async function loadApp() {
   windowStub.document = sandbox.document;
   vm.createContext(sandbox);
   vm.runInContext(source, sandbox, { filename: 'app.js' });
-  return sandbox.LivestockApp;
+  return { app: sandbox.LivestockApp, indexedDbRecords };
 }
 
-const app = await loadApp();
+const { app, indexedDbRecords } = await loadApp();
 
 test('internal review build exposes all 80 source-checked questions', () => {
   const state = app.defaultState();
@@ -316,10 +365,44 @@ test('older history imports gain explicit support-usage and gap fields', () => {
   assert.equal(entry.retryOfHistoryId, null);
 });
 
-test('save revisions state before asynchronous IndexedDB persistence', async () => {
+test('legacy state migrates to the current schema without losing progress or review state', () => {
+  const migrated = app.validateImportedState({
+    schemaVersion: '0.4.0',
+    revision: 12,
+    updatedAt: '2026-08-10T00:00:00.000Z',
+    mastery: {
+      q001: {
+        questionId: 'q001', factIds: ['fact-001'], stage: 2, attempts: 3, correct: 2,
+        dueAt: '2026-08-20T00:00:00.000Z', lastAnsweredAt: '2026-08-10T00:00:00.000Z',
+        lastCorrect: true, lastSupportLevel: 2,
+      },
+    },
+    reviews: { q001: { content: 'pass' } },
+    settings: { uiLanguage: 'ja' },
+    lastSessionQuestionIds: ['q001'],
+  });
+
+  assert.equal(migrated.schemaVersion, '0.6.0');
+  assert.equal(migrated.revision, 12);
+  assert.equal(migrated.mastery.q001.stage, 2);
+  assert.equal(migrated.mastery.q001.dueAt, '2026-08-20T00:00:00.000Z');
+  assert.equal(migrated.reviews.q001.content, 'pass');
+  assert.equal(migrated.settings.uiLanguage, 'ja');
+  assert.deepEqual(Array.from(migrated.lastSessionQuestionIds), ['q001']);
+});
+
+test('consecutive saves retain the newest revision in IndexedDB and fallback persistence', async () => {
   const state = app.defaultState();
-  const pending = app.saveState(state);
-  assert.equal(state.revision, 1);
+  const firstSave = app.saveState(state);
+  state.settings.uiLanguage = 'ja';
+  const secondSave = app.saveState(state);
+  assert.equal(state.revision, 2);
   assert.ok(Date.parse(state.updatedAt) > 0);
-  await pending;
+  await Promise.all([firstSave, secondSave]);
+
+  assert.equal(indexedDbRecords.get('state-v0.4').revision, 2);
+  assert.equal(indexedDbRecords.get('state-v0.4').settings.uiLanguage, 'ja');
+  const loaded = await app.loadState();
+  assert.equal(loaded.revision, 2);
+  assert.equal(loaded.settings.uiLanguage, 'ja');
 });

@@ -1,5 +1,14 @@
 {
   "generatedAt": "2026-08-13",
+  "reportKind": "canonical-generated-summary",
+  "executionScope": {
+    "name": "local-controlled-source-review",
+    "githubActions": false,
+    "sourceDirConfigured": true,
+    "officialPdfsAvailable": true,
+    "githubCiPolicy": "Standard PR CI validates repository data and code but skips PDF binary hashes, page counts, and text anchors because official PDFs are not stored in Git.",
+    "localPdfPolicy": "Set SSW2_SOURCE_DIR to the controlled folder containing both official PDFs to run binary hash, page-count, and text-anchor checks."
+  },
   "overall": "PASS",
   "releaseMeaning": "PASS means the Alpha v0.5 pack passed structural, pedagogical, rights, and available source checks. A skipped PDF check is reported explicitly and PASS never means public-use approval.",
   "counts": {
@@ -74,7 +83,45 @@
       "q078",
       "q079",
       "q080"
-    ]
+    ],
+    "reviewStates": {
+      "content": {
+        "pass": 16
+      },
+      "languageJa": {
+        "pass": 16
+      },
+      "languageId": {
+        "pending_native_review": 16
+      },
+      "furigana": {
+        "pending": 16
+      },
+      "japaneseLearning": {
+        "pending": 16
+      },
+      "answerLeak": {
+        "pending": 16
+      },
+      "legalRights": {
+        "pass": 16
+      },
+      "approvalByUser": {
+        "pending": 16
+      }
+    },
+    "deviceReviewStates": {
+      "pending": 16
+    },
+    "pendingGates": {
+      "nativeIndonesian": 16,
+      "furigana": 16,
+      "japaneseLearning": 16,
+      "answerLeak": 16,
+      "userApproval": 16,
+      "deviceReview": 16,
+      "total": 96
+    }
   },
   "anchorVerification": {
     "available": true,
@@ -131,7 +178,7 @@
       "detail": "[]"
     },
     {
-      "name": "All source documents and PDF pages exist",
+      "name": "All source IDs and ledger page ranges resolve",
       "pass": true,
       "detail": "[]"
     },
@@ -161,9 +208,24 @@
       "detail": "[]"
     },
     {
-      "name": "Representative v0.4 pilot count",
+      "name": "Representative question-schema 0.4 pilot count",
       "pass": true,
       "detail": "16 / 16"
+    },
+    {
+      "name": "Review checklist has one row for each of the 80 questions",
+      "pass": true,
+      "detail": "rows=80, duplicates=[], idDiff=[]"
+    },
+    {
+      "name": "Review checklist canonical fields match question data",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot review checklist exposes four 4-question sets, source metadata, device status, and correction notes",
+      "pass": true,
+      "detail": "sets={'A': 4, 'C': 4, 'D': 4, 'B': 4}, nonpilotSets=[], metadata=[]"
     },
     {
       "name": "Pilot required translations are populated",

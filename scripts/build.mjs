@@ -77,7 +77,7 @@ const manifest = {
 };
 await writeFile(resolve(distDir, 'manifest.webmanifest'), JSON.stringify(manifest, null, 2));
 
-const cacheVersion = 'livestock2-v0.5.0-pedagogical-learning';
+const cacheVersion = 'livestock2-v0.5.0-pedagogy-review-ready';
 const cacheFiles = [
   './', './index.html', './styles.css', './app.js', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './apple-touch-icon.png',

@@ -458,7 +458,7 @@ namespace LivestockApp {
   }
 
   function exportProgress(): void {
-    downloadText('畜産2号トレーナー_学習データ_v0.4.json', JSON.stringify({ exportedAt: nowIso(), appVersion: APP_VERSION, state: runtime.state }, null, 2));
+    downloadText('畜産2号トレーナー_学習データ_v0.5.json', JSON.stringify({ exportedAt: nowIso(), appVersion: APP_VERSION, state: runtime.state }, null, 2));
   }
 
   function exportProgressCsv(): void {
@@ -486,7 +486,7 @@ namespace LivestockApp {
       entry.japaneseGap,
       entry.isRetryWithoutSupport,
     ]);
-    downloadText('畜産2号トレーナー_学習履歴_v0.4.csv', '\uFEFF' + [header, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n'), 'text/csv');
+    downloadText('畜産2号トレーナー_学習履歴_v0.5.csv', '\uFEFF' + [header, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n'), 'text/csv');
   }
 
   function exportReviews(): void {
@@ -500,7 +500,7 @@ namespace LivestockApp {
       printedPage: question.source.printedPageLabel,
       questionJa: question.question.ja,
     }));
-    downloadText('畜産2号トレーナー_80問レビュー_v0.4.json', JSON.stringify(records, null, 2));
+    downloadText('畜産2号トレーナー_80問レビュー_v0.5.json', JSON.stringify(records, null, 2));
   }
 
   async function importProgress(file: File): Promise<void> {

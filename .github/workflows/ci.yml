@@ -56,3 +56,16 @@ jobs:
           test -f dist/sw.js
           test -f dist/.nojekyll
           test -f dist/robots.txt
+          test -f dist/standalone-review.html
+          test -z "$(find dist -type f -iname '*.pdf' -print -quit)"
+
+      # Internal review only: this expiring artifact is not deployed to Pages.
+      - name: Upload 7-day internal review build
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: internal-review-build-7d-${{ github.event.pull_request.number || github.run_id }}-attempt-${{ github.run_attempt }}
+          path: dist/
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 7

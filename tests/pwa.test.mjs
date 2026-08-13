@@ -21,6 +21,7 @@ test('web app manifest is installable and icons exist', async () => {
 
 test('service worker caches the complete app shell', async () => {
   const serviceWorker = await readFile(resolve(dist, 'sw.js'), 'utf8');
+  assert.match(serviceWorker, /livestock2-v0\.5\.0-pedagogy-review-ready/);
   for (const required of ['index.html', 'styles.css', 'app.js', 'manifest.webmanifest', 'chick-guard.svg']) {
     assert.match(serviceWorker, new RegExp(required.replace('.', '\\.')));
   }
@@ -30,10 +31,14 @@ test('service worker caches the complete app shell', async () => {
 
 test('standalone review build contains code, styles, and embedded visual assets', async () => {
   const html = await readFile(resolve(dist, 'standalone-review.html'), 'utf8');
+  assert.match(html, /<style>[^<]+/);
+  assert.match(html, /<script>window\.__ASSET_DATA__/);
+  assert.match(html, /<script>[^<]*namespace LivestockApp|sourceURL=livestock2-app\.js/);
   assert.match(html, /window\.__ASSET_DATA__/);
   assert.match(html, /畜産2号トレーナー/);
   assert.match(html, /chick-guard/);
   assert.doesNotMatch(html, /https:\/\/cdn\./);
+  assert.doesNotMatch(html, /(?:src|href)=["'][^"']+\.(?:js|css)["']/);
 });
 
 test('review deployment discourages indexing and bypasses Jekyll', async () => {
@@ -56,4 +61,8 @@ test('compiled application contains persistent bilingual UI support', async () =
   assert.match(app, /studySupportMode/);
   assert.match(app, /japanese-only-card/);
   assert.match(app, /renderJapaneseOnlyQuestionCard/);
+  assert.match(app, /畜産2号トレーナー_学習データ_v0\.5\.json/);
+  assert.match(app, /畜産2号トレーナー_学習履歴_v0\.5\.csv/);
+  assert.match(app, /畜産2号トレーナー_80問レビュー_v0\.5\.json/);
+  assert.doesNotMatch(app, /畜産2号トレーナー_[^'"\\n]+_v0\.4\.(?:json|csv)/);
 });

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import hashlib
 import json
 import os
@@ -27,14 +28,26 @@ FACTS = json.loads((DATA / 'source-facts.json').read_text(encoding='utf-8'))
 GLOSSARY = json.loads((DATA / 'glossary-ja-id.json').read_text(encoding='utf-8'))
 SCHEMA = json.loads((DATA / 'question.schema.json').read_text(encoding='utf-8'))
 LEDGER = json.loads((DATA / 'source-ledger.json').read_text(encoding='utf-8'))
+with (DATA / 'review-checklist.csv').open(encoding='utf-8', newline='') as review_file:
+    REVIEW_READER = csv.DictReader(review_file)
+    REVIEW_FIELDNAMES = REVIEW_READER.fieldnames or []
+    REVIEW_ROWS = list(REVIEW_READER)
 
 SOURCE_DIR = pathlib.Path(os.environ.get('SSW2_SOURCE_DIR', '/mnt/data'))
+RUNNING_IN_GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS') == 'true'
+SOURCE_DIR_CONFIGURED = bool(os.environ.get('SSW2_SOURCE_DIR'))
 PDFS = {
     'livestock-textbook-2023-09': SOURCE_DIR / '技能測定試験（畜産農業）.pdf',
     'safety-textbook-2023-09': SOURCE_DIR / '衛生管理（畜産農業）.pdf',
 }
 LEDGER_BY_ID = {doc['sourceId']: doc for doc in LEDGER.get('officialDocuments', [])}
 SOURCE_PDFS_AVAILABLE = fitz is not None and all(path.exists() for path in PDFS.values())
+if SOURCE_PDFS_AVAILABLE:
+    EXECUTION_SCOPE = 'local-controlled-source-review'
+elif RUNNING_IN_GITHUB_ACTIONS:
+    EXECUTION_SCOPE = 'github-ci-without-official-pdfs'
+else:
+    EXECUTION_SCOPE = 'local-structural-validation-without-official-pdfs'
 ASSET_DIR = ROOT / 'public' / 'assets'
 
 
@@ -231,16 +244,81 @@ for q in QUESTIONS:
         if not aid or not (ASSET_DIR / f'{aid}.svg').exists():
             missing_assets.append((q['id'], aid))
 
+question_by_id = {q['id']: q for q in QUESTIONS}
+review_ids = [row.get('question_id', '') for row in REVIEW_ROWS]
+review_duplicate_ids = sorted(qid for qid, count in Counter(review_ids).items() if count > 1)
+review_missing_or_extra_ids = sorted(set(question_by_id) ^ set(review_ids))
+review_field_mismatches = []
+review_column_map = {
+    'schema_version': lambda q: q.get('schemaVersion'),
+    'category': lambda q: q.get('category'),
+    'topic': lambda q: q.get('topic'),
+    'status': lambda q: q.get('status'),
+    'source_id': lambda q: q.get('source', {}).get('sourceId'),
+    'pdf_page': lambda q: q.get('source', {}).get('pdfPage'),
+    'printed_page': lambda q: q.get('source', {}).get('printedPageLabel'),
+    'content_review': lambda q: q.get('review', {}).get('content'),
+    'japanese_review': lambda q: q.get('review', {}).get('languageJa'),
+    'indonesian_review': lambda q: q.get('review', {}).get('languageId'),
+    'furigana_review': lambda q: q.get('review', {}).get('furigana'),
+    'japanese_learning_review': lambda q: q.get('review', {}).get('japaneseLearning'),
+    'answer_leak_review': lambda q: q.get('review', {}).get('answerLeak'),
+    'rights_review': lambda q: q.get('review', {}).get('legalRights'),
+    'user_approval': lambda q: q.get('review', {}).get('approvalByUser'),
+    'language_point_keys': lambda q: '|'.join(q.get('learningSupport', {}).get('languagePointKeys', [])),
+    'question_ja': lambda q: q.get('question', {}).get('ja'),
+    'notes': lambda q: q.get('review', {}).get('notes'),
+}
+for row in REVIEW_ROWS:
+    q = question_by_id.get(row.get('question_id'))
+    if not q:
+        continue
+    for column, expected_value in review_column_map.items():
+        expected = expected_value(q)
+        if (row.get(column) or '') != ('' if expected is None else str(expected)):
+            review_field_mismatches.append((q['id'], column))
+
+required_human_review_columns = {
+    'pilot_set', 'source_title', 'source_edition', 'source_section',
+    'current_reviewer_type', 'current_reviewed_at', 'device_review', 'correction_notes',
+}
+pilot_review_rows = [row for row in REVIEW_ROWS if row.get('question_id') in pilot_ids]
+pilot_set_counts = Counter(row.get('pilot_set') for row in pilot_review_rows)
+nonpilot_assigned_sets = sorted(
+    row.get('question_id') for row in REVIEW_ROWS
+    if row.get('question_id') not in pilot_ids and row.get('pilot_set')
+)
+pilot_review_metadata_missing = []
+for row in pilot_review_rows:
+    q = question_by_id[row['question_id']]
+    source = q.get('source', {})
+    review = q.get('review', {})
+    expected_metadata = {
+        'source_title': source.get('documentTitle'),
+        'source_edition': source.get('edition'),
+        'source_section': source.get('section'),
+        'current_reviewer_type': review.get('reviewerType'),
+        'current_reviewed_at': review.get('reviewedAt'),
+    }
+    for column, expected in expected_metadata.items():
+        if (row.get(column) or '') != ('' if expected is None else str(expected)):
+            pilot_review_metadata_missing.append((q['id'], column))
+    if row.get('device_review') not in {'pending', 'pass', 'fail'}:
+        pilot_review_metadata_missing.append((q['id'], 'device_review'))
+
 checks += [
     check(not missing_refs, 'All question-to-fact references resolve', str(missing_refs[:10])),
     check(not bad_correct, 'Every correctChoiceId exists', str(bad_correct[:10])),
-    check(not bad_sources, 'All source documents and PDF pages exist', str(bad_sources[:10])),
+    check(not bad_sources, 'All source IDs and ledger page ranges resolve', str(bad_sources[:10])),
     check(not bad_rights, 'Rights flags prohibit official/competitor reuse', str(bad_rights[:10])),
     check(not bad_status, 'All questions remain source_checked (not auto-approved)', str(bad_status[:10])),
     check(not bad_language, 'All multilingual fields are populated', str(bad_language[:10])),
     check(not bad_pedagogy, 'All questions include ruby and pedagogical support', str(bad_pedagogy[:10])),
     check(not missing_assets, 'All declared original visual assets exist', str(missing_assets[:10])),
-    check(len(pilot_ids) == 16, 'Representative v0.4 pilot count', f'{len(pilot_ids)} / 16'),
+    check(len(pilot_ids) == 16, 'Representative question-schema 0.4 pilot count', f'{len(pilot_ids)} / 16'),
+    check(len(REVIEW_ROWS) == len(QUESTIONS) and not review_duplicate_ids and not review_missing_or_extra_ids, 'Review checklist has one row for each of the 80 questions', f'rows={len(REVIEW_ROWS)}, duplicates={review_duplicate_ids[:10]}, idDiff={review_missing_or_extra_ids[:10]}'),
+    check(not review_field_mismatches, 'Review checklist canonical fields match question data', str(review_field_mismatches[:10])),
+    check(required_human_review_columns.issubset(REVIEW_FIELDNAMES) and pilot_set_counts == Counter({'A': 4, 'B': 4, 'C': 4, 'D': 4}) and not nonpilot_assigned_sets and not pilot_review_metadata_missing, 'Pilot review checklist exposes four 4-question sets, source metadata, device status, and correction notes', f'sets={dict(pilot_set_counts)}, nonpilotSets={nonpilot_assigned_sets[:10]}, metadata={pilot_review_metadata_missing[:10]}'),
     check(not pilot_missing_translation, 'Pilot required translations are populated', str(pilot_missing_translation[:10])),
     check(not pilot_missing_furigana, 'Pilot kanji ruby segments have readings', str(pilot_missing_furigana[:10])),
     check(not pilot_missing_correct_reason, 'Pilot correct-answer reasons are populated', str(pilot_missing_correct_reason[:10])),
@@ -303,17 +381,27 @@ if SOURCE_PDFS_AVAILABLE:
     ))
     issues.extend({'type': 'anchor', **item} for item in anchor_failures)
 else:
+    binary_skip_detail = (
+        'SKIPPED in GitHub CI: official PDFs are intentionally not stored in Git; source IDs and ledger page ranges were checked.'
+        if RUNNING_IN_GITHUB_ACTIONS
+        else 'SKIPPED in this local run: official PDFs were unavailable. Set SSW2_SOURCE_DIR to the controlled folder containing both PDFs.'
+    )
+    anchor_skip_detail = (
+        f'SKIPPED in GitHub CI: {anchor_total} anchored facts require official PDFs that are intentionally not stored in Git.'
+        if RUNNING_IN_GITHUB_ACTIONS
+        else f'SKIPPED in this local run: {anchor_total} anchored facts require both official PDFs under SSW2_SOURCE_DIR.'
+    )
     checks.append({
         'name': 'Official-source binary verification',
         'pass': True,
-        'detail': 'SKIPPED: official PDFs are not mounted in this CI environment; source IDs and page ranges were checked against source-ledger.json.',
+        'detail': binary_skip_detail,
         'warning': True,
         'skipped': True,
     })
     checks.append({
         'name': 'Automated PDF anchor verification',
         'pass': True,
-        'detail': f'SKIPPED: {anchor_total} anchored facts require the mounted official PDFs. Run npm run validate:content in the controlled source-review environment for full verification.',
+        'detail': anchor_skip_detail,
         'warning': True,
         'skipped': True,
     })
@@ -340,6 +428,20 @@ status_counts = Counter(q['status'] for q in QUESTIONS)
 category_counts = Counter(q['category'] for q in QUESTIONS)
 fact_subject_counts = Counter(f['subject'] for f in FACTS)
 review_counts = Counter(q.get('review', {}).get('languageId', 'missing') for q in QUESTIONS)
+pilot_questions = [q for q in QUESTIONS if q['id'] in pilot_ids]
+pilot_review_states = {
+    key: dict(Counter(q.get('review', {}).get(key, 'missing') for q in pilot_questions))
+    for key in ('content', 'languageJa', 'languageId', 'furigana', 'japaneseLearning', 'answerLeak', 'legalRights', 'approvalByUser')
+}
+pilot_device_review_states = dict(Counter(row.get('device_review', 'missing') or 'missing' for row in pilot_review_rows))
+pilot_pending_gate_counts = {
+    'nativeIndonesian': pilot_review_states['languageId'].get('pending_native_review', 0),
+    'furigana': pilot_review_states['furigana'].get('pending', 0),
+    'japaneseLearning': pilot_review_states['japaneseLearning'].get('pending', 0),
+    'answerLeak': pilot_review_states['answerLeak'].get('pending', 0),
+    'userApproval': pilot_review_states['approvalByUser'].get('pending', 0),
+    'deviceReview': pilot_device_review_states.get('pending', 0),
+}
 checks.append({
     'name': 'Pilot native-Indonesian review queue',
     'pass': True,
@@ -350,6 +452,15 @@ all_pass = all(c['pass'] for c in checks if c['name'] != 'Near-duplicate review 
 
 report = {
     'generatedAt': '2026-08-13',
+    'reportKind': 'canonical-generated-summary',
+    'executionScope': {
+        'name': EXECUTION_SCOPE,
+        'githubActions': RUNNING_IN_GITHUB_ACTIONS,
+        'sourceDirConfigured': SOURCE_DIR_CONFIGURED,
+        'officialPdfsAvailable': SOURCE_PDFS_AVAILABLE,
+        'githubCiPolicy': 'Standard PR CI validates repository data and code but skips PDF binary hashes, page counts, and text anchors because official PDFs are not stored in Git.',
+        'localPdfPolicy': 'Set SSW2_SOURCE_DIR to the controlled folder containing both official PDFs to run binary hash, page-count, and text-anchor checks.',
+    },
     'overall': 'PASS' if all_pass else 'FAIL',
     'releaseMeaning': 'PASS means the Alpha v0.5 pack passed structural, pedagogical, rights, and available source checks. A skipped PDF check is reported explicitly and PASS never means public-use approval.',
     'counts': {'facts': len(FACTS), 'questions': len(QUESTIONS), 'glossary': len(GLOSSARY), 'visualAssets': len(list(ASSET_DIR.glob('*.svg')))},
@@ -362,6 +473,9 @@ report = {
         'count': len(pilot_ids),
         'nativeIndonesianUnchecked': len(pilot_native_unchecked),
         'nativeIndonesianUncheckedIds': sorted(pilot_native_unchecked),
+        'reviewStates': pilot_review_states,
+        'deviceReviewStates': pilot_device_review_states,
+        'pendingGates': {**pilot_pending_gate_counts, 'total': sum(pilot_pending_gate_counts.values())},
     },
     'anchorVerification': {'available': SOURCE_PDFS_AVAILABLE, 'skipped': anchor_skipped, 'anchoredFacts': anchor_total, 'passed': anchor_pass, 'failed': len(anchor_failures), 'legacyManualPageReferences': manual_page_refs},
     'checks': checks,
@@ -380,7 +494,13 @@ report = {
 lines = [
     '# Alpha v0.5 Content Validation Report', '',
     f"**Overall: {report['overall']}**", '',
-    '> PASSは構造・参照・権利フラグ・自動検査が通ったことを示します。公開用approvedを意味しません。', '',
+    '> このファイルは再生成可能な正本サマリーです。GitHub Actionsの実行ログやartifact一覧そのものではありません。', '',
+    '> PASSは構造・参照・権利フラグ・この実行範囲で利用可能な自動検査が通ったことを示します。公開用approvedを意味しません。', '',
+    '## Verification scope', '',
+    f"- Current report scope: `{EXECUTION_SCOPE}`",
+    f"- Official PDFs available in this run: {'yes' if SOURCE_PDFS_AVAILABLE else 'no'}",
+    '- GitHub PR CI: リポジトリ内のデータ同期、Schema、型、単体テスト、E2E、ビルドを検査します。公式PDFをGitへ保存しないため、標準CIではPDFバイナリのSHA-256、ページ数、本文アンカー照合をSKIPします。',
+    '- Controlled local review: `SSW2_SOURCE_DIR` に公式PDF 2冊を配置した場合だけ、PDFのSHA-256、ページ数、本文アンカー照合を追加実行します。', '',
     '## Counts', '',
     f"- Knowledge cards: {len(FACTS)}", f"- Questions: {len(QUESTIONS)}", f"- Glossary: {len(GLOSSARY)}", f"- Original SVG assets: {report['counts']['visualAssets']}", '',
     '## Checks', '',
@@ -392,7 +512,20 @@ for c in checks:
 lines += ['', '## Coverage', '']
 for k, v in sorted(category_counts.items()):
     lines.append(f'- {k}: {v}問')
-lines += ['', '## Approval Gate', '', '- source_checked: 80', '- approved: 0', '- インドネシア語ネイティブ確認: 0/80', '- 残り: ネイティブ確認、利用者操作テスト、マサトさん最終承認', '']
+lines += [
+    '', '## Approval Gate', '',
+    f"- source_checked: {report['approvalGate']['sourceChecked']}",
+    f"- approved: {report['approvalGate']['approved']}",
+    f"- インドネシア語ネイティブ確認: {report['approvalGate']['nativeIndonesianReviewed']}/{len(QUESTIONS)}",
+    f"- 代表16問の review.languageId 未確認: {pilot_review_states['languageId'].get('pending_native_review', 0)}",
+    f"- 代表16問の review.furigana 未確認: {pilot_review_states['furigana'].get('pending', 0)}",
+    f"- 代表16問の review.japaneseLearning 未確認: {pilot_review_states['japaneseLearning'].get('pending', 0)}",
+    f"- 代表16問の review.answerLeak 未確認: {pilot_review_states['answerLeak'].get('pending', 0)}",
+    f"- 代表16問の review.approvalByUser 未確認: {pilot_review_states['approvalByUser'].get('pending', 0)}",
+    f"- 代表16問の device_review 未確認: {pilot_device_review_states.get('pending', 0)}",
+    f"- 代表16問の未確認ゲート記録合計: {sum(pilot_pending_gate_counts.values())}",
+    '- 残り: 代表16問の人手レビュー、実機テスト、マサトさん最終承認', ''
+]
 if near_dupes:
     lines += ['## Near-duplicate review queue', '']
     lines += [f"- {x['q1']} / {x['q2']}: {x['ratio']}" for x in near_dupes]
