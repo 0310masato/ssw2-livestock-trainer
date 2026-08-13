@@ -9,9 +9,10 @@
 ## Verification scope
 
 - Current report scope: `local-controlled-source-review`
-- Official PDFs available in this run: yes
+- Required PDF verification enabled in this run: yes
+- Official PDFs available to required verification: yes
 - GitHub PR CI: リポジトリ内のデータ同期、Schema、型、単体テスト、E2E、ビルドを検査します。公式PDFをGitへ保存しないため、標準CIではPDFバイナリのSHA-256、ページ数、本文アンカー照合をSKIPします。
-- Controlled local review: `SSW2_SOURCE_DIR` に公式PDF 2冊を配置した場合だけ、PDFのSHA-256、ページ数、本文アンカー照合を追加実行します。
+- Controlled local review: `SSW2_SOURCE_DIR` を明示した場合、または `npm run validate:content:pdf` を実行した場合、PDFのSHA-256、ページ数、本文アンカー照合を必須検査として実行します。PDF不足はFAILです。
 
 ## Counts
 
@@ -23,6 +24,7 @@
 ## Checks
 
 - **PASS** — JSON Schema validation: 0 error(s)
+- **PASS** — Approved gate rejects every incomplete human-review condition: []
 - **PASS** — Knowledge-card count: 100 / 100
 - **PASS** — Alpha-question count: 80 / 80
 - **PASS** — Glossary count: 63 / 63
@@ -34,6 +36,7 @@
 - **PASS** — All source IDs and ledger page ranges resolve: []
 - **PASS** — Rights flags prohibit official/competitor reuse: []
 - **PASS** — All questions remain source_checked (not auto-approved): []
+- **PASS** — Approved questions satisfy every automated and human review gate: []
 - **PASS** — All multilingual fields are populated: []
 - **PASS** — All questions include ruby and pedagogical support: []
 - **PASS** — All declared original visual assets exist: []

@@ -426,6 +426,48 @@
           }
         }
       }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "approved"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "prototypeOnly": {
+            "const": false
+          },
+          "review": {
+            "required": [
+              "furigana",
+              "japaneseLearning",
+              "answerLeak"
+            ],
+            "properties": {
+              "content": { "const": "pass" },
+              "languageJa": { "const": "pass" },
+              "languageId": { "const": "pass" },
+              "legalRights": { "const": "pass" },
+              "furigana": { "const": "pass" },
+              "japaneseLearning": { "const": "pass" },
+              "answerLeak": { "const": "pass" },
+              "approvalByUser": { "const": "approved" },
+              "reviewedAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
     }
   ],
   "$defs": {

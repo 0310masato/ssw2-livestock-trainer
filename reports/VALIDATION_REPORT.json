@@ -5,9 +5,11 @@
     "name": "local-controlled-source-review",
     "githubActions": false,
     "sourceDirConfigured": true,
+    "pdfVerificationRequired": true,
+    "officialPdfsPresent": true,
     "officialPdfsAvailable": true,
     "githubCiPolicy": "Standard PR CI validates repository data and code but skips PDF binary hashes, page counts, and text anchors because official PDFs are not stored in Git.",
-    "localPdfPolicy": "Set SSW2_SOURCE_DIR to the controlled folder containing both official PDFs to run binary hash, page-count, and text-anchor checks."
+    "localPdfPolicy": "Set SSW2_SOURCE_DIR to the controlled folder containing both official PDFs and run validate:content:pdf (or --require-pdfs) to require binary hash, page-count, and text-anchor checks."
   },
   "overall": "PASS",
   "releaseMeaning": "PASS means the Alpha v0.5 pack passed structural, pedagogical, rights, and available source checks. A skipped PDF check is reported explicitly and PASS never means public-use approval.",
@@ -124,6 +126,7 @@
     }
   },
   "anchorVerification": {
+    "required": true,
     "available": true,
     "skipped": false,
     "anchoredFacts": 50,
@@ -136,6 +139,11 @@
       "name": "JSON Schema validation",
       "pass": true,
       "detail": "0 error(s)"
+    },
+    {
+      "name": "Approved gate rejects every incomplete human-review condition",
+      "pass": true,
+      "detail": "[]"
     },
     {
       "name": "Knowledge-card count",
@@ -189,6 +197,11 @@
     },
     {
       "name": "All questions remain source_checked (not auto-approved)",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Approved questions satisfy every automated and human review gate",
       "pass": true,
       "detail": "[]"
     },

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import csv
-import hashlib
+import argparse
 import json
 import os
 import pathlib
@@ -9,6 +9,7 @@ import re
 import sys
 import unicodedata
 from collections import Counter
+from datetime import datetime
 from difflib import SequenceMatcher
 
 try:
@@ -16,11 +17,26 @@ try:
 except ModuleNotFoundError:
     fitz = None
 
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, FormatChecker
+from content_validation_helpers import verify_pdf_documents
+
+
+ARG_PARSER = argparse.ArgumentParser(description='Validate canonical livestock trainer content.')
+ARG_PARSER.add_argument(
+    '--require-pdfs',
+    action='store_true',
+    help='Require both controlled official PDFs and run hash, page-count, and anchor verification.',
+)
+ARG_PARSER.add_argument(
+    '--report-dir',
+    type=pathlib.Path,
+    help='Write generated validation reports to this directory (primarily for isolated tests).',
+)
+ARGS = ARG_PARSER.parse_args()
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DATA = ROOT / 'public'
-REPORTS = ROOT / 'reports'
+REPORTS = ARGS.report_dir.resolve() if ARGS.report_dir else ROOT / 'reports'
 REPORTS.mkdir(exist_ok=True, parents=True)
 
 QUESTIONS = json.loads((DATA / 'questions-alpha-80.json').read_text(encoding='utf-8'))
@@ -36,14 +52,18 @@ with (DATA / 'review-checklist.csv').open(encoding='utf-8', newline='') as revie
 SOURCE_DIR = pathlib.Path(os.environ.get('SSW2_SOURCE_DIR', '/mnt/data'))
 RUNNING_IN_GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS') == 'true'
 SOURCE_DIR_CONFIGURED = bool(os.environ.get('SSW2_SOURCE_DIR'))
+PDF_VERIFICATION_REQUIRED = ARGS.require_pdfs or SOURCE_DIR_CONFIGURED
 PDFS = {
     'livestock-textbook-2023-09': SOURCE_DIR / '技能測定試験（畜産農業）.pdf',
     'safety-textbook-2023-09': SOURCE_DIR / '衛生管理（畜産農業）.pdf',
 }
 LEDGER_BY_ID = {doc['sourceId']: doc for doc in LEDGER.get('officialDocuments', [])}
-SOURCE_PDFS_AVAILABLE = fitz is not None and all(path.exists() for path in PDFS.values())
+SOURCE_PDFS_PRESENT = fitz is not None and all(path.exists() for path in PDFS.values())
+SOURCE_PDFS_AVAILABLE = PDF_VERIFICATION_REQUIRED and SOURCE_PDFS_PRESENT
 if SOURCE_PDFS_AVAILABLE:
     EXECUTION_SCOPE = 'local-controlled-source-review'
+elif PDF_VERIFICATION_REQUIRED:
+    EXECUTION_SCOPE = 'local-required-source-review-failed'
 elif RUNNING_IN_GITHUB_ACTIONS:
     EXECUTION_SCOPE = 'github-ci-without-official-pdfs'
 else:
@@ -51,12 +71,20 @@ else:
 ASSET_DIR = ROOT / 'public' / 'assets'
 
 
-def sha256(path: pathlib.Path) -> str:
-    h = hashlib.sha256()
-    with path.open('rb') as f:
-        for chunk in iter(lambda: f.read(1024 * 1024), b''):
-            h.update(chunk)
-    return h.hexdigest()
+def is_valid_date_time(value: object) -> bool:
+    if not isinstance(value, str) or not re.fullmatch(
+        r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})', value
+    ):
+        return False
+    try:
+        datetime.fromisoformat(value.replace('Z', '+00:00'))
+        return True
+    except ValueError:
+        return False
+
+
+FORMAT_CHECKER = FormatChecker()
+FORMAT_CHECKER.checks('date-time')(is_valid_date_time)
 
 
 def norm(text: str) -> str:
@@ -107,15 +135,81 @@ def missing_han_readings(value: dict) -> list[str]:
     ]
 
 
+def is_question_approved(question: dict) -> bool:
+    review = question.get('review', {})
+    required = ('content', 'languageJa', 'languageId', 'legalRights', 'furigana', 'japaneseLearning', 'answerLeak')
+    reviewed_at = review.get('reviewedAt')
+    reviewed_at_valid = is_valid_date_time(reviewed_at)
+    return (
+        question.get('status') == 'approved'
+        and question.get('prototypeOnly') is False
+        and all(review.get(key) == 'pass' for key in required)
+        and review.get('approvalByUser') == 'approved'
+        and reviewed_at_valid
+    )
+
+
+def approved_gate_negative_fixtures() -> list[str]:
+    pilot = next((q for q in QUESTIONS if q.get('schemaVersion') == '0.4.0'), None)
+    if not pilot:
+        return ['no 0.4.0 fixture question available']
+    base = json.loads(json.dumps(pilot))
+    base['status'] = 'approved'
+    base['prototypeOnly'] = False
+    base['review'].update({
+        'content': 'pass',
+        'languageJa': 'pass',
+        'languageId': 'pass',
+        'legalRights': 'pass',
+        'furigana': 'pass',
+        'japaneseLearning': 'pass',
+        'answerLeak': 'pass',
+        'approvalByUser': 'approved',
+        'reviewedAt': '2026-08-13T00:00:00.000Z',
+    })
+    failures = []
+    if list(validator.iter_errors(base)) or not is_question_approved(base):
+        failures.append('valid approved fixture was rejected')
+    mutations = {
+        'prototypeOnly': lambda q: q.update(prototypeOnly=True),
+        'content': lambda q: q['review'].update(content='pending'),
+        'languageJa': lambda q: q['review'].update(languageJa='pending'),
+        'languageId': lambda q: q['review'].update(languageId='pending_native_review'),
+        'legalRights': lambda q: q['review'].update(legalRights='pending'),
+        'furigana': lambda q: q['review'].update(furigana='pending'),
+        'japaneseLearning': lambda q: q['review'].update(japaneseLearning='pending'),
+        'answerLeak': lambda q: q['review'].update(answerLeak='pending'),
+        'approvalByUser': lambda q: q['review'].update(approvalByUser='pending'),
+        'reviewedAt:null': lambda q: q['review'].update(reviewedAt=None),
+        'reviewedAt:invalid': lambda q: q['review'].update(reviewedAt='not-a-date'),
+        'reviewedAt:invalid-calendar': lambda q: q['review'].update(reviewedAt='2026-02-31T00:00:00.000Z'),
+    }
+    for name, mutate in mutations.items():
+        candidate = json.loads(json.dumps(base))
+        mutate(candidate)
+        if not list(validator.iter_errors(candidate)):
+            failures.append(f'{name}: schema accepted')
+        if is_question_approved(candidate):
+            failures.append(f'{name}: runtime gate accepted')
+    return failures
+
+
 checks: list[dict] = []
 issues: list[dict] = []
-validator = Draft202012Validator(SCHEMA)
+validator = Draft202012Validator(SCHEMA, format_checker=FORMAT_CHECKER)
 schema_errors = []
 for q in QUESTIONS:
     for err in validator.iter_errors(q):
         schema_errors.append({'questionId': q.get('id'), 'path': '/'.join(map(str, err.path)), 'message': err.message})
 checks.append(check(not schema_errors, 'JSON Schema validation', f'{len(schema_errors)} error(s)'))
 issues.extend({'type': 'schema', **e} for e in schema_errors)
+approved_fixture_failures = approved_gate_negative_fixtures()
+checks.append(check(
+    not approved_fixture_failures,
+    'Approved gate rejects every incomplete human-review condition',
+    str(approved_fixture_failures),
+))
+issues.extend({'type': 'approved_gate_fixture', 'item': item} for item in approved_fixture_failures)
 
 checks += [
     check(len(FACTS) == 100, 'Knowledge-card count', f'{len(FACTS)} / 100'),
@@ -138,6 +232,7 @@ bad_correct = []
 bad_sources = []
 bad_rights = []
 bad_status = []
+bad_approved_gate = []
 bad_language = []
 missing_assets = []
 bad_pedagogy = []
@@ -176,6 +271,8 @@ for q in QUESTIONS:
         bad_rights.append(q['id'])
     if q.get('status') != 'source_checked':
         bad_status.append(q['id'])
+    if q.get('status') == 'approved' and not is_question_approved(q):
+        bad_approved_gate.append(q['id'])
     for field in ('question', 'explanation'):
         text = q.get(field, {})
         if not all(str(text.get(k, '')).strip() for k in ('ja', 'easyJa', 'id')):
@@ -312,6 +409,7 @@ checks += [
     check(not bad_sources, 'All source IDs and ledger page ranges resolve', str(bad_sources[:10])),
     check(not bad_rights, 'Rights flags prohibit official/competitor reuse', str(bad_rights[:10])),
     check(not bad_status, 'All questions remain source_checked (not auto-approved)', str(bad_status[:10])),
+    check(not bad_approved_gate, 'Approved questions satisfy every automated and human review gate', str(bad_approved_gate[:10])),
     check(not bad_language, 'All multilingual fields are populated', str(bad_language[:10])),
     check(not bad_pedagogy, 'All questions include ruby and pedagogical support', str(bad_pedagogy[:10])),
     check(not missing_assets, 'All declared original visual assets exist', str(missing_assets[:10])),
@@ -330,7 +428,7 @@ checks += [
     check(not pilot_missing_source, 'Pilot questions identify source title, edition, page, and section', str(pilot_missing_source[:10])),
     check(not pilot_missing_review_flags, 'Pilot review gates are explicit', str(pilot_missing_review_flags[:10])),
 ]
-for name, items in [('missing_fact_reference', missing_refs), ('bad_correct_choice', bad_correct), ('bad_source', bad_sources), ('bad_rights', bad_rights), ('bad_status', bad_status), ('bad_language', bad_language), ('bad_pedagogy', bad_pedagogy), ('missing_asset', missing_assets), ('pilot_missing_translation', pilot_missing_translation), ('pilot_missing_furigana', pilot_missing_furigana), ('pilot_missing_correct_reason', pilot_missing_correct_reason), ('pilot_missing_wrong_reason', pilot_missing_wrong_reason), ('pilot_duplicate_wrong_reasons', pilot_duplicate_wrong_reasons), ('pilot_missing_keywords', pilot_missing_keywords), ('pilot_missing_language_points', pilot_missing_language_points), ('pilot_missing_term_annotations', pilot_missing_term_annotations), ('pilot_missing_source', pilot_missing_source), ('pilot_missing_review_flags', pilot_missing_review_flags)]:
+for name, items in [('missing_fact_reference', missing_refs), ('bad_correct_choice', bad_correct), ('bad_source', bad_sources), ('bad_rights', bad_rights), ('bad_status', bad_status), ('bad_approved_gate', bad_approved_gate), ('bad_language', bad_language), ('bad_pedagogy', bad_pedagogy), ('missing_asset', missing_assets), ('pilot_missing_translation', pilot_missing_translation), ('pilot_missing_furigana', pilot_missing_furigana), ('pilot_missing_correct_reason', pilot_missing_correct_reason), ('pilot_missing_wrong_reason', pilot_missing_wrong_reason), ('pilot_duplicate_wrong_reasons', pilot_duplicate_wrong_reasons), ('pilot_missing_keywords', pilot_missing_keywords), ('pilot_missing_language_points', pilot_missing_language_points), ('pilot_missing_term_annotations', pilot_missing_term_annotations), ('pilot_missing_source', pilot_missing_source), ('pilot_missing_review_flags', pilot_missing_review_flags)]:
     issues.extend({'type': name, 'item': item} for item in items)
 
 # Source ledger and PDF verification.
@@ -342,20 +440,26 @@ anchor_total = sum(bool(fact.get('source', {}).get('verificationAnchors')) for f
 manual_page_refs = len(FACTS) - anchor_total
 anchor_pass = 0
 anchor_failures = []
-anchor_skipped = not SOURCE_PDFS_AVAILABLE
+anchor_skipped = not PDF_VERIFICATION_REQUIRED
+
+if PDF_VERIFICATION_REQUIRED and not SOURCE_PDFS_PRESENT:
+    required_pdf_issues = []
+    if not SOURCE_DIR_CONFIGURED:
+        required_pdf_issues.append('SSW2_SOURCE_DIR is not configured')
+    if fitz is None:
+        required_pdf_issues.append('PyMuPDF (fitz) is unavailable')
+    for source_id, path in PDFS.items():
+        if not path.exists():
+            required_pdf_issues.append(f'{source_id}: missing {path.name}')
+    checks.append(check(
+        False,
+        'Required official PDFs are available',
+        '; '.join(required_pdf_issues),
+    ))
+    issues.extend({'type': 'required_source_pdf', 'item': item} for item in required_pdf_issues)
 
 if SOURCE_PDFS_AVAILABLE:
-    for doc in LEDGER.get('officialDocuments', []):
-        sid = doc['sourceId']
-        pdf_path = PDFS.get(sid)
-        if not pdf_path or not pdf_path.exists():
-            ledger_issues.append((sid, 'missing file'))
-            continue
-        if sha256(pdf_path) != doc.get('sha256'):
-            ledger_issues.append((sid, 'sha256 mismatch'))
-        with fitz.open(pdf_path) as pdf:
-            if pdf.page_count != doc.get('pageCount'):
-                ledger_issues.append((sid, f"page count {pdf.page_count} != {doc.get('pageCount')}"))
+    ledger_issues = verify_pdf_documents(PDFS, LEDGER.get('officialDocuments', []), fitz)
     checks.append(check(not ledger_issues, 'Official-source hashes and page counts match ledger', str(ledger_issues)))
     issues.extend({'type': 'source_ledger', 'item': item} for item in ledger_issues)
 
@@ -382,28 +486,28 @@ if SOURCE_PDFS_AVAILABLE:
     issues.extend({'type': 'anchor', **item} for item in anchor_failures)
 else:
     binary_skip_detail = (
-        'SKIPPED in GitHub CI: official PDFs are intentionally not stored in Git; source IDs and ledger page ranges were checked.'
-        if RUNNING_IN_GITHUB_ACTIONS
-        else 'SKIPPED in this local run: official PDFs were unavailable. Set SSW2_SOURCE_DIR to the controlled folder containing both PDFs.'
+        'FAILED required PDF validation: use SSW2_SOURCE_DIR with both controlled official PDFs.'
+        if PDF_VERIFICATION_REQUIRED
+        else 'SKIPPED by structural-validation policy: official PDF binary checks run only with --require-pdfs.'
     )
     anchor_skip_detail = (
-        f'SKIPPED in GitHub CI: {anchor_total} anchored facts require official PDFs that are intentionally not stored in Git.'
-        if RUNNING_IN_GITHUB_ACTIONS
-        else f'SKIPPED in this local run: {anchor_total} anchored facts require both official PDFs under SSW2_SOURCE_DIR.'
+        f'FAILED required PDF validation: {anchor_total} anchored facts could not be checked.'
+        if PDF_VERIFICATION_REQUIRED
+        else f'SKIPPED by structural-validation policy: {anchor_total} anchored facts require --require-pdfs.'
     )
     checks.append({
         'name': 'Official-source binary verification',
-        'pass': True,
+        'pass': False if PDF_VERIFICATION_REQUIRED else None,
         'detail': binary_skip_detail,
-        'warning': True,
-        'skipped': True,
+        'warning': not PDF_VERIFICATION_REQUIRED,
+        'skipped': not PDF_VERIFICATION_REQUIRED,
     })
     checks.append({
         'name': 'Automated PDF anchor verification',
-        'pass': True,
+        'pass': False if PDF_VERIFICATION_REQUIRED else None,
         'detail': anchor_skip_detail,
-        'warning': True,
-        'skipped': True,
+        'warning': not PDF_VERIFICATION_REQUIRED,
+        'skipped': not PDF_VERIFICATION_REQUIRED,
     })
 
 # Exact and near-duplicate question wording checks.
@@ -448,7 +552,11 @@ checks.append({
     'detail': f'{len(pilot_native_unchecked)} / {len(pilot_ids)} pilot question(s) remain outside approved until languageId=pass',
     'warning': bool(pilot_native_unchecked),
 })
-all_pass = all(c['pass'] for c in checks if c['name'] != 'Near-duplicate review queue')
+all_pass = all(
+    c['pass']
+    for c in checks
+    if c['name'] != 'Near-duplicate review queue' and not c.get('skipped')
+)
 
 report = {
     'generatedAt': '2026-08-13',
@@ -457,9 +565,11 @@ report = {
         'name': EXECUTION_SCOPE,
         'githubActions': RUNNING_IN_GITHUB_ACTIONS,
         'sourceDirConfigured': SOURCE_DIR_CONFIGURED,
+        'pdfVerificationRequired': PDF_VERIFICATION_REQUIRED,
+        'officialPdfsPresent': SOURCE_PDFS_PRESENT,
         'officialPdfsAvailable': SOURCE_PDFS_AVAILABLE,
         'githubCiPolicy': 'Standard PR CI validates repository data and code but skips PDF binary hashes, page counts, and text anchors because official PDFs are not stored in Git.',
-        'localPdfPolicy': 'Set SSW2_SOURCE_DIR to the controlled folder containing both official PDFs to run binary hash, page-count, and text-anchor checks.',
+        'localPdfPolicy': 'Set SSW2_SOURCE_DIR to the controlled folder containing both official PDFs and run validate:content:pdf (or --require-pdfs) to require binary hash, page-count, and text-anchor checks.',
     },
     'overall': 'PASS' if all_pass else 'FAIL',
     'releaseMeaning': 'PASS means the Alpha v0.5 pack passed structural, pedagogical, rights, and available source checks. A skipped PDF check is reported explicitly and PASS never means public-use approval.',
@@ -477,7 +587,7 @@ report = {
         'deviceReviewStates': pilot_device_review_states,
         'pendingGates': {**pilot_pending_gate_counts, 'total': sum(pilot_pending_gate_counts.values())},
     },
-    'anchorVerification': {'available': SOURCE_PDFS_AVAILABLE, 'skipped': anchor_skipped, 'anchoredFacts': anchor_total, 'passed': anchor_pass, 'failed': len(anchor_failures), 'legacyManualPageReferences': manual_page_refs},
+    'anchorVerification': {'required': PDF_VERIFICATION_REQUIRED, 'available': SOURCE_PDFS_AVAILABLE, 'skipped': anchor_skipped, 'anchoredFacts': anchor_total, 'passed': anchor_pass, 'failed': len(anchor_failures), 'legacyManualPageReferences': manual_page_refs},
     'checks': checks,
     'nearDuplicates': near_dupes,
     'issues': issues,
@@ -498,15 +608,16 @@ lines = [
     '> PASSは構造・参照・権利フラグ・この実行範囲で利用可能な自動検査が通ったことを示します。公開用approvedを意味しません。', '',
     '## Verification scope', '',
     f"- Current report scope: `{EXECUTION_SCOPE}`",
-    f"- Official PDFs available in this run: {'yes' if SOURCE_PDFS_AVAILABLE else 'no'}",
+    f"- Required PDF verification enabled in this run: {'yes' if PDF_VERIFICATION_REQUIRED else 'no'}",
+    f"- Official PDFs available to required verification: {'yes' if SOURCE_PDFS_AVAILABLE else 'no'}",
     '- GitHub PR CI: リポジトリ内のデータ同期、Schema、型、単体テスト、E2E、ビルドを検査します。公式PDFをGitへ保存しないため、標準CIではPDFバイナリのSHA-256、ページ数、本文アンカー照合をSKIPします。',
-    '- Controlled local review: `SSW2_SOURCE_DIR` に公式PDF 2冊を配置した場合だけ、PDFのSHA-256、ページ数、本文アンカー照合を追加実行します。', '',
+    '- Controlled local review: `SSW2_SOURCE_DIR` を明示した場合、または `npm run validate:content:pdf` を実行した場合、PDFのSHA-256、ページ数、本文アンカー照合を必須検査として実行します。PDF不足はFAILです。', '',
     '## Counts', '',
     f"- Knowledge cards: {len(FACTS)}", f"- Questions: {len(QUESTIONS)}", f"- Glossary: {len(GLOSSARY)}", f"- Original SVG assets: {report['counts']['visualAssets']}", '',
     '## Checks', '',
 ]
 for c in checks:
-    icon = 'PASS' if c['pass'] else 'FAIL'
+    icon = 'SKIP' if c.get('skipped') else 'PASS' if c['pass'] else 'FAIL'
     suffix = ' (warning)' if c.get('warning') else ''
     lines.append(f"- **{icon}{suffix}** — {c['name']}: {c.get('detail','')}")
 lines += ['', '## Coverage', '']
