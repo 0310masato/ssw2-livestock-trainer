@@ -35,6 +35,9 @@ jobs:
       - name: Generate furigana and pedagogical question data
         run: node scripts/apply_pedagogy_rework.mjs
 
+      - name: Normalize cross-realm test assertions
+        run: node scripts/fix_pedagogy_tests.mjs
+
       - name: Type check
         run: npm run typecheck
 
@@ -54,7 +57,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git restore .github/workflows
-          rm -f scripts/apply_pedagogy_rework.mjs
+          rm -f scripts/apply_pedagogy_rework.mjs scripts/fix_pedagogy_tests.mjs
           git add -A
           git commit -m "feat: redesign as Indonesian Japanese-learning material"
           git push origin HEAD:feat/pedagogical-indonesian-learning
