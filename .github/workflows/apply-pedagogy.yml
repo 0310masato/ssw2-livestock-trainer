@@ -1,6 +1,6 @@
 name: Apply pedagogical Indonesian learning redesign
 
-# One-time feature-branch migration. This run verifies the final deterministic browser interactions.
+# One-time feature-branch migration with deterministic, viewport-sized browser checks.
 on:
   push:
     branches:
@@ -11,10 +11,14 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: pedagogical-redesign
+  cancel-in-progress: true
+
 jobs:
   migrate-test-commit:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
     steps:
       - name: Checkout feature branch
         uses: actions/checkout@v4
