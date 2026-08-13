@@ -93,6 +93,7 @@ bad_rights = []
 bad_status = []
 bad_language = []
 missing_assets = []
+bad_pedagogy = []
 for q in QUESTIONS:
     for fid in q.get('sourceFactIds', []):
         if fid not in fact_ids:
@@ -118,6 +119,18 @@ for q in QUESTIONS:
     for c in q.get('choices', []):
         if not all(str(c.get('text', {}).get(k, '')).strip() for k in ('ja', 'easyJa', 'id')):
             bad_language.append((q['id'], f"choice:{c.get('id')}"))
+    support = q.get('learningSupport', {})
+    rationales = q.get('choiceRationales', {})
+    ruby_fields = [q.get('question', {}), q.get('explanation', {}), *[c.get('text', {}) for c in q.get('choices', [])], *rationales.values()]
+    if (
+        q.get('schemaVersion') != '0.3.0'
+        or not support.get('questionPattern')
+        or not support.get('keyTermIds')
+        or len(rationales) != len(q.get('choices', []))
+        or any(not item.get('rubyJa') for item in ruby_fields)
+        or any(not all(str(item.get(k, '')).strip() for k in ('ja', 'easyJa', 'id')) for item in rationales.values())
+    ):
+        bad_pedagogy.append(q['id'])
     if q.get('visual'):
         aid = q['visual'].get('assetId')
         if not aid or not (ASSET_DIR / f'{aid}.svg').exists():
@@ -130,9 +143,10 @@ checks += [
     check(not bad_rights, 'Rights flags prohibit official/competitor reuse', str(bad_rights[:10])),
     check(not bad_status, 'All questions remain source_checked (not auto-approved)', str(bad_status[:10])),
     check(not bad_language, 'All multilingual fields are populated', str(bad_language[:10])),
+    check(not bad_pedagogy, 'All questions include ruby and pedagogical support', str(bad_pedagogy[:10])),
     check(not missing_assets, 'All declared original visual assets exist', str(missing_assets[:10])),
 ]
-for name, items in [('missing_fact_reference', missing_refs), ('bad_correct_choice', bad_correct), ('bad_source', bad_sources), ('bad_rights', bad_rights), ('bad_status', bad_status), ('bad_language', bad_language), ('missing_asset', missing_assets)]:
+for name, items in [('missing_fact_reference', missing_refs), ('bad_correct_choice', bad_correct), ('bad_source', bad_sources), ('bad_rights', bad_rights), ('bad_status', bad_status), ('bad_language', bad_language), ('bad_pedagogy', bad_pedagogy), ('missing_asset', missing_assets)]:
     issues.extend({'type': name, 'item': item} for item in items)
 
 # Source ledger hash and page-count verification.
@@ -201,7 +215,7 @@ review_counts = Counter(q.get('review', {}).get('languageId', 'missing') for q i
 all_pass = all(c['pass'] for c in checks if c['name'] != 'Near-duplicate review queue')
 
 report = {
-    'generatedAt': '2026-08-12',
+    'generatedAt': '2026-08-13',
     'overall': 'PASS' if all_pass else 'FAIL',
     'releaseMeaning': 'PASS means the Alpha v0.4 review build is structurally and source-reference valid. It does not mean questions are approved for public use.',
     'counts': {'facts': len(FACTS), 'questions': len(QUESTIONS), 'glossary': len(GLOSSARY), 'visualAssets': len(list(ASSET_DIR.glob('*.svg')))},

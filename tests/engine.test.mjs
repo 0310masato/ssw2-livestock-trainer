@@ -158,3 +158,19 @@ test('UI language defaults to Indonesian and can be persisted', () => {
   const migrated = app.validateImportedState({ settings: {} });
   assert.equal(migrated.settings.uiLanguage, 'id');
 });
+
+test('guided study mode always exposes Japanese-learning supports', () => {
+  const state = app.defaultState();
+  const question = app.QUESTIONS[0];
+  assert.equal(state.settings.studySupportMode, 'guided');
+  assert.equal(JSON.stringify(app.supportSettingsForStudy(state, question, 'daily')), JSON.stringify({ showFurigana: true, showEasyJapanese: true, showIndonesian: true }));
+});
+
+test('Japanese-only and mock modes hide all learning supports', () => {
+  const state = app.defaultState();
+  const question = app.QUESTIONS[0];
+  state.settings.studySupportMode = 'japanese_only';
+  assert.equal(JSON.stringify(app.supportSettingsForStudy(state, question, 'daily')), JSON.stringify({ showFurigana: false, showEasyJapanese: false, showIndonesian: false }));
+  state.settings.studySupportMode = 'guided';
+  assert.equal(JSON.stringify(app.supportSettingsForStudy(state, question, 'mock')), JSON.stringify({ showFurigana: false, showEasyJapanese: false, showIndonesian: false }));
+});

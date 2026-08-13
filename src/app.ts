@@ -105,14 +105,7 @@ namespace LivestockApp {
   }
 
   function questionSupport(session: SessionState, question: Question): void {
-    const level = effectiveSupportLevel(runtime.state, question);
-    const support = runtime.state.settings.automaticSupport
-      ? supportSettingsForLevel(level)
-      : {
-          showFurigana: runtime.state.settings.showFurigana,
-          showEasyJapanese: runtime.state.settings.showEasyJapanese,
-          showIndonesian: runtime.state.settings.showIndonesian,
-        };
+    const support = supportSettingsForStudy(runtime.state, question, session.kind);
     session.furiganaVisible = support.showFurigana;
     session.easyJapaneseVisible = support.showEasyJapanese;
     session.indonesianVisible = support.showIndonesian;
@@ -488,6 +481,20 @@ namespace LivestockApp {
       input.addEventListener('change', () => {
         const key = input.dataset.settingCheckbox as keyof UserSettings;
         (runtime.state.settings as unknown as Record<string, unknown>)[key] = input.checked;
+        void persist();
+        render();
+      });
+    });
+    document.querySelector<HTMLSelectElement>('[data-setting-study-mode]')?.addEventListener('change', (event) => {
+      const value = (event.currentTarget as HTMLSelectElement).value;
+      runtime.state.settings.studySupportMode = ['adaptive', 'japanese_only'].includes(value) ? value as StudySupportMode : 'guided';
+      void persist();
+      render();
+    });
+    document.querySelectorAll<HTMLInputElement>('[data-setting-pedagogy-checkbox]').forEach((input) => {
+      input.addEventListener('change', () => {
+        const key = input.dataset.settingPedagogyCheckbox as 'showVocabulary' | 'showQuestionPattern';
+        runtime.state.settings[key] = input.checked;
         void persist();
         render();
       });

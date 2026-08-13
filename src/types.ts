@@ -1,16 +1,24 @@
 namespace LivestockApp {
   export type LanguageKey = 'ja' | 'easyJa' | 'id';
   export type UiLanguage = 'ja' | 'id';
+  export type StudySupportMode = 'guided' | 'adaptive' | 'japanese_only';
+  export type QuestionPatternKey = 'most_appropriate' | 'incorrect' | 'correct' | 'calculation' | 'procedure' | 'which';
   export type QuestionStatus = 'draft' | 'candidate' | 'source_checked' | 'language_checked' | 'approved' | 'suspended' | 'retired';
   export type ErrorReason = 'knowledge' | 'japanese' | 'misread' | 'calculation' | 'time' | 'unsure';
   export type ReviewMark = '未確認' | '承認候補' | '要修正' | '保留';
   export type SessionKind = 'daily' | 'poultry' | 'all' | 'due' | 'category' | 'mock';
   export type ViewName = 'home' | 'study' | 'glossary' | 'results' | 'manager' | 'review' | 'settings';
 
+  export interface RubySegment {
+    text: string;
+    reading?: string;
+  }
+
   export interface LocalizedText {
     ja: string;
     easyJa: string;
     id: string;
+    rubyJa?: RubySegment[];
   }
 
   export interface Choice {
@@ -57,6 +65,13 @@ namespace LivestockApp {
     correctChoiceId: string;
     explanation: LocalizedText;
     choiceRationalesJa: Record<string, string>;
+    choiceRationales: Record<string, LocalizedText>;
+    learningSupport: {
+      questionPattern: QuestionPatternKey;
+      keyTermIds: string[];
+      lessonObjective: LocalizedText;
+      memoryPoint: LocalizedText;
+    };
     source: SourceRef;
     tags: string[];
     timeSensitive: boolean;
@@ -141,6 +156,9 @@ namespace LivestockApp {
 
   export interface UserSettings {
     uiLanguage: UiLanguage;
+    studySupportMode: StudySupportMode;
+    showVocabulary: boolean;
+    showQuestionPattern: boolean;
     preferredSupportLevel: 0 | 1 | 2 | 3;
     automaticSupport: boolean;
     showFurigana: boolean;

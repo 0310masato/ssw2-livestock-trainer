@@ -43,7 +43,7 @@ const indexHtml = `<!doctype html>
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" href="icon-192.png">
   <link rel="stylesheet" href="styles.css">
-  <title>Pelatih Peternakan Tingkat 2 / 畜産2号トレーナー</title>
+  <title>Belajar Bahasa Jepang untuk Peternakan 2 / 畜産2号日本語トレーナー</title>
 </head>
 <body>
   <noscript>Aktifkan JavaScript untuk menggunakan aplikasi ini。／このアプリを使うにはJavaScriptを有効にしてください。</noscript>
@@ -56,7 +56,7 @@ await writeFile(resolve(distDir, 'index.html'), indexHtml);
 
 const manifest = {
   name: 'Pelatih Peternakan Tingkat 2 / 畜産2号トレーナー',
-  short_name: 'Ternak 2',
+  short_name: 'Nihongo Ternak',
   description: 'PWA pembelajaran tidak resmi untuk ujian peternakan tingkat 2 / 特定技能2号・畜産農業の非公式学習支援PWA',
   start_url: './',
   scope: './',
@@ -76,7 +76,7 @@ const manifest = {
 };
 await writeFile(resolve(distDir, 'manifest.webmanifest'), JSON.stringify(manifest, null, 2));
 
-const cacheVersion = 'livestock2-v0.4.2-persistent-ui-language';
+const cacheVersion = 'livestock2-v0.5.0-pedagogical-learning';
 const cacheFiles = [
   './', './index.html', './styles.css', './app.js', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './apple-touch-icon.png',

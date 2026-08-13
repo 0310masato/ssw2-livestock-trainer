@@ -1,0 +1,22 @@
+{
+  "overall": "PASS",
+  "viewport": "390x844",
+  "checks": {
+    "indonesian_default": true,
+    "learning_flow_visible": true,
+    "language_persisted_default": true,
+    "guided_lesson_sections": true,
+    "full_furigana": true,
+    "indonesian_question_meaning": true,
+    "question_vocabulary": true,
+    "four_bilingual_choices": true,
+    "bilingual_answer_explanation": true,
+    "choice_by_choice_review": true,
+    "memory_point": true,
+    "source_citation": true,
+    "no_runtime_errors": true
+  },
+  "failed": [],
+  "pageErrors": [],
+  "screenshot": "pedagogy-guided-mobile.png"
+}
