@@ -33,8 +33,10 @@ e2e = e2e.replace(
   "    page.evaluate(\"(selector) => document.querySelector(selector)?.click()\", f'[data-choice=\"{wrong_choice}\"]')",
 );
 if (!e2e.includes("guided_indonesian_lesson")) throw new Error('Guided lesson checks were not generated.');
-if (e2e.includes(".click()")) {
-  const remaining = e2e.split('\n').filter((line) => line.includes('.click()'));
-  throw new Error(`Playwright click calls remain: ${remaining.join(' | ')}`);
+const remainingLocatorClicks = e2e.split('\n').filter(
+  (line) => line.includes('page.locator') && line.includes('.click()'),
+);
+if (remainingLocatorClicks.length) {
+  throw new Error(`Playwright locator clicks remain: ${remainingLocatorClicks.join(' | ')}`);
 }
 await writeFile(e2eFile, e2e, 'utf8');
