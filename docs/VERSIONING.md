@@ -10,7 +10,7 @@
 | 保存キー名の `v0.4` | `state-v0.4` / `livestock2-state-v0.4` | 既存端末データを見つけるための永続キー名。アプリ版ではない。 | migrationを用意して保存先を意図的に切り替えるときだけ |
 | 問題 `schemaVersion` | パイロット16問 `0.4.0`、残り64問 `0.3.0` | 問題1件ごとのデータ構造。`0.4.0` は新しい学習支援構造、`0.3.0` は従来構造。 | その問題を人手管理下で新構造へ変換するとき |
 | JSON Schema | `livestock2-question-v0.4.schema.json` | `0.3.0` と `0.4.0` の問題を同時検証するSchema定義版。 | 検証契約を変更するとき |
-| Service Worker cache | `livestock2-v0.5.0-pr5-remediation` | 古いApp Shell cacheを破棄するための技術的識別子。PR #5是正後のレビューartifactを既存cacheより優先する。 | 配布ファイルを更新し、既存cacheを確実に切り替えるとき |
+| Service Worker cache | `livestock2-v0.5.0-<build-id>` | App Shellの相対パスと内容から決定的に算出するSHA-256先頭16桁。アプリ本体が変わると自動的に別cacheになる。 | `npm run build` 時に自動算出。手動更新しない |
 | exportファイル名 | `..._v0.5.json` / `..._v0.5.csv` | 人が複数の出力を見分けるためのアプリ版ラベル。stateや問題Schemaの版ではない。 | アプリ版ラベルを更新するとき |
 | レポート見出し | `Alpha v0.5` | どのアプリ系列の検証スナップショットかを示す。 | 別のアプリ系列を検証するとき |
 
@@ -19,7 +19,8 @@
 - 保存キーの `v0.4` を見た目だけの理由で変更しない。変更すると既存のlocalStorage／IndexedDB stateを読めなくなる可能性がある。
 - state `0.6.0` と問題 `0.4.0` は別のデータ構造であり、一致させない。
 - 残り64問の `0.3.0` はPhase 6前の意図した状態であり、古いアプリが混在しているという意味ではない。
-- Service Worker cache名は配布更新用であり、データmigrationやコンテンツ承認状態には使わない。
+- Service Workerの`build-id`は、コンパイル後のJavaScript、CSS、index template、manifest、App ShellのSVG・iconを、OS非依存の相対パスと正規化した内容でsortしてからSHA-256へ入力する。`index.html`の`meta[name="app-build-id"]`でも確認できる。
+- Service Worker cache名は配布更新用であり、データmigrationやコンテンツ承認状態には使わない。旧owned cacheはactivate時に削除するが、他アプリのcacheは削除しない。
 - exportファイルの内容には `appVersion` とstate `schemaVersion` の両方を保持し、ファイル名だけで互換性を判断しない。
 
 ## レポート表記

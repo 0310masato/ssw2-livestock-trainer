@@ -56,7 +56,23 @@ namespace LivestockApp {
   async function registerServiceWorker(): Promise<void> {
     if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
     try {
-      await navigator.serviceWorker.register('./sw.js', { scope: './' });
+      const hadController = Boolean(navigator.serviceWorker.controller);
+      const registration = await navigator.serviceWorker.register('./sw.js', {
+        scope: './',
+        updateViaCache: 'none',
+      });
+      const watchInstallingWorker = (): void => {
+        const worker = registration.installing;
+        if (!hadController || !worker) return;
+        worker.addEventListener('statechange', () => {
+          if (worker.state === 'installed') {
+            showNotice('アプリを更新できます。学習中の画面は維持され、次回の再読み込みで新しい版になります。');
+          }
+        });
+      };
+      registration.addEventListener('updatefound', watchInstallingWorker);
+      watchInstallingWorker();
+      await registration.update();
     } catch (error) {
       console.warn('Service Worker registration failed.', error);
     }

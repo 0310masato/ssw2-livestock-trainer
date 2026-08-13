@@ -24,8 +24,8 @@
 | REV-009 | 対応・自動検証済み | `scripts/generate_data.mjs` | `src/data.ts`を決定的に全生成し、意味的TypeScript検証後だけatomic置換する | 境界文字列、不正JSON、非配列、重複、失敗時不変 |
 | REV-010 | 対応・自動検証済み | `scripts/generate_data.mjs` | COVERAGEを正本JSONから毎回全再計算する | 件数・カテゴリ・status変更fixture |
 | REV-011 | 対応・自動検証済み | `scripts/validate_content.py`, `package.json` | 構造検証とPDF必須検証を分離し、明示source dirもfail-closedにした | 未設定SKIP、必須不足FAIL、正常・hash・page・50 anchor |
-| REV-012 | 対応・自動検証済み | `scripts/build.mjs` | このアプリの旧cacheだけ削除し他アプリcacheを保持する | 実Service Worker cache検査 |
-| REV-013 | 対応・自動検証済み | `e2e/http_pwa_smoke.py`, CI | localhostでSW・CacheStorage・実IndexedDB・offline更新を検査する | `page.goto` HTTP E2E |
+| REV-012 | P0再是正・自動検証済み | `scripts/build.mjs` | App Shell内容からbuild IDを算出し、versioned URLへ保存する。このアプリの旧cacheだけ削除し他アプリcacheを保持する | build ID単体検査、実Service Worker cache検査 |
+| REV-013 | P0再是正・自動検証済み | `e2e/http_pwa_smoke.py`, CI | localhostで実際の旧HEADから新buildへ同一origin更新し、SW・CacheStorage・実IndexedDB・offline起動を検査する | `a6533c3...`→現buildの`page.goto` HTTP E2E |
 | REV-014 | 対応・自動検証済み | CI, README, review docs | public repositoryの期限付き一時artifactとして表記を統一した | artifact名・保持期間・非正式配布表示 |
 | REV-015 | 対応・自動検証済み | `src/storage.ts`, settings UI | 旧表示checkboxをmigration入力だけにし、mode/Levelを正本化した | 設定UI→IDB→reload→新session E2E |
 | REV-016 | 対応・自動検証済み | `.github/workflows/pages.yml`, `.github/workflows/publish-gh-pages-branch.yml` | すべてのPages公開経路を手動実行だけに限定した | workflow trigger静的検査 |
@@ -44,6 +44,12 @@ DOMのclassや支援領域を均一化しても、表示文字列の言い換え
 PR #5の技術的な境界修正は、選択肢の `easyJa` を学習者向け画面で回答前後とも無効にすることである。フィールドは削除せず、人による原文比較と将来の修正文案検討にだけ使用する。4問の文案変更や他12問の意味品質判定は、この技術修正で完了扱いにしない。answer leakと日本語教材性の人手ゲートを維持し、人が修正文案を確認した後の別PRで問題JSONと生成物を同期し、代表16問全体の回帰を実行する。
 
 回帰検査では、代表16問×Level 0〜3について回答前64件・回答後64件を走査し、選択肢のeasyJa専用要素・class・ARIA・data属性・許可要素以外の残余DOMがないことを確認する。問題文と正答解説のeasyJa、選択肢の日本語・ruby・Level 3のインドネシア語訳は維持する。`ja === easyJa` の配列と正答位置の相関はレポートへ残し、`q045`、`q055`、`q078`、`q079` を既知の人手レビュー対象として列挙する。
+
+## P0再是正: 旧PWA cacheからの漏えいコード継続
+
+独立再監査で、fresh buildでは選択肢easyJaが消えていても、固定cache名を共有する旧PWAから同一originで更新すると、旧`app.js`がcache-firstで継続配信されることを確認した。固定値の手動更新を廃止し、App Shellの相対パスと内容をSHA-256へ入力した先頭16桁をbuild IDとする。`app.js`と`styles.css`のURL、Service Workerのcache名、APP_SHELLを同じbuild IDで区別し、installではHTTP cacheを再利用せず必須responseを検査する。
+
+正式な回帰では旧HEAD `a6533c3a4dd194f48cc5186ed061b06b06019e6f`を別buildとして作成し、同じoriginの配信rootを新buildへ切り替える。旧漏えいfixtureの存在、新buildへの切替、旧owned cache削除、foreign cache保持、offline起動、およびproduction経路の回答前64件・回答後64件を一続きで検査する。更新workerが見つかっても学習途中を自動reloadせず、現在画面を維持して次回reloadで切り替える。
 
 ## 人が再確認する事項
 

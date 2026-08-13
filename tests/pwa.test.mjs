@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { access, readFile, readdir, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { computeContentBuildId } from '../scripts/build.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const dist = resolve(root, 'dist');
@@ -33,13 +34,70 @@ test('web app manifest is installable and icons exist', async () => {
   }
 });
 
-test('service worker caches the complete app shell', async () => {
+test('content build ID is deterministic and changes with app bytes', () => {
+  const baseline = computeContentBuildId([
+    { path: 'styles.css', content: 'body { color: teal; }\n' },
+    { path: 'app.js', content: 'console.log("current");\n' },
+    { path: 'assets/icon.bin', content: Buffer.from([0, 1, 2]) },
+  ]);
+  const sameAcrossOrderingAndPlatformNewlines = computeContentBuildId([
+    { path: 'assets\\icon.bin', content: Buffer.from([0, 1, 2]) },
+    { path: 'app.js', content: 'console.log("current");\r\n' },
+    { path: 'styles.css', content: 'body { color: teal; }\r\n' },
+  ]);
+  const changedApp = computeContentBuildId([
+    { path: 'styles.css', content: 'body { color: teal; }\n' },
+    { path: 'app.js', content: 'console.log("current");!\n' },
+    { path: 'assets/icon.bin', content: Buffer.from([0, 1, 2]) },
+  ]);
+  assert.match(baseline, /^[a-f0-9]{16}$/);
+  assert.equal(sameAcrossOrderingAndPlatformNewlines, baseline);
+  assert.notEqual(changedApp, baseline);
+});
+
+test('content build ID covers every required app-shell source', async () => {
+  const buildSource = await readFile(resolve(root, 'scripts', 'build.mjs'), 'utf8');
+  for (const required of [
+    "path: 'app.js'",
+    "path: 'styles.css'",
+    "path: 'index.html.template'",
+    "path: 'manifest.webmanifest'",
+    'barn-ppe.svg',
+    'chick-guard.svg',
+    'cow-measurements.svg',
+    'dilution-20l.svg',
+    'sow-body-condition.svg',
+    'icon-192.png',
+    'icon-512.png',
+    'apple-touch-icon.png',
+  ]) {
+    assert.match(buildSource, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  assert.match(buildSource, /hashEntries\.push/);
+  assert.match(buildSource, /replace\(\/\\r\\n\?\/g, '\\n'\)/);
+  assert.match(buildSource, /entry\.path\.replaceAll\('\\\\', '\/'\)/);
+});
+
+test('service worker caches the content-addressed complete app shell', async () => {
   const serviceWorker = await readFile(resolve(dist, 'sw.js'), 'utf8');
-  assert.match(serviceWorker, /livestock2-v0\.5\.0-pr5-remediation/);
+  const indexHtml = await readFile(resolve(dist, 'index.html'), 'utf8');
+  const buildId = indexHtml.match(/<meta name="app-build-id" content="([a-f0-9]{16})">/)?.[1];
+  assert.ok(buildId, 'index.html must expose its content build ID');
+  assert.match(serviceWorker, new RegExp(`const CACHE_NAME = ["']livestock2-v0\\.5\\.0-${buildId}["']`));
+  assert.match(serviceWorker, new RegExp(`const BUILD_ID = ["']${buildId}["']`));
+  assert.match(indexHtml, new RegExp(`href="styles\\.css\\?v=${buildId}"`));
+  assert.match(indexHtml, new RegExp(`src="app\\.js\\?v=${buildId}"`));
+  assert.match(serviceWorker, new RegExp(`styles\\.css\\?v=${buildId}`));
+  assert.match(serviceWorker, new RegExp(`app\\.js\\?v=${buildId}`));
+  assert.doesNotMatch(serviceWorker, /livestock2-v0\.5\.0-pr5-remediation/);
   for (const required of ['index.html', 'styles.css', 'app.js', 'manifest.webmanifest', 'chick-guard.svg']) {
     assert.match(serviceWorker, new RegExp(required.replace('.', '\\.')));
   }
   assert.match(serviceWorker, /caches\.open/);
+  assert.match(serviceWorker, /new Request\(asset, \{ cache: 'reload' \}\)/);
+  assert.match(serviceWorker, /!response\.ok \|\| response\.type === 'opaque'/);
+  assert.match(serviceWorker, /await caches\.delete\(CACHE_NAME\);/);
+  assert.doesNotMatch(serviceWorker, /cache\.addAll/);
   assert.match(serviceWorker, /event\.request\.mode === 'navigate'/);
   assert.match(serviceWorker, /const CACHE_PREFIX = ["']livestock2-["']/);
   assert.match(serviceWorker, /key\.startsWith\(CACHE_PREFIX\) && key !== CACHE_NAME/);
@@ -86,6 +144,10 @@ test('compiled application contains persistent bilingual UI support', async () =
   assert.match(app, /畜産2号トレーナー_学習データ_v0\.5\.json/);
   assert.match(app, /畜産2号トレーナー_学習履歴_v0\.5\.csv/);
   assert.match(app, /畜産2号トレーナー_80問レビュー_v0\.5\.json/);
+  assert.match(app, /updateViaCache:\s*['"]none['"]/);
+  assert.match(app, /registration\.update\(\)/);
+  assert.match(app, /アプリを更新できます/);
+  assert.doesNotMatch(app, /location\.reload\(\)/);
   assert.doesNotMatch(app, /畜産2号トレーナー_[^'"\\n]+_v0\.4\.(?:json|csv)/);
 });
 

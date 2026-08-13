@@ -450,6 +450,169 @@ with sync_playwright() as p:
     for regression_id in ('q045', 'q055', 'q078', 'q079'):
         record(checks, f'{regression_id}_choice_easy_ja_absent_before_and_after', leak_matrix['explicit'].get(regression_id) is True)
 
+    # Repeat the complete 16 x 4 matrix through the production integration
+    # boundary. LivestockApp.render() replaces #app with the real study view and
+    # binds its production event handlers; the retry assertion exercises one of
+    # those handlers for every answered case.
+    production_matrix = page.evaluate("""() => {
+      const pilot = LivestockApp.QUESTIONS.filter((question) => question.schemaVersion === '0.4.0');
+      const failures = [];
+      const original = {
+        view: LivestockApp.runtime.view,
+        session: LivestockApp.runtime.session,
+        lastMockResult: LivestockApp.runtime.lastMockResult,
+        settings: { ...LivestockApp.runtime.state.settings },
+        historyLength: LivestockApp.runtime.state.history.length,
+      };
+      let beforeCases = 0;
+      let afterCases = 0;
+
+      const newSession = (question, level, answered) => {
+        const policy = LivestockApp.supportPolicyForLevel(level);
+        return {
+          id: `production-${question.id}-${level}`,
+          kind: 'daily',
+          questionIds: [question.id],
+          index: 0,
+          selectedChoiceId: answered ? question.correctChoiceId : null,
+          answered,
+          startedQuestionAt: performance.now(),
+          supportLevel: level,
+          furiganaVisible: policy.showFuriganaInitially,
+          easyJapaneseVisible: policy.showEasyJapaneseInitially,
+          indonesianVisible: policy.showQuestionTranslationInitially,
+          keywordsVisible: policy.showKeywordsInitially,
+          choiceTranslationsVisible: policy.showChoiceTranslationsInitially,
+          answerIndonesianVisible: answered && policy.showAnswerIndonesianInitially,
+          supportUsage: {
+            furiganaUsed: policy.showFuriganaInitially,
+            easyJapaneseUsed: policy.showEasyJapaneseInitially,
+            keywordsOpened: policy.showKeywordsInitially,
+            questionTranslationOpened: policy.showQuestionTranslationInitially,
+            choiceTranslationsOpened: policy.showChoiceTranslationsInitially,
+            answerIndonesianOpened: answered && policy.showAnswerIndonesianInitially,
+          },
+          retryOfHistoryId: null,
+          isRetryWithoutSupport: false,
+          confidence: answered ? 'sure' : null,
+          pendingReason: null,
+          completed: false,
+        };
+      };
+
+      const beforeFailure = (question, level, message) => failures.push(`${question.id}/L${level}/before: ${message}`);
+      const afterFailure = (question, level, message) => failures.push(`${question.id}/L${level}/after: ${message}`);
+      Object.assign(LivestockApp.runtime.state.settings, {
+        studySupportMode: 'guided',
+        showVocabulary: true,
+        showQuestionPattern: true,
+      });
+      LivestockApp.runtime.view = 'study';
+      LivestockApp.runtime.lastMockResult = null;
+
+      for (const question of pilot) {
+        for (const level of [0, 1, 2, 3]) {
+          const policy = LivestockApp.supportPolicyForLevel(level);
+          LivestockApp.runtime.state.settings.preferredSupportLevel = level;
+          LivestockApp.runtime.session = newSession(question, level, false);
+          LivestockApp.render();
+          beforeCases += 1;
+
+          const card = document.querySelector(level === 0 ? '.japanese-only-card' : '.guided-lesson-card');
+          const choices = [...document.querySelectorAll('.choice-button')];
+          if (!card || choices.length !== question.choices.length) beforeFailure(question, level, 'production study card/choices');
+          if (document.querySelectorAll('[data-learning-component="choice-easy-japanese"], .choice-easy-japanese').length) {
+            beforeFailure(question, level, 'choice easyJa mounted');
+          }
+          if (document.querySelector('[data-learning-component="answer-explanation"], [data-learning-component="wrong-choice-explanation"], .answer-panel, .choice-review, .memory-point, .choice-button.correct, .choice-button.wrong')) {
+            beforeFailure(question, level, 'answer-only material or result class mounted');
+          }
+          for (const element of [document.body, ...document.body.querySelectorAll('*')]) {
+            for (const attribute of element.attributes) {
+              if (attribute.name !== 'data-choice' && attribute.value === question.correctChoiceId) {
+                beforeFailure(question, level, `correctChoiceId mounted in ${attribute.name}`);
+              }
+            }
+          }
+          const questionEasy = document.querySelector('.meaning-stage .support-box:not(.id) p[lang="ja"]');
+          if ((level === 3 && questionEasy?.textContent !== question.question.easyJa) || (level !== 3 && questionEasy)) {
+            beforeFailure(question, level, 'question easyJa boundary');
+          }
+          const expectedQuestionReadings = level > 0
+            ? (question.question.rubyJa ?? []).filter((segment) => segment.reading).length
+            : 0;
+          if (document.querySelectorAll('.question-text rt').length !== expectedQuestionReadings) {
+            beforeFailure(question, level, 'question ruby boundary');
+          }
+          const questionTranslations = document.querySelectorAll('.meaning-stage [data-learning-component="indonesian-translation"]');
+          const choiceTranslations = document.querySelectorAll('.choice-button [data-learning-component="choice-translation"]');
+          if (questionTranslations.length !== (level === 3 ? 1 : 0)) beforeFailure(question, level, 'question ID boundary');
+          if (choiceTranslations.length !== (level === 3 ? question.choices.length : 0)) beforeFailure(question, level, 'choice ID boundary');
+
+          const historyId = `production-history-${question.id}-${level}`;
+          LivestockApp.runtime.state.history.push({
+            id: historyId,
+            sessionId: LivestockApp.runtime.session.id,
+            questionId: question.id,
+            correct: true,
+          });
+          LivestockApp.runtime.session = newSession(question, level, true);
+          LivestockApp.render();
+          afterCases += 1;
+
+          if (document.querySelectorAll('[data-learning-component="choice-easy-japanese"], .choice-easy-japanese').length) {
+            afterFailure(question, level, 'choice easyJa mounted');
+          }
+          if (document.querySelectorAll('[data-learning-component="answer-explanation"]').length !== 1) {
+            afterFailure(question, level, 'correct explanation missing');
+          }
+          if (document.querySelectorAll('.choice-review-item').length !== question.choices.length) {
+            afterFailure(question, level, 'choice rationale count');
+          }
+          const answeredChoiceTranslations = document.querySelectorAll('.choice-button [data-learning-component="choice-translation"]');
+          if (answeredChoiceTranslations.length !== (level === 3 ? question.choices.length : 0)) {
+            afterFailure(question, level, 'choice ID boundary');
+          }
+          const retry = document.querySelector('[data-retry-without-support]');
+          if (level === 0) {
+            if (retry || document.querySelectorAll('.japanese-only-card').length !== 1) {
+              afterFailure(question, level, 'Level 0 must already be Japanese-only without another retry');
+            }
+          } else if (!retry) {
+            afterFailure(question, level, 'retry control missing');
+          } else {
+            retry.click();
+            const retrySession = LivestockApp.runtime.session;
+            if (retrySession?.supportLevel !== 0
+                || retrySession?.isRetryWithoutSupport !== true
+                || document.querySelectorAll('.japanese-only-card').length !== 1
+                || document.querySelector('.japanese-only-card [lang="id"], .japanese-only-card ruby rt, .japanese-only-card [data-learning-component]')) {
+              afterFailure(question, level, 'production retry is not strict Level 0');
+            }
+          }
+          LivestockApp.runtime.state.history.length = original.historyLength;
+        }
+      }
+
+      LivestockApp.runtime.state.history.length = original.historyLength;
+      Object.assign(LivestockApp.runtime.state.settings, original.settings);
+      LivestockApp.runtime.view = original.view;
+      LivestockApp.runtime.session = original.session;
+      LivestockApp.runtime.lastMockResult = original.lastMockResult;
+      LivestockApp.render();
+      return { pilotCount: pilot.length, beforeCases, afterCases, failures };
+    }""")
+    if production_matrix['failures']:
+        print(json.dumps(production_matrix['failures'], ensure_ascii=False, indent=2), flush=True)
+    record(
+        checks,
+        'production_path_pilot_16_by_level_before_64_after_64',
+        production_matrix['pilotCount'] == 16
+        and production_matrix['beforeCases'] == 64
+        and production_matrix['afterCases'] == 64
+        and not production_matrix['failures'],
+    )
+
     mode_contract = page.evaluate("""() => {
       const state = LivestockApp.defaultState();
       const question = LivestockApp.QUESTIONS.find((item) => item.id === 'q001');
@@ -895,6 +1058,12 @@ report = {
         'answeredCases': leak_matrix['answeredCases'],
         'samePattern': leak_matrix['samePattern'],
         'correlatedQuestionIds': leak_matrix['correlatedQuestionIds'],
+    },
+    'productionPath': {
+        'pilotCount': production_matrix['pilotCount'],
+        'beforeCases': production_matrix['beforeCases'],
+        'afterCases': production_matrix['afterCases'],
+        'failures': production_matrix['failures'],
     },
     'screenshots': sorted(path.name for path in SHOTS.glob('*.png')),
 }

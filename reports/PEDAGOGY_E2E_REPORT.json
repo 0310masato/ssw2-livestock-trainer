@@ -11,6 +11,7 @@
     "q055_choice_easy_ja_absent_before_and_after": true,
     "q078_choice_easy_ja_absent_before_and_after": true,
     "q079_choice_easy_ja_absent_before_and_after": true,
+    "production_path_pilot_16_by_level_before_64_after_64": true,
     "support_mode_contract_guided_adaptive_japanese_only": true,
     "settings_ui_exposes_mode_and_guided_level_without_legacy_toggles": true,
     "level0_ja_operation_labels": true,
@@ -166,6 +167,12 @@
       "q078",
       "q079"
     ]
+  },
+  "productionPath": {
+    "pilotCount": 16,
+    "beforeCases": 64,
+    "afterCases": 64,
+    "failures": []
   },
   "screenshots": [
     "01-level2-closed.png",
