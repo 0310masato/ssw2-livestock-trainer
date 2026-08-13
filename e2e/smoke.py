@@ -44,12 +44,19 @@ with sync_playwright() as p:
 
     checks: dict[str, bool] = {}
     body = page.locator('body').inner_text()
-    check('今日の10問を始める' in body and 'approved 問題はまだ0問' in body, 'home_render', checks)
+    check('Mulai 10 soal hari ini' in body and 'Belum ada soal berstatus approved' in body, 'home_render_indonesian', checks)
+    check(page.locator('[data-ui-language]').count() == 2 and page.evaluate("document.documentElement.lang === 'id'"), 'language_switcher_default', checks)
     check(page.locator('[data-category]').count() == 9, 'category_navigation', checks)
     tap_heights = page.evaluate("""() => [...document.querySelectorAll('button')].filter((el) => el.offsetParent !== null).slice(0, 25).map((el) => el.getBoundingClientRect().height)""")
     check(bool(tap_heights) and min(tap_heights) >= 40, 'mobile_tap_targets', checks)
     check(page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'), 'mobile_no_horizontal_overflow', checks)
     page.screenshot(path=str(SHOTS / 'alpha-home-mobile.png'), full_page=True)
+
+    page.locator('[data-ui-language="ja"]').click()
+    page.wait_for_timeout(150)
+    check('今日の10問を始める' in page.locator('body').inner_text() and page.evaluate("document.documentElement.lang === 'ja'"), 'language_switch_to_japanese', checks)
+    page.wait_for_timeout(150)
+    check(page.evaluate("JSON.parse(localStorage.getItem('livestock2-state-v0.4')).settings.uiLanguage === 'ja'"), 'language_selection_persisted', checks)
 
     page.locator('[data-start="daily"]').first.click()
     page.wait_for_timeout(150)

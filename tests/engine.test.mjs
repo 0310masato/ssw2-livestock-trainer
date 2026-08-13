@@ -145,3 +145,16 @@ test('mock exam uses 50 unique questions and grades answers', () => {
   assert.equal(result.unanswered, 38);
   assert.equal(result.accuracy, 24);
 });
+
+test('UI language defaults to Indonesian and can be persisted', () => {
+  const state = app.defaultState();
+  assert.equal(state.settings.uiLanguage, 'id');
+  assert.equal(app.translateUiText('ホーム', 'id'), 'Beranda');
+  assert.equal(app.translateUiText('今日の10問を始める', 'id'), 'Mulai 10 soal hari ini');
+  assert.equal(app.translateUiText('ホーム', 'ja'), 'ホーム');
+
+  const imported = app.validateImportedState({ settings: { uiLanguage: 'ja' } });
+  assert.equal(imported.settings.uiLanguage, 'ja');
+  const migrated = app.validateImportedState({ settings: {} });
+  assert.equal(migrated.settings.uiLanguage, 'id');
+});

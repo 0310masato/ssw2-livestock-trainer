@@ -24,6 +24,7 @@ namespace LivestockApp {
   export async function boot(): Promise<void> {
     const state = await loadState();
     runtime = initialRuntime(state);
+    applyDocumentUiLanguage();
     window.addEventListener('online', () => {
       runtime.online = true;
       render();
@@ -62,6 +63,7 @@ namespace LivestockApp {
     const root = document.querySelector<HTMLElement>('#app');
     if (!root) return;
     root.innerHTML = appShell(renderCurrentView());
+    applyUiLanguage(root);
     bindEvents();
     startMockTickerIfNeeded();
   }
@@ -331,11 +333,11 @@ namespace LivestockApp {
     const titleNode = document.querySelector<HTMLElement>('[data-confirm-title]');
     const textNode = document.querySelector<HTMLElement>('[data-confirm-text]');
     if (!dialog || !titleNode || !textNode) {
-      if (window.confirm(text)) callback();
+      if (window.confirm(translateUiText(text))) callback();
       return;
     }
-    titleNode.textContent = title;
-    textNode.textContent = text;
+    titleNode.textContent = translateUiText(title);
+    textNode.textContent = translateUiText(text);
     dialog.showModal();
   }
 
@@ -392,6 +394,13 @@ namespace LivestockApp {
   function bindEvents(): void {
     document.querySelectorAll<HTMLElement>('[data-view]').forEach((element) => {
       element.addEventListener('click', () => setView(element.dataset.view as ViewName));
+    });
+    document.querySelectorAll<HTMLElement>('[data-ui-language]').forEach((element) => {
+      element.addEventListener('click', () => {
+        runtime.state.settings.uiLanguage = element.dataset.uiLanguage === 'ja' ? 'ja' : 'id';
+        void persist();
+        render();
+      });
     });
     document.querySelectorAll<HTMLElement>('[data-start]').forEach((element) => {
       element.addEventListener('click', () => startSession(element.dataset.start as SessionKind));
@@ -465,7 +474,7 @@ namespace LivestockApp {
         const [questionId, mark] = (element.dataset.reviewSet ?? '').split('|') as [string, ReviewMark];
         let note = runtime.state.reviews[questionId]?.note ?? '';
         if (mark === '要修正') {
-          const entered = window.prompt(`${questionId} 要修正の理由`, note);
+          const entered = window.prompt(translateUiText(`${questionId} 要修正の理由`), note);
           if (entered === null) return;
           note = entered;
         }
@@ -482,6 +491,11 @@ namespace LivestockApp {
         void persist();
         render();
       });
+    });
+    document.querySelector<HTMLSelectElement>('[data-setting-ui-language]')?.addEventListener('change', (event) => {
+      runtime.state.settings.uiLanguage = (event.currentTarget as HTMLSelectElement).value === 'ja' ? 'ja' : 'id';
+      void persist();
+      render();
     });
     document.querySelector<HTMLSelectElement>('[data-setting-level]')?.addEventListener('change', (event) => {
       runtime.state.settings.preferredSupportLevel = Number((event.currentTarget as HTMLSelectElement).value) as 0 | 1 | 2 | 3;
