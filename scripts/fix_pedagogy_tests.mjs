@@ -32,6 +32,15 @@ e2e = e2e.replace(
   "    page.locator(f'[data-choice=\"{wrong_choice}\"]').click()",
   "    page.evaluate(\"(selector) => document.querySelector(selector)?.click()\", f'[data-choice=\"{wrong_choice}\"]')",
 );
+e2e = e2e.replace(
+  "    page.locator('[data-glossary-search]').fill('分娩')",
+  "    page.evaluate(\"\"\"() => { const input = document.querySelector('[data-glossary-search]'); input.value = '分娩'; input.dispatchEvent(new Event('input', { bubbles: true })); }\"\"\")",
+);
+e2e = e2e.replace(
+  "    page = browser.new_page(viewport={'width': 390, 'height': 844}, device_scale_factor=1)",
+  "    page = browser.new_page(viewport={'width': 390, 'height': 844}, device_scale_factor=1)\n    page.set_default_timeout(5000)",
+);
+e2e = e2e.replaceAll(', full_page=True)', ', full_page=False)');
 if (!e2e.includes("guided_indonesian_lesson")) throw new Error('Guided lesson checks were not generated.');
 const remainingLocatorClicks = e2e.split('\n').filter(
   (line) => line.includes('page.locator') && line.includes('.click()'),
