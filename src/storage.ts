@@ -4,10 +4,13 @@ namespace LivestockApp {
   const STORE_NAME = 'app';
   const STATE_KEY = 'state-v0.4';
   const FALLBACK_KEY = 'livestock2-state-v0.4';
+  let writeQueue: Promise<void> = Promise.resolve();
 
   export function defaultState(): AppState {
     return {
-      schemaVersion: '0.5.0',
+      schemaVersion: '0.6.0',
+      revision: 0,
+      updatedAt: nowIso(),
       history: [],
       mastery: {},
       mockDraft: null,
@@ -31,6 +34,30 @@ namespace LivestockApp {
     };
   }
 
+  function normalizedSupportLevel(value: unknown): SupportLevel {
+    const numeric = Number(value);
+    return ([0, 1, 2, 3] as const).includes(numeric as SupportLevel) ? numeric as SupportLevel : 3;
+  }
+
+  function migrateHistory(raw: unknown): HistoryEntry[] {
+    if (!Array.isArray(raw)) return [];
+    return raw.filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === 'object').map((entry) => ({
+      ...entry,
+      usedEasyJapanese: Boolean(entry.usedEasyJapanese),
+      usedIndonesian: Boolean(entry.usedIndonesian),
+      usedFurigana: Boolean(entry.usedFurigana),
+      openedKeywords: Boolean(entry.openedKeywords),
+      openedQuestionTranslation: Boolean(entry.openedQuestionTranslation ?? entry.usedIndonesian),
+      openedChoiceTranslations: Boolean(entry.openedChoiceTranslations),
+      openedAnswerIndonesian: Boolean(entry.openedAnswerIndonesian),
+      supportLevel: normalizedSupportLevel(entry.supportLevel),
+      knowledgeGap: Boolean(entry.knowledgeGap) || entry.reason === 'knowledge',
+      japaneseGap: Boolean(entry.japaneseGap) || entry.reason === 'japanese',
+      retryOfHistoryId: typeof entry.retryOfHistoryId === 'string' ? entry.retryOfHistoryId : null,
+      isRetryWithoutSupport: Boolean(entry.isRetryWithoutSupport),
+    })) as HistoryEntry[];
+  }
+
   function mergeState(raw: unknown): AppState {
     const base = defaultState();
     if (!raw || typeof raw !== 'object') return base;
@@ -45,20 +72,46 @@ namespace LivestockApp {
         : 'guided',
       showVocabulary: candidateSettings.showVocabulary !== false,
       showQuestionPattern: candidateSettings.showQuestionPattern !== false,
+      preferredSupportLevel: normalizedSupportLevel(candidateSettings.preferredSupportLevel),
+      automaticSupport: candidateSettings.automaticSupport !== false,
+      showFurigana: candidateSettings.showFurigana !== false,
+      showEasyJapanese: candidateSettings.showEasyJapanese !== false,
+      showIndonesian: candidateSettings.showIndonesian !== false,
     };
     return {
       ...base,
       ...candidate,
-      history: Array.isArray(candidate.history) ? candidate.history : [],
+      history: migrateHistory(candidate.history),
       mastery: candidate.mastery && typeof candidate.mastery === 'object' ? candidate.mastery : {},
       mockDraft: candidate.mockDraft ?? null,
       mockHistory: Array.isArray(candidate.mockHistory) ? candidate.mockHistory : [],
       reviews: candidate.reviews && typeof candidate.reviews === 'object' ? candidate.reviews : {},
       settings,
       lastSessionQuestionIds: Array.isArray(candidate.lastSessionQuestionIds) ? candidate.lastSessionQuestionIds : [],
-      lastOpenedAt: nowIso(),
-      schemaVersion: '0.5.0',
+      revision: Number.isInteger(candidate.revision) && Number(candidate.revision) >= 0 ? Number(candidate.revision) : 0,
+      updatedAt: typeof candidate.updatedAt === 'string'
+        ? candidate.updatedAt
+        : typeof candidate.lastOpenedAt === 'string' ? candidate.lastOpenedAt : base.updatedAt,
+      lastOpenedAt: typeof candidate.lastOpenedAt === 'string' ? candidate.lastOpenedAt : base.lastOpenedAt,
+      schemaVersion: '0.6.0',
     };
+  }
+
+  function freshness(raw: unknown): [number, number] {
+    if (!raw || typeof raw !== 'object') return [-1, -1];
+    const candidate = raw as Partial<AppState>;
+    const revision = Number.isInteger(candidate.revision) ? Number(candidate.revision) : 0;
+    const timestamp = Date.parse(candidate.updatedAt ?? candidate.lastOpenedAt ?? '') || 0;
+    return [revision, timestamp];
+  }
+
+  function freshest(indexed: unknown, fallback: unknown): unknown {
+    if (!indexed) return fallback;
+    if (!fallback) return indexed;
+    const [indexedRevision, indexedTime] = freshness(indexed);
+    const [fallbackRevision, fallbackTime] = freshness(fallback);
+    if (fallbackRevision !== indexedRevision) return fallbackRevision > indexedRevision ? fallback : indexed;
+    return fallbackTime >= indexedTime ? fallback : indexed;
   }
 
   function openDatabase(): Promise<IDBDatabase> {
@@ -102,28 +155,37 @@ namespace LivestockApp {
   }
 
   export async function loadState(): Promise<AppState> {
+    let indexed: unknown = null;
+    let fallback: unknown = null;
     try {
-      const indexed = await readIndexedDb();
-      if (indexed) return mergeState(indexed);
+      indexed = await readIndexedDb();
     } catch (error) {
-      console.warn('IndexedDB load failed. Falling back to localStorage.', error);
+      console.warn('IndexedDB load failed. Comparing available localStorage state.', error);
     }
 
     try {
       const text = localStorage.getItem(FALLBACK_KEY);
-      if (text) return mergeState(JSON.parse(text));
+      if (text) fallback = JSON.parse(text);
     } catch (error) {
       console.warn('Fallback state load failed.', error);
     }
-    return defaultState();
+    const state = mergeState(freshest(indexed, fallback));
+    state.lastOpenedAt = nowIso();
+    return state;
   }
 
   export async function saveState(state: AppState): Promise<void> {
-    state.lastOpenedAt = nowIso();
+    const timestamp = nowIso();
+    state.revision = Math.max(0, Number(state.revision) || 0) + 1;
+    state.updatedAt = timestamp;
+    state.lastOpenedAt = timestamp;
     const serialized = JSON.stringify(state);
     localStorage.setItem(FALLBACK_KEY, serialized);
+    const snapshot = JSON.parse(serialized) as AppState;
+    const write = writeQueue.catch(() => undefined).then(() => writeIndexedDb(snapshot));
+    writeQueue = write.catch(() => undefined);
     try {
-      await writeIndexedDb(state);
+      await write;
     } catch (error) {
       console.warn('IndexedDB save failed. State is preserved in localStorage.', error);
     }
@@ -133,6 +195,7 @@ namespace LivestockApp {
     const next = defaultState();
     next.reviews = state.reviews;
     next.settings = state.settings;
+    next.revision = state.revision;
     await saveState(next);
     return next;
   }

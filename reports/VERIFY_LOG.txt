@@ -1,4 +1,6 @@
 
+HISTORICAL SNAPSHOT: This log records the pre-pilot v0.4.0 verification. Current v0.5.0 results are in VALIDATION_REPORT.md, E2E_REPORT.json, and PEDAGOGY_E2E_REPORT.json.
+
 > ssw2-livestock-trainer@0.4.0-alpha-review verify
 > npm run validate:content && npm test && npm run test:e2e
 

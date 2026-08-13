@@ -6,12 +6,16 @@
   "type": "module",
   "scripts": {
     "clean": "node scripts/clean.mjs",
+    "generate:data": "node scripts/generate_data.mjs",
+    "check:data-sync": "node scripts/generate_data.mjs --check",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "node scripts/build.mjs",
     "validate:content": "python scripts/validate_content.py",
     "test": "npm run build && node --test tests/*.test.mjs",
-    "test:e2e": "python e2e/smoke.py",
-    "verify": "npm run validate:content && npm test && npm run test:e2e",
+    "test:e2e:core": "python e2e/smoke.py",
+    "test:e2e:pedagogy": "python e2e/pedagogy_smoke.py",
+    "test:e2e": "npm run test:e2e:core && npm run test:e2e:pedagogy",
+    "verify": "npm run check:data-sync && npm run validate:content && npm run typecheck && npm test && npm run test:e2e",
     "serve": "python -m http.server 4173 -d dist"
   },
   "devDependencies": {

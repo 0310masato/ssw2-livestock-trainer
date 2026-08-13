@@ -2,7 +2,7 @@
 
 特定技能2号「畜産農業」の受験者向けに作成した、スマートフォン中心の非公式学習支援PWAです。
 
-このリポジトリは **v0.4.0 Alpha・内部レビュー版** です。搭載する80問は公式教材との根拠照合済みですが、インドネシア語ネイティブ確認と利用者最終承認前です。問題状態は `source_checked` のままで、正式な `approved` は0問です。
+このリポジトリは **v0.5.0 Alpha・学習支援パイロット版** です。代表16問だけを新しい日本語学習支援形式へ移行し、残り64問は従来形式のまま保持しています。搭載する80問は公式教材との根拠照合済みですが、インドネシア語ネイティブ確認と利用者最終承認前です。問題状態は `source_checked` のままで、正式な `approved` は0問です。
 
 ## この版で動く機能
 
@@ -14,7 +14,7 @@
 - 誤答原因の分類：知識、日本語、読み違い、計算、時間、その他
 - 間隔反復：10分後、3日、7日、14日、30日
 - 50問・60分の模擬試験
-- 日本語専門用語60語
+- 日本語専門用語63語
 - 成績・弱点分析
 - 会社管理者向け端末内ダッシュボード
 - 80問レビュー画面
@@ -73,6 +73,7 @@ npm run serve
 ## 検証
 
 ```bash
+npm run check:data-sync
 npm run typecheck
 npm run validate:content
 npm test
@@ -85,14 +86,21 @@ npm run test:e2e
 npm run verify
 ```
 
-`validate:content` は公式PDFのハッシュ、ページ数、根拠アンカーを確認するため、次のローカルパスを使用します。
+`validate:content` は公式PDFのハッシュ、ページ数、根拠アンカーを確認します。既定値は `/mnt/data` です。別の保存場所を使う場合は、2ファイルを同じフォルダーに置いて `SSW2_SOURCE_DIR` を指定します（PDF自体はGitへ追加しません）。
 
 ```text
 /mnt/data/技能測定試験（畜産農業）.pdf
 /mnt/data/衛生管理（畜産農業）.pdf
 ```
 
-GitHub CIでは著作権上PDFをリポジトリへ含めず、構造・ビルド・学習ロジック・PWA構成を検査します。公式PDFとの完全照合は、許可されたローカル環境で実行します。
+PowerShell例：
+
+```powershell
+$env:SSW2_SOURCE_DIR = 'C:\controlled-source-review'
+npm run validate:content
+```
+
+GitHub CIでは著作権上PDFをリポジトリへ含めず、データ同期、構造、型、ビルド、学習ロジック、360px Playwright、模試の日本語限定、PWA構成を検査します。公式PDFとの完全照合は、許可されたローカル環境で実行します。
 
 ## ディレクトリ
 
@@ -156,3 +164,13 @@ v0.4.1ではGitHub登録後の検証に必要なCI、手動Pages workflow、Andr
 - 模擬試験は日本語のみ
 
 詳細は [docs/PEDAGOGY_SPEC.md](docs/PEDAGOGY_SPEC.md) を参照してください。
+
+### Phase 1 教材・レビュー仕様
+
+- [学習支援レベル仕様](docs/LEARNING_SUPPORT_SPEC.md)
+- [ふりがな作成・確認方針](docs/FURIGANA_POLICY.md)
+- [インドネシア語翻訳ガイド](docs/INDONESIAN_TRANSLATION_GUIDE.md)
+- [問題解説・日本語ポイント作成方針](docs/QUESTION_EXPLANATION_POLICY.md)
+- [コンテンツレビュー・チェックリスト](docs/CONTENT_REVIEW_CHECKLIST.md)
+
+このfeature branchでは代表16問だけをパイロットとしてレビューし、残り64問を含む全80問展開（Phase 6）は行いません。機械翻訳はdraftであり、日本語確認、インドネシア語ネイティブ確認、正答漏えい確認、利用者最終承認を別々のゲートとして扱います。

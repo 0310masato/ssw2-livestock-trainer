@@ -5,7 +5,7 @@
   "counts": {
     "facts": 100,
     "questions": 80,
-    "glossary": 60,
+    "glossary": 63,
     "visualAssets": 5
   },
   "statusCounts": {
@@ -36,11 +36,51 @@
   "indonesianReviewCounts": {
     "pending_native_review": 80
   },
+  "pilot": {
+    "questionIds": [
+      "q001",
+      "q004",
+      "q008",
+      "q013",
+      "q016",
+      "q029",
+      "q033",
+      "q035",
+      "q044",
+      "q045",
+      "q049",
+      "q055",
+      "q057",
+      "q078",
+      "q079",
+      "q080"
+    ],
+    "count": 16,
+    "nativeIndonesianUnchecked": 16,
+    "nativeIndonesianUncheckedIds": [
+      "q001",
+      "q004",
+      "q008",
+      "q013",
+      "q016",
+      "q029",
+      "q033",
+      "q035",
+      "q044",
+      "q045",
+      "q049",
+      "q055",
+      "q057",
+      "q078",
+      "q079",
+      "q080"
+    ]
+  },
   "anchorVerification": {
-    "available": false,
-    "skipped": true,
+    "available": true,
+    "skipped": false,
     "anchoredFacts": 50,
-    "passed": 0,
+    "passed": 50,
     "failed": 0,
     "legacyManualPageReferences": 50
   },
@@ -63,7 +103,7 @@
     {
       "name": "Glossary count",
       "pass": true,
-      "detail": "60 / 60"
+      "detail": "63 / 63"
     },
     {
       "name": "Unique question IDs",
@@ -121,18 +161,69 @@
       "detail": "[]"
     },
     {
-      "name": "Official-source binary verification",
+      "name": "Representative v0.4 pilot count",
       "pass": true,
-      "detail": "SKIPPED: official PDFs are not mounted in this CI environment; source IDs and page ranges were checked against source-ledger.json.",
-      "warning": true,
-      "skipped": true
+      "detail": "16 / 16"
+    },
+    {
+      "name": "Pilot required translations are populated",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot kanji ruby segments have readings",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot correct-answer reasons are populated",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot wrong-choice reasons are populated",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot wrong-choice reasons are choice-specific",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot questions have 1 to 5 key terms",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot questions identify at least one Japanese language point",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot question and choice translations retain Japanese term annotations and readings for kanji",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot questions identify source title, edition, page, and section",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot review gates are explicit",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Official-source hashes and page counts match ledger",
+      "pass": true,
+      "detail": "[]"
     },
     {
       "name": "Automated PDF anchor verification",
       "pass": true,
-      "detail": "SKIPPED: 50 anchored facts require the mounted official PDFs. Run npm run validate:content in the controlled source-review environment for full verification.",
-      "warning": true,
-      "skipped": true
+      "detail": "50/50 anchored facts passed; 50 legacy facts retain manual page references"
     },
     {
       "name": "No exact duplicate question wording",
@@ -144,6 +235,12 @@
       "pass": true,
       "detail": "0 pair(s) at similarity >= 0.92",
       "warning": false
+    },
+    {
+      "name": "Pilot native-Indonesian review queue",
+      "pass": true,
+      "detail": "16 / 16 pilot question(s) remain outside approved until languageId=pass",
+      "warning": true
     }
   ],
   "nearDuplicates": [],
@@ -152,6 +249,7 @@
     "sourceChecked": 80,
     "approved": 0,
     "nativeIndonesianReviewed": 0,
+    "pilotNativeIndonesianUnchecked": 16,
     "remaining": [
       "インドネシア語ネイティブ確認",
       "利用者操作テスト",

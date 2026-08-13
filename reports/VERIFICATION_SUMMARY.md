@@ -1,5 +1,7 @@
 # 畜産2号トレーナー Alpha v0.4.1 検証報告
 
+> この文書は2026-08-12時点のAlpha v0.4.1検証スナップショットです。現在のv0.5.0パイロット結果は `VALIDATION_REPORT.md`、`E2E_REPORT.json`、`PEDAGOGY_E2E_REPORT.json` を参照してください。
+
 作成日：2026-08-12
 
 ## 結論

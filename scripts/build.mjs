@@ -12,7 +12,8 @@ await mkdir(buildDir, { recursive: true });
 await mkdir(resolve(distDir, 'assets'), { recursive: true });
 await mkdir(resolve(distDir, 'data'), { recursive: true });
 
-execFileSync('tsc', ['-p', resolve(root, 'tsconfig.json')], { stdio: 'inherit' });
+const tscEntry = resolve(root, 'node_modules', 'typescript', 'bin', 'tsc');
+execFileSync(process.execPath, [tscEntry, '-p', resolve(root, 'tsconfig.json')], { stdio: 'inherit' });
 
 await cp(resolve(root, 'public', 'assets'), resolve(distDir, 'assets'), { recursive: true });
 for (const file of ['questions-alpha-80.json', 'source-facts.json', 'glossary-ja-id.json', 'source-ledger.json', 'question.schema.json', 'review-checklist.csv']) {

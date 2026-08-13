@@ -90,7 +90,7 @@ namespace LivestockApp {
     '成績を見る': 'Lihat hasil',
     '今日の問題へ': 'Ke soal hari ini',
     '日本語専門用語': 'Istilah teknis bahasa Jepang',
-    '試験問題を読むための60語です。一般日本語ではなく、畜産・安全衛生の専門語に絞っています。': 'Berisi 60 istilah untuk membaca soal ujian, khusus peternakan serta keselamatan dan kesehatan kerja.',
+    '試験問題を読むための63語です。一般日本語ではなく、畜産・安全衛生の専門語に絞っています。': 'Berisi 63 istilah untuk membaca soal ujian, khusus peternakan serta keselamatan dan kesehatan kerja.',
     '例：分娩、飼料、防疫、melahirkan': 'Contoh: 分娩, 飼料, 防疫, melahirkan',
     '関連問題を探す': 'Cari soal terkait',
     '該当する用語がありません': 'Istilah tidak ditemukan',
@@ -273,7 +273,7 @@ namespace LivestockApp {
     0: 'Bahasa Jepang saja',
   };
 
-  const PROTECTED_CONTENT = '.question-text, .choice-copy, .support-box p, .glossary-term, .glossary-row > p, .review-card h2';
+  const PROTECTED_CONTENT = '.question-text, .choice-copy, .support-box p, .glossary-term, .glossary-row > p, .review-card h2, [data-learning-component], .mock-shell';
 
   export function currentUiLanguage(): UiLanguage {
     try {
@@ -414,8 +414,8 @@ namespace LivestockApp {
     cluster.prepend(group);
   }
 
-  export function applyDocumentUiLanguage(): void {
-    const language = currentUiLanguage();
+  export function applyDocumentUiLanguage(languageOverride?: UiLanguage): void {
+    const language = languageOverride ?? currentUiLanguage();
     document.documentElement.lang = language;
     document.documentElement.dataset.uiLanguage = language;
     document.title = ui('畜産2号トレーナー', 'Pelatih Peternakan Tingkat 2', language);
@@ -431,9 +431,10 @@ namespace LivestockApp {
 
   export function applyUiLanguage(root: HTMLElement): void {
     ensureLanguageStyles();
-    ensureLanguageSwitcher(root);
-    applyDocumentUiLanguage();
-    const language = currentUiLanguage();
+    const mockActive = Boolean(root.querySelector('[data-mock-app-shell]'));
+    if (!mockActive) ensureLanguageSwitcher(root);
+    const language: UiLanguage = mockActive ? 'ja' : currentUiLanguage();
+    applyDocumentUiLanguage(language);
     root.classList.toggle('ui-language-id', language === 'id');
 
     root.querySelectorAll<HTMLElement>('[data-ui-language]').forEach((button) => {

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import pathlib
 import re
 import sys
@@ -27,9 +28,10 @@ GLOSSARY = json.loads((DATA / 'glossary-ja-id.json').read_text(encoding='utf-8')
 SCHEMA = json.loads((DATA / 'question.schema.json').read_text(encoding='utf-8'))
 LEDGER = json.loads((DATA / 'source-ledger.json').read_text(encoding='utf-8'))
 
+SOURCE_DIR = pathlib.Path(os.environ.get('SSW2_SOURCE_DIR', '/mnt/data'))
 PDFS = {
-    'livestock-textbook-2023-09': pathlib.Path('/mnt/data/技能測定試験（畜産農業）.pdf'),
-    'safety-textbook-2023-09': pathlib.Path('/mnt/data/衛生管理（畜産農業）.pdf'),
+    'livestock-textbook-2023-09': SOURCE_DIR / '技能測定試験（畜産農業）.pdf',
+    'safety-textbook-2023-09': SOURCE_DIR / '衛生管理（畜産農業）.pdf',
 }
 LEDGER_BY_ID = {doc['sourceId']: doc for doc in LEDGER.get('officialDocuments', [])}
 SOURCE_PDFS_AVAILABLE = fitz is not None and all(path.exists() for path in PDFS.values())
@@ -66,6 +68,32 @@ def check(condition: bool, name: str, detail: str = '') -> dict:
     return {'name': name, 'pass': bool(condition), 'detail': detail}
 
 
+HAN_RE = re.compile(r'[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff々〆ヶ]')
+PILOT_TERM_ANNOTATION_RE = re.compile(r'（[^（）]*[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff々〆ヶ][^（）]*）')
+PILOT_TERM_WITH_READING_RE = re.compile(
+    r'（[^（）]*[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff々〆ヶ][^（）]*／[^（）]+）'
+)
+
+
+def localized_texts(question: dict) -> list[tuple[str, dict]]:
+    values = [('question', question.get('question', {})), ('explanation', question.get('explanation', {}))]
+    values.extend((f"choice:{choice.get('id')}", choice.get('text', {})) for choice in question.get('choices', []))
+    values.extend((f"rationale:{choice_id}", value) for choice_id, value in question.get('choiceRationales', {}).items())
+    support = question.get('learningSupport', {})
+    values.extend([('lessonObjective', support.get('lessonObjective', {})), ('memoryPoint', support.get('memoryPoint', {}))])
+    if support.get('intentOverride'):
+        values.append(('intentOverride', support['intentOverride']))
+    return values
+
+
+def missing_han_readings(value: dict) -> list[str]:
+    return [
+        str(segment.get('text', ''))
+        for segment in value.get('rubyJa', [])
+        if HAN_RE.search(str(segment.get('text', ''))) and not str(segment.get('reading', '')).strip()
+    ]
+
+
 checks: list[dict] = []
 issues: list[dict] = []
 validator = Draft202012Validator(SCHEMA)
@@ -79,7 +107,7 @@ issues.extend({'type': 'schema', **e} for e in schema_errors)
 checks += [
     check(len(FACTS) == 100, 'Knowledge-card count', f'{len(FACTS)} / 100'),
     check(len(QUESTIONS) == 80, 'Alpha-question count', f'{len(QUESTIONS)} / 80'),
-    check(len(GLOSSARY) == 60, 'Glossary count', f'{len(GLOSSARY)} / 60'),
+    check(len(GLOSSARY) == 63, 'Glossary count', f'{len(GLOSSARY)} / 63'),
 ]
 
 qids = [q['id'] for q in QUESTIONS]
@@ -100,6 +128,18 @@ bad_status = []
 bad_language = []
 missing_assets = []
 bad_pedagogy = []
+pilot_ids = set()
+pilot_missing_translation = []
+pilot_missing_furigana = []
+pilot_missing_correct_reason = []
+pilot_missing_wrong_reason = []
+pilot_duplicate_wrong_reasons = []
+pilot_missing_keywords = []
+pilot_missing_source = []
+pilot_missing_review_flags = []
+pilot_missing_language_points = []
+pilot_missing_term_annotations = []
+pilot_native_unchecked = []
 for q in QUESTIONS:
     for fid in q.get('sourceFactIds', []):
         if fid not in fact_ids:
@@ -134,7 +174,7 @@ for q in QUESTIONS:
     rationales = q.get('choiceRationales', {})
     ruby_fields = [q.get('question', {}), q.get('explanation', {}), *[c.get('text', {}) for c in q.get('choices', [])], *rationales.values()]
     if (
-        q.get('schemaVersion') != '0.3.0'
+        q.get('schemaVersion') not in {'0.3.0', '0.4.0'}
         or not support.get('questionPattern')
         or not support.get('keyTermIds')
         or len(rationales) != len(q.get('choices', []))
@@ -142,6 +182,50 @@ for q in QUESTIONS:
         or any(not all(str(item.get(k, '')).strip() for k in ('ja', 'easyJa', 'id')) for item in rationales.values())
     ):
         bad_pedagogy.append(q['id'])
+    if q.get('schemaVersion') == '0.4.0':
+        qid = q['id']
+        pilot_ids.add(qid)
+        for path, value in localized_texts(q):
+            if not all(str(value.get(key, '')).strip() for key in ('ja', 'easyJa', 'id')):
+                pilot_missing_translation.append((qid, path))
+            if not value.get('rubyJa') or missing_han_readings(value):
+                pilot_missing_furigana.append((qid, path, missing_han_readings(value)))
+        if not str(q.get('explanation', {}).get('ja', '')).strip() or not str(q.get('explanation', {}).get('id', '')).strip():
+            pilot_missing_correct_reason.append(qid)
+        for choice in q.get('choices', []):
+            rationale = q.get('choiceRationales', {}).get(choice.get('id'), {})
+            if choice.get('id') != q.get('correctChoiceId') and not all(str(rationale.get(key, '')).strip() for key in ('ja', 'easyJa', 'id')):
+                pilot_missing_wrong_reason.append((qid, choice.get('id')))
+        wrong_reason_texts = [
+            norm(q.get('choiceRationales', {}).get(choice.get('id'), {}).get('ja', ''))
+            for choice in q.get('choices', [])
+            if choice.get('id') != q.get('correctChoiceId')
+        ]
+        if len(wrong_reason_texts) != len(set(wrong_reason_texts)):
+            pilot_duplicate_wrong_reasons.append(qid)
+        if not 1 <= len(support.get('keyTermIds', [])) <= 5:
+            pilot_missing_keywords.append(qid)
+        if not support.get('languagePointKeys'):
+            pilot_missing_language_points.append(qid)
+        annotated_translations = [('question', q.get('question', {}).get('id', ''))]
+        annotated_translations.extend(
+            (f"choice:{choice.get('id')}", choice.get('text', {}).get('id', ''))
+            for choice in q.get('choices', [])
+        )
+        for path, text in annotated_translations:
+            annotations = PILOT_TERM_ANNOTATION_RE.findall(str(text))
+            if not annotations or any(
+                HAN_RE.search(annotation) and not PILOT_TERM_WITH_READING_RE.fullmatch(annotation)
+                for annotation in annotations
+            ):
+                pilot_missing_term_annotations.append((qid, path))
+        if not all(src.get(key) not in (None, '') for key in ('documentTitle', 'edition', 'pdfPage', 'section')):
+            pilot_missing_source.append(qid)
+        review = q.get('review', {})
+        if not all(key in review for key in ('furigana', 'japaneseLearning', 'answerLeak')):
+            pilot_missing_review_flags.append(qid)
+        if review.get('languageId') != 'pass':
+            pilot_native_unchecked.append(qid)
     if q.get('visual'):
         aid = q['visual'].get('assetId')
         if not aid or not (ASSET_DIR / f'{aid}.svg').exists():
@@ -156,8 +240,19 @@ checks += [
     check(not bad_language, 'All multilingual fields are populated', str(bad_language[:10])),
     check(not bad_pedagogy, 'All questions include ruby and pedagogical support', str(bad_pedagogy[:10])),
     check(not missing_assets, 'All declared original visual assets exist', str(missing_assets[:10])),
+    check(len(pilot_ids) == 16, 'Representative v0.4 pilot count', f'{len(pilot_ids)} / 16'),
+    check(not pilot_missing_translation, 'Pilot required translations are populated', str(pilot_missing_translation[:10])),
+    check(not pilot_missing_furigana, 'Pilot kanji ruby segments have readings', str(pilot_missing_furigana[:10])),
+    check(not pilot_missing_correct_reason, 'Pilot correct-answer reasons are populated', str(pilot_missing_correct_reason[:10])),
+    check(not pilot_missing_wrong_reason, 'Pilot wrong-choice reasons are populated', str(pilot_missing_wrong_reason[:10])),
+    check(not pilot_duplicate_wrong_reasons, 'Pilot wrong-choice reasons are choice-specific', str(pilot_duplicate_wrong_reasons[:10])),
+    check(not pilot_missing_keywords, 'Pilot questions have 1 to 5 key terms', str(pilot_missing_keywords[:10])),
+    check(not pilot_missing_language_points, 'Pilot questions identify at least one Japanese language point', str(pilot_missing_language_points[:10])),
+    check(not pilot_missing_term_annotations, 'Pilot question and choice translations retain Japanese term annotations and readings for kanji', str(pilot_missing_term_annotations[:10])),
+    check(not pilot_missing_source, 'Pilot questions identify source title, edition, page, and section', str(pilot_missing_source[:10])),
+    check(not pilot_missing_review_flags, 'Pilot review gates are explicit', str(pilot_missing_review_flags[:10])),
 ]
-for name, items in [('missing_fact_reference', missing_refs), ('bad_correct_choice', bad_correct), ('bad_source', bad_sources), ('bad_rights', bad_rights), ('bad_status', bad_status), ('bad_language', bad_language), ('bad_pedagogy', bad_pedagogy), ('missing_asset', missing_assets)]:
+for name, items in [('missing_fact_reference', missing_refs), ('bad_correct_choice', bad_correct), ('bad_source', bad_sources), ('bad_rights', bad_rights), ('bad_status', bad_status), ('bad_language', bad_language), ('bad_pedagogy', bad_pedagogy), ('missing_asset', missing_assets), ('pilot_missing_translation', pilot_missing_translation), ('pilot_missing_furigana', pilot_missing_furigana), ('pilot_missing_correct_reason', pilot_missing_correct_reason), ('pilot_missing_wrong_reason', pilot_missing_wrong_reason), ('pilot_duplicate_wrong_reasons', pilot_duplicate_wrong_reasons), ('pilot_missing_keywords', pilot_missing_keywords), ('pilot_missing_language_points', pilot_missing_language_points), ('pilot_missing_term_annotations', pilot_missing_term_annotations), ('pilot_missing_source', pilot_missing_source), ('pilot_missing_review_flags', pilot_missing_review_flags)]:
     issues.extend({'type': name, 'item': item} for item in items)
 
 # Source ledger and PDF verification.
@@ -245,6 +340,12 @@ status_counts = Counter(q['status'] for q in QUESTIONS)
 category_counts = Counter(q['category'] for q in QUESTIONS)
 fact_subject_counts = Counter(f['subject'] for f in FACTS)
 review_counts = Counter(q.get('review', {}).get('languageId', 'missing') for q in QUESTIONS)
+checks.append({
+    'name': 'Pilot native-Indonesian review queue',
+    'pass': True,
+    'detail': f'{len(pilot_native_unchecked)} / {len(pilot_ids)} pilot question(s) remain outside approved until languageId=pass',
+    'warning': bool(pilot_native_unchecked),
+})
 all_pass = all(c['pass'] for c in checks if c['name'] != 'Near-duplicate review queue')
 
 report = {
@@ -256,6 +357,12 @@ report = {
     'questionCountsByCategory': dict(category_counts),
     'factCountsBySubject': dict(fact_subject_counts),
     'indonesianReviewCounts': dict(review_counts),
+    'pilot': {
+        'questionIds': sorted(pilot_ids),
+        'count': len(pilot_ids),
+        'nativeIndonesianUnchecked': len(pilot_native_unchecked),
+        'nativeIndonesianUncheckedIds': sorted(pilot_native_unchecked),
+    },
     'anchorVerification': {'available': SOURCE_PDFS_AVAILABLE, 'skipped': anchor_skipped, 'anchoredFacts': anchor_total, 'passed': anchor_pass, 'failed': len(anchor_failures), 'legacyManualPageReferences': manual_page_refs},
     'checks': checks,
     'nearDuplicates': near_dupes,
@@ -264,6 +371,7 @@ report = {
         'sourceChecked': sum(q['status'] == 'source_checked' for q in QUESTIONS),
         'approved': sum(q['status'] == 'approved' for q in QUESTIONS),
         'nativeIndonesianReviewed': sum(q.get('review', {}).get('languageId') == 'pass' for q in QUESTIONS),
+        'pilotNativeIndonesianUnchecked': len(pilot_native_unchecked),
         'remaining': ['インドネシア語ネイティブ確認', '利用者操作テスト', 'マサトさん最終承認']
     }
 }

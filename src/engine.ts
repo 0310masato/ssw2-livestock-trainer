@@ -10,9 +10,13 @@ namespace LivestockApp {
     return new Set(state.history.map((entry) => entry.questionId));
   }
 
+  export function assessmentHistory(state: AppState): HistoryEntry[] {
+    return state.history.filter((entry) => !entry.isRetryWithoutSupport);
+  }
+
   export function calculateCategoryStats(state: AppState): CategoryStats[] {
     const grouped = new Map<string, HistoryEntry[]>();
-    for (const entry of state.history) {
+    for (const entry of assessmentHistory(state)) {
       const list = grouped.get(entry.category) ?? [];
       list.push(entry);
       grouped.set(entry.category, list);
@@ -137,7 +141,7 @@ namespace LivestockApp {
     return result.slice(0, count).map((question) => question.id);
   }
 
-  export function effectiveSupportLevel(state: AppState, question: Question): 0 | 1 | 2 | 3 {
+  export function effectiveSupportLevel(state: AppState, question: Question): SupportLevel {
     if (!state.settings.automaticSupport) return state.settings.preferredSupportLevel;
     const mastery = state.mastery[question.id];
     if (!mastery) return 3;
@@ -147,11 +151,101 @@ namespace LivestockApp {
     return 3;
   }
 
+  export function resolvedSupportLevel(
+    state: AppState,
+    question: Question,
+    kind: SessionKind,
+    forceWithoutSupport = false,
+  ): SupportLevel {
+    if (kind === 'mock' || forceWithoutSupport || state.settings.studySupportMode === 'japanese_only') return 0;
+    if (state.settings.studySupportMode === 'guided') {
+      return state.settings.automaticSupport ? 3 : state.settings.preferredSupportLevel;
+    }
+    return state.settings.automaticSupport ? effectiveSupportLevel(state, question) : state.settings.preferredSupportLevel;
+  }
+
+  export function supportPolicyForLevel(level: SupportLevel): ResolvedSupportPolicy {
+    if (level === 0) {
+      return {
+        level,
+        showFuriganaInitially: false,
+        showEasyJapaneseInitially: false,
+        showKeywordsInitially: false,
+        showIntent: false,
+        compactKeywordHints: false,
+        showQuestionTranslationInitially: false,
+        allowQuestionTranslation: false,
+        showChoiceTranslationsInitially: false,
+        allowChoiceTranslations: false,
+        showAnswerIndonesianInitially: false,
+        allowAnswerIndonesian: false,
+      };
+    }
+    if (level === 1) {
+      return {
+        level,
+        showFuriganaInitially: true,
+        showEasyJapaneseInitially: false,
+        showKeywordsInitially: true,
+        showIntent: false,
+        compactKeywordHints: true,
+        showQuestionTranslationInitially: false,
+        allowQuestionTranslation: false,
+        showChoiceTranslationsInitially: false,
+        allowChoiceTranslations: false,
+        showAnswerIndonesianInitially: false,
+        allowAnswerIndonesian: true,
+      };
+    }
+    if (level === 2) {
+      return {
+        level,
+        showFuriganaInitially: true,
+        showEasyJapaneseInitially: false,
+        showKeywordsInitially: true,
+        showIntent: true,
+        compactKeywordHints: false,
+        showQuestionTranslationInitially: false,
+        allowQuestionTranslation: true,
+        showChoiceTranslationsInitially: false,
+        allowChoiceTranslations: true,
+        showAnswerIndonesianInitially: false,
+        allowAnswerIndonesian: true,
+      };
+    }
+    return {
+      level,
+      showFuriganaInitially: true,
+      showEasyJapaneseInitially: true,
+      showKeywordsInitially: true,
+      showIntent: true,
+      compactKeywordHints: false,
+      showQuestionTranslationInitially: true,
+      allowQuestionTranslation: true,
+      showChoiceTranslationsInitially: true,
+      allowChoiceTranslations: true,
+      showAnswerIndonesianInitially: true,
+      allowAnswerIndonesian: true,
+    };
+  }
+
+  export function resolveSupportPolicy(
+    state: AppState,
+    question: Question,
+    kind: SessionKind,
+    forceWithoutSupport = false,
+  ): ResolvedSupportPolicy {
+    return supportPolicyForLevel(resolvedSupportLevel(state, question, kind, forceWithoutSupport));
+  }
+
   export function supportSettingsForLevel(level: number): Pick<UserSettings, 'showFurigana' | 'showEasyJapanese' | 'showIndonesian'> {
-    if (level <= 0) return { showFurigana: false, showEasyJapanese: false, showIndonesian: false };
-    if (level === 1) return { showFurigana: false, showEasyJapanese: false, showIndonesian: false };
-    if (level === 2) return { showFurigana: true, showEasyJapanese: true, showIndonesian: false };
-    return { showFurigana: true, showEasyJapanese: true, showIndonesian: true };
+    const normalized = clamp(Math.round(level), 0, 3) as SupportLevel;
+    const policy = supportPolicyForLevel(normalized);
+    return {
+      showFurigana: policy.showFuriganaInitially,
+      showEasyJapanese: policy.showEasyJapaneseInitially,
+      showIndonesian: policy.showQuestionTranslationInitially,
+    };
   }
 
   export function recordAnswer(
@@ -165,9 +259,15 @@ namespace LivestockApp {
       usedEasyJapanese: boolean;
       usedIndonesian: boolean;
       usedFurigana: boolean;
-      supportLevel: number;
+      openedKeywords?: boolean;
+      openedQuestionTranslation?: boolean;
+      openedChoiceTranslations?: boolean;
+      openedAnswerIndonesian?: boolean;
+      supportLevel: SupportLevel;
       reason: ErrorReason | null;
       confidence: 'sure' | 'unsure' | null;
+      retryOfHistoryId?: string | null;
+      isRetryWithoutSupport?: boolean;
       answeredAt?: Date;
     },
   ): HistoryEntry {
@@ -177,10 +277,29 @@ namespace LivestockApp {
     let stage = previous?.stage ?? 0;
 
     if (correct) {
-      const usedStrongSupport = options.usedIndonesian || options.usedEasyJapanese || options.supportLevel >= 2;
+      const usedStrongSupport = options.usedIndonesian
+        || options.usedEasyJapanese
+        || options.usedFurigana
+        || Boolean(options.openedKeywords)
+        || Boolean(options.openedQuestionTranslation)
+        || Boolean(options.openedChoiceTranslations)
+        || Boolean(options.openedAnswerIndonesian);
       const slow = options.elapsedMs > 120_000;
-      if (!usedStrongSupport && !slow && options.confidence !== 'unsure') stage = clamp(stage + 1, 1, 4);
-      else stage = Math.max(stage, 1);
+      if (!usedStrongSupport && !slow && options.confidence !== 'unsure') {
+        stage = clamp(stage + 1, 1, 4);
+      } else {
+        stage = Math.max(stage, 1);
+        // A supported success is useful evidence, but it must not be treated as
+        // an unsupported success. Require a second consecutive success at the
+        // same support level before fading one step, and cap the mastery that
+        // can be earned while stronger support is still visible.
+        const repeatedAtSameLevel = previous?.lastCorrect
+          && previous.lastSupportLevel === options.supportLevel;
+        const supportedCeiling: Record<SupportLevel, number> = { 0: 4, 1: 4, 2: 3, 3: 2 };
+        if (repeatedAtSameLevel) {
+          stage = Math.min(stage + 1, supportedCeiling[options.supportLevel]);
+        }
+      }
     } else {
       stage = 0;
     }
@@ -189,17 +308,23 @@ namespace LivestockApp {
       ? addDaysIso(answeredAt, REVIEW_INTERVAL_DAYS[stage] ?? 30)
       : addMinutesIso(answeredAt, 10);
 
-    state.mastery[question.id] = {
-      questionId: question.id,
-      factIds: question.sourceFactIds,
-      stage,
-      attempts: (previous?.attempts ?? 0) + 1,
-      correct: (previous?.correct ?? 0) + (correct ? 1 : 0),
-      dueAt,
-      lastAnsweredAt: answeredAt.toISOString(),
-      lastCorrect: correct,
-      lastSupportLevel: options.supportLevel,
-    };
+    // An immediate Japanese-only retry is evidence for the learner, but it is
+    // not a new spaced-repetition attempt. Keep the original due schedule and
+    // mastery counters so the retry cannot erase the learning need that was
+    // detected by the first answer.
+    if (!options.isRetryWithoutSupport) {
+      state.mastery[question.id] = {
+        questionId: question.id,
+        factIds: question.sourceFactIds,
+        stage,
+        attempts: (previous?.attempts ?? 0) + 1,
+        correct: (previous?.correct ?? 0) + (correct ? 1 : 0),
+        dueAt,
+        lastAnsweredAt: answeredAt.toISOString(),
+        lastCorrect: correct,
+        lastSupportLevel: options.supportLevel,
+      };
+    }
 
     const entry: HistoryEntry = {
       id: uid('answer'),
@@ -215,7 +340,15 @@ namespace LivestockApp {
       usedEasyJapanese: options.usedEasyJapanese,
       usedIndonesian: options.usedIndonesian,
       usedFurigana: options.usedFurigana,
+      openedKeywords: Boolean(options.openedKeywords),
+      openedQuestionTranslation: Boolean(options.openedQuestionTranslation),
+      openedChoiceTranslations: Boolean(options.openedChoiceTranslations),
+      openedAnswerIndonesian: Boolean(options.openedAnswerIndonesian),
       supportLevel: options.supportLevel,
+      knowledgeGap: options.reason === 'knowledge',
+      japaneseGap: options.reason === 'japanese',
+      retryOfHistoryId: options.retryOfHistoryId ?? null,
+      isRetryWithoutSupport: Boolean(options.isRetryWithoutSupport),
       reason: options.reason,
       confidence: options.confidence,
       at: answeredAt.toISOString(),
@@ -233,8 +366,9 @@ namespace LivestockApp {
   }
 
   export function overallAccuracy(state: AppState): number {
-    return state.history.length
-      ? Math.round((state.history.filter((entry) => entry.correct).length / state.history.length) * 100)
+    const independentAttempts = assessmentHistory(state);
+    return independentAttempts.length
+      ? Math.round((independentAttempts.filter((entry) => entry.correct).length / independentAttempts.length) * 100)
       : 0;
   }
 

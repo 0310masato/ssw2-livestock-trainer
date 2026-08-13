@@ -1,7 +1,7 @@
 [
   {
     "id": "q001",
-    "schemaVersion": "0.3.0",
+    "schemaVersion": "0.4.0",
     "status": "source_checked",
     "prototypeOnly": true,
     "category": "畜産共通",
@@ -14,7 +14,7 @@
     "question": {
       "ja": "日本で主に飼養されている家畜の組合せとして、最も適切なものはどれですか。",
       "easyJa": "日本でよく飼われている動物はどれですか。",
-      "id": "Kombinasi ternak yang paling umum dipelihara di Jepang adalah yang mana?",
+      "id": "Di antara kombinasi ternak（家畜／かちく）yang umum dalam pemeliharaan ternak（飼養／しよう）di Jepang, manakah yang paling tepat（最も適切／もっともてきせつ）?",
       "rubyJa": [
         {
           "text": "日本",
@@ -100,7 +100,7 @@
         "text": {
           "ja": "牛・豚・鶏",
           "easyJa": "牛・豚・鶏",
-          "id": "sapi, babi, dan ayam",
+          "id": "sapi, babi, dan ayam（牛・豚・鶏／うし・ぶた・にわとり）",
           "rubyJa": [
             {
               "text": "牛",
@@ -128,7 +128,7 @@
         "text": {
           "ja": "馬・羊・鹿",
           "easyJa": "馬・羊・鹿",
-          "id": "kuda, domba, dan rusa",
+          "id": "kuda, domba, dan rusa（馬・羊・鹿／うま・ひつじ・しか）",
           "rubyJa": [
             {
               "text": "馬",
@@ -156,7 +156,7 @@
         "text": {
           "ja": "魚・えび・かに",
           "easyJa": "魚・えび・かに",
-          "id": "ikan, udang, dan kepiting",
+          "id": "ikan, udang, dan kepiting（魚・えび・かに／さかな・えび・かに）",
           "rubyJa": [
             {
               "text": "魚",
@@ -182,11 +182,11 @@
         "text": {
           "ja": "米・麦・大豆",
           "easyJa": "米・麦・大豆",
-          "id": "beras, gandum, dan kedelai",
+          "id": "beras, gandum, dan kedelai（米・麦・大豆／こめ・むぎ・だいず）",
           "rubyJa": [
             {
               "text": "米",
-              "reading": "べい"
+              "reading": "こめ"
             },
             {
               "text": "・"
@@ -329,7 +329,10 @@
       "reviewerType": "ai_source_review",
       "reviewedAt": "2026-08-11",
       "approvalByUser": "pending",
-      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。"
+      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。",
+      "furigana": "pending",
+      "japaneseLearning": "pending",
+      "answerLeak": "pending"
     },
     "errorReasonOptions": [
       "knowledge",
@@ -468,60 +471,65 @@
         ]
       },
       "b": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「牛・豚・鶏」です。",
-        "easyJa": "これは正解ではありません。正解は「牛・豚・鶏」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “sapi, babi, dan ayam”. Menurut buku resmi, ternak utama di Jepang adalah sapi, babi, dan ayam.",
+        "ja": "「馬・羊・鹿」は、教材が日本の主な家畜として挙げる「牛・豚・鶏」の組合せではありません。",
+        "easyJa": "教材の主な家畜は牛・豚・鶏です。馬・羊・鹿の組合せではありません。",
+        "id": "“Kuda, domba, dan rusa” bukan kombinasi “sapi, babi, dan ayam” yang disebut materi sebagai ternak utama di Jepang.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "「"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "馬",
+            "reading": "うま"
           },
           {
-            "text": "は"
+            "text": "・"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
+            "text": "羊",
+            "reading": "ひつじ"
+          },
+          {
+            "text": "・"
+          },
+          {
+            "text": "鹿",
+            "reading": "しか"
+          },
+          {
+            "text": "」は、"
           },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
+            "text": "が"
+          },
+          {
+            "text": "日本",
+            "reading": "にほん"
+          },
+          {
             "text": "の"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "主",
+            "reading": "おも"
           },
           {
-            "text": "と"
+            "text": "な"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
+            "text": "家畜",
+            "reading": "かちく"
           },
           {
-            "text": "し"
+            "text": "として"
           },
           {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
+            "text": "挙げる",
+            "reading": "あげる"
           },
           {
             "text": "「"
@@ -545,71 +553,63 @@
             "reading": "にわとり"
           },
           {
-            "text": "」"
+            "text": "」の"
           },
           {
-            "text": "です"
+            "text": "組合せ",
+            "reading": "くみあわせ"
           },
           {
-            "text": "。"
+            "text": "ではありません。"
           }
         ]
       },
       "c": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「牛・豚・鶏」です。",
-        "easyJa": "これは正解ではありません。正解は「牛・豚・鶏」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “sapi, babi, dan ayam”. Menurut buku resmi, ternak utama di Jepang adalah sapi, babi, dan ayam.",
+        "ja": "「魚・えび・かに」は、教材が日本の主な家畜として挙げる「牛・豚・鶏」の組合せではありません。",
+        "easyJa": "教材の主な家畜は牛・豚・鶏です。魚・えび・かにの組合せではありません。",
+        "id": "“Ikan, udang, dan kepiting” bukan kombinasi “sapi, babi, dan ayam” yang disebut materi sebagai ternak utama di Jepang.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "「"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "魚",
+            "reading": "さかな"
           },
           {
-            "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
+            "text": "・えび・かに」は、"
           },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
+            "text": "が"
+          },
+          {
+            "text": "日本",
+            "reading": "にほん"
+          },
+          {
             "text": "の"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "主",
+            "reading": "おも"
           },
           {
-            "text": "と"
+            "text": "な"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
+            "text": "家畜",
+            "reading": "かちく"
           },
           {
-            "text": "し"
+            "text": "として"
           },
           {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
+            "text": "挙げる",
+            "reading": "あげる"
           },
           {
             "text": "「"
@@ -633,71 +633,77 @@
             "reading": "にわとり"
           },
           {
-            "text": "」"
+            "text": "」の"
           },
           {
-            "text": "です"
+            "text": "組合せ",
+            "reading": "くみあわせ"
           },
           {
-            "text": "。"
+            "text": "ではありません。"
           }
         ]
       },
       "d": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「牛・豚・鶏」です。",
-        "easyJa": "これは正解ではありません。正解は「牛・豚・鶏」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “sapi, babi, dan ayam”. Menurut buku resmi, ternak utama di Jepang adalah sapi, babi, dan ayam.",
+        "ja": "「米・麦・大豆」は、教材が日本の主な家畜として挙げる「牛・豚・鶏」の組合せではありません。",
+        "easyJa": "教材の主な家畜は牛・豚・鶏です。米・麦・大豆の組合せではありません。",
+        "id": "“Beras, gandum, dan kedelai” bukan kombinasi “sapi, babi, dan ayam” yang disebut materi sebagai ternak utama di Jepang.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "「"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "米",
+            "reading": "こめ"
           },
           {
-            "text": "は"
+            "text": "・"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
+            "text": "麦",
+            "reading": "むぎ"
+          },
+          {
+            "text": "・"
+          },
+          {
+            "text": "大豆",
+            "reading": "だいず"
+          },
+          {
+            "text": "」は、"
           },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
+            "text": "が"
+          },
+          {
+            "text": "日本",
+            "reading": "にほん"
+          },
+          {
             "text": "の"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "主",
+            "reading": "おも"
           },
           {
-            "text": "と"
+            "text": "な"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
+            "text": "家畜",
+            "reading": "かちく"
           },
           {
-            "text": "し"
+            "text": "として"
           },
           {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
+            "text": "挙げる",
+            "reading": "あげる"
           },
           {
             "text": "「"
@@ -721,13 +727,14 @@
             "reading": "にわとり"
           },
           {
-            "text": "」"
+            "text": "」の"
           },
           {
-            "text": "です"
+            "text": "組合せ",
+            "reading": "くみあわせ"
           },
           {
-            "text": "。"
+            "text": "ではありません。"
           }
         ]
       }
@@ -735,7 +742,6 @@
     "learningSupport": {
       "questionPattern": "most_appropriate",
       "keyTermIds": [
-        "g001",
         "g002",
         "g003"
       ],
@@ -893,7 +899,10 @@
             "text": "。"
           }
         ]
-      }
+      },
+      "languagePointKeys": [
+        "most_appropriate"
+      ]
     }
   },
   {
@@ -2465,7 +2474,7 @@
   },
   {
     "id": "q004",
-    "schemaVersion": "0.3.0",
+    "schemaVersion": "0.4.0",
     "status": "source_checked",
     "prototypeOnly": true,
     "category": "畜産共通",
@@ -2478,7 +2487,7 @@
     "question": {
       "ja": "入国後の防疫行動として、教材が原則として求めているものはどれですか。",
       "easyJa": "日本へ来たあと、原則として何をしますか。",
-      "id": "Tindakan biosekuriti apa yang pada prinsipnya diminta setelah masuk Jepang?",
+      "id": "Dalam tindakan biosekuriti/pencegahan penyakit（防疫／ぼうえき）setelah masuk Jepang, manakah yang pada prinsipnya（原則として／げんそくとして）diminta oleh materi?",
       "rubyJa": [
         {
           "text": "入国",
@@ -2555,7 +2564,7 @@
         "text": {
           "ja": "すぐに畜舎へ入る",
           "easyJa": "すぐに畜舎で働く",
-          "id": "langsung masuk kandang",
+          "id": "langsung masuk kandang（すぐに畜舎へ入る／すぐにちくしゃへはいる）",
           "rubyJa": [
             {
               "text": "すぐ"
@@ -2582,7 +2591,7 @@
         "text": {
           "ja": "1週間は畜舎と周囲に入らない",
           "easyJa": "1週間、畜舎の近くへ行かない",
-          "id": "tidak masuk kandang dan sekitarnya selama satu minggu",
+          "id": "tidak masuk kandang dan sekitarnya selama satu minggu（1週間は畜舎と周囲に入らない／1しゅうかんはちくしゃとしゅういにはいらない）",
           "rubyJa": [
             {
               "text": "1"
@@ -2623,7 +2632,7 @@
         "text": {
           "ja": "作業靴だけ持ち込む",
           "easyJa": "外国で使った靴を持ってくる",
-          "id": "membawa sepatu kerja dari luar negeri",
+          "id": "hanya membawa sepatu kerja（作業靴だけ持ち込む／さぎょうくつだけもちこむ）",
           "rubyJa": [
             {
               "text": "作業",
@@ -2648,7 +2657,7 @@
         "text": {
           "ja": "肉製品を持ち込む",
           "easyJa": "肉を日本へ持ってくる",
-          "id": "membawa produk daging",
+          "id": "membawa produk daging（肉製品を持ち込む／にくせいひんをもちこむ）",
           "rubyJa": [
             {
               "text": "肉",
@@ -2687,12 +2696,8 @@
           "text": "の"
         },
         {
-          "text": "持",
-          "reading": "じ"
-        },
-        {
-          "text": "込み",
-          "reading": "こみ"
+          "text": "持込み",
+          "reading": "もちこみ"
         },
         {
           "text": "を"
@@ -2811,7 +2816,10 @@
       "reviewerType": "ai_source_review",
       "reviewedAt": "2026-08-11",
       "approvalByUser": "pending",
-      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。"
+      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。",
+      "furigana": "pending",
+      "japaneseLearning": "pending",
+      "answerLeak": "pending"
     },
     "errorReasonOptions": [
       "knowledge",
@@ -2823,63 +2831,24 @@
     ],
     "choiceRationales": {
       "a": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「1週間は畜舎と周囲に入らない」です。",
-        "easyJa": "これは正解ではありません。正解は「1週間、畜舎の近くへ行かない」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “tidak masuk kandang dan sekitarnya selama satu minggu”. Untuk mencegah masuknya patogen, pada prinsipnya jangan masuk kandang dan sekitarnya selama satu minggu.",
+        "ja": "教材は入国後1週間、畜舎と周囲に入らないことを求めているため、「すぐに畜舎へ入る」は反対です。",
+        "easyJa": "入国後1週間は畜舎の近くへ入りません。すぐ入るのは反対です。",
+        "id": "Materi meminta agar tidak memasuki kandang dan sekitarnya selama satu minggu setelah masuk Jepang; “langsung masuk kandang” adalah kebalikannya.",
         "rubyJa": [
-          {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
-            "text": "の"
-          },
-          {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
             "text": "は"
           },
           {
-            "text": "「"
+            "text": "入国",
+            "reading": "にゅうこく"
+          },
+          {
+            "text": "後",
+            "reading": "ご"
           },
           {
             "text": "1"
@@ -2889,7 +2858,7 @@
             "reading": "しゅうかん"
           },
           {
-            "text": "は"
+            "text": "、"
           },
           {
             "text": "畜舎",
@@ -2906,20 +2875,39 @@
             "text": "に"
           },
           {
-            "text": "入ら",
-            "reading": "はいら"
+            "text": "入らない",
+            "reading": "はいらない"
           },
           {
-            "text": "ない"
+            "text": "ことを"
           },
           {
-            "text": "」"
+            "text": "求めている",
+            "reading": "もとめている"
           },
           {
-            "text": "です"
+            "text": "ため、「すぐに"
           },
           {
-            "text": "。"
+            "text": "畜舎",
+            "reading": "ちくしゃ"
+          },
+          {
+            "text": "へ"
+          },
+          {
+            "text": "入る",
+            "reading": "はいる"
+          },
+          {
+            "text": "」は"
+          },
+          {
+            "text": "反対",
+            "reading": "はんたい"
+          },
+          {
+            "text": "です。"
           }
         ]
       },
@@ -2990,12 +2978,8 @@
             "text": "の"
           },
           {
-            "text": "持",
-            "reading": "じ"
-          },
-          {
-            "text": "込み",
-            "reading": "こみ"
+            "text": "持込み",
+            "reading": "もちこみ"
           },
           {
             "text": "を"
@@ -3083,63 +3067,35 @@
         ]
       },
       "c": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「1週間は畜舎と周囲に入らない」です。",
-        "easyJa": "これは正解ではありません。正解は「1週間、畜舎の近くへ行かない」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “tidak masuk kandang dan sekitarnya selama satu minggu”. Untuk mencegah masuknya patogen, pada prinsipnya jangan masuk kandang dan sekitarnya selama satu minggu.",
+        "ja": "教材が求める行動は、入国後1週間、畜舎と周囲に入らないことです。「作業靴だけ持ち込む」ことではありません。",
+        "easyJa": "必要な行動は、1週間、畜舎の近くへ入らないことです。作業靴を持ち込むことではありません。",
+        "id": "Tindakan yang diminta materi adalah tidak memasuki kandang dan sekitarnya selama satu minggu setelah masuk Jepang, bukan “hanya membawa sepatu kerja”.",
         "rubyJa": [
-          {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
-            "text": "の"
+            "text": "が"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "求める",
+            "reading": "もとめる"
           },
           {
-            "text": "と"
+            "text": "行動",
+            "reading": "こうどう"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
+            "text": "は、"
           },
           {
-            "text": "し"
+            "text": "入国",
+            "reading": "にゅうこく"
           },
           {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
+            "text": "後",
+            "reading": "ご"
           },
           {
             "text": "1"
@@ -3149,7 +3105,7 @@
             "reading": "しゅうかん"
           },
           {
-            "text": "は"
+            "text": "、"
           },
           {
             "text": "畜舎",
@@ -3166,81 +3122,58 @@
             "text": "に"
           },
           {
-            "text": "入ら",
-            "reading": "はいら"
+            "text": "入らない",
+            "reading": "はいらない"
           },
           {
-            "text": "ない"
+            "text": "ことです。「"
           },
           {
-            "text": "」"
+            "text": "作業靴",
+            "reading": "さぎょうぐつ"
           },
           {
-            "text": "です"
+            "text": "だけ"
           },
           {
-            "text": "。"
+            "text": "持ち込む",
+            "reading": "もちこむ"
+          },
+          {
+            "text": "」ことではありません。"
           }
         ]
       },
       "d": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「1週間は畜舎と周囲に入らない」です。",
-        "easyJa": "これは正解ではありません。正解は「1週間、畜舎の近くへ行かない」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “tidak masuk kandang dan sekitarnya selama satu minggu”. Untuk mencegah masuknya patogen, pada prinsipnya jangan masuk kandang dan sekitarnya selama satu minggu.",
+        "ja": "教材が求める行動は、入国後1週間、畜舎と周囲に入らないことです。「肉製品を持ち込む」ことではありません。",
+        "easyJa": "必要な行動は、1週間、畜舎の近くへ入らないことです。肉製品を持ち込むことではありません。",
+        "id": "Tindakan yang diminta materi adalah tidak memasuki kandang dan sekitarnya selama satu minggu setelah masuk Jepang, bukan “membawa produk daging”.",
         "rubyJa": [
-          {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
-            "text": "の"
+            "text": "が"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "求める",
+            "reading": "もとめる"
           },
           {
-            "text": "と"
+            "text": "行動",
+            "reading": "こうどう"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
+            "text": "は、"
           },
           {
-            "text": "し"
+            "text": "入国",
+            "reading": "にゅうこく"
           },
           {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
+            "text": "後",
+            "reading": "ご"
           },
           {
             "text": "1"
@@ -3250,7 +3183,7 @@
             "reading": "しゅうかん"
           },
           {
-            "text": "は"
+            "text": "、"
           },
           {
             "text": "畜舎",
@@ -3267,28 +3200,32 @@
             "text": "に"
           },
           {
-            "text": "入ら",
-            "reading": "はいら"
+            "text": "入らない",
+            "reading": "はいらない"
           },
           {
-            "text": "ない"
+            "text": "ことです。「"
           },
           {
-            "text": "」"
+            "text": "肉製品",
+            "reading": "にくせいひん"
           },
           {
-            "text": "です"
+            "text": "を"
           },
           {
-            "text": "。"
+            "text": "持ち込む",
+            "reading": "もちこむ"
+          },
+          {
+            "text": "」ことではありません。"
           }
         ]
       }
     },
     "learningSupport": {
-      "questionPattern": "calculation",
+      "questionPattern": "which",
       "keyTermIds": [
-        "g001",
         "g023"
       ],
       "lessonObjective": {
@@ -3366,12 +3303,8 @@
             "text": "の"
           },
           {
-            "text": "持",
-            "reading": "じ"
-          },
-          {
-            "text": "込み",
-            "reading": "こみ"
+            "text": "持込み",
+            "reading": "もちこみ"
           },
           {
             "text": "を"
@@ -3457,7 +3390,10 @@
             "text": "。"
           }
         ]
-      }
+      },
+      "languagePointKeys": [
+        "in_principle"
+      ]
     }
   },
   {
@@ -5672,7 +5608,7 @@
   },
   {
     "id": "q008",
-    "schemaVersion": "0.3.0",
+    "schemaVersion": "0.4.0",
     "status": "source_checked",
     "prototypeOnly": true,
     "category": "乳用牛",
@@ -5685,7 +5621,7 @@
     "question": {
       "ja": "次の分娩に備えて搾乳を止める時期として、教材に沿うものはどれですか。",
       "easyJa": "次の出産の何か月前に、乳をしぼるのを止めますか。",
-      "id": "Kapan pemerahan dihentikan untuk mempersiapkan kelahiran berikutnya?",
+      "id": "Untuk mempersiapkan proses melahirkan（分娩／ぶんべん）berikutnya, kapan pemerahan（搾乳／さくにゅう）harus dihentikan menurut materi?",
       "rubyJa": [
         {
           "text": "次",
@@ -5766,7 +5702,7 @@
         "text": {
           "ja": "分娩の前日",
           "easyJa": "出産の1日前",
-          "id": "sehari sebelum melahirkan",
+          "id": "sehari sebelum melahirkan（分娩の前日／ぶんべんのぜんじつ）",
           "rubyJa": [
             {
               "text": "分娩",
@@ -5787,7 +5723,7 @@
         "text": {
           "ja": "分娩の1週間前",
           "easyJa": "出産の1週間前",
-          "id": "seminggu sebelum melahirkan",
+          "id": "seminggu sebelum melahirkan（分娩の1週間前／ぶんべんの1しゅうかんまえ）",
           "rubyJa": [
             {
               "text": "分娩",
@@ -5815,7 +5751,7 @@
         "text": {
           "ja": "分娩の2～3か月前",
           "easyJa": "出産の2～3か月前",
-          "id": "2–3 bulan sebelum melahirkan",
+          "id": "2–3 bulan sebelum melahirkan（分娩の2～3か月前／ぶんべんの2～3かげつまえ）",
           "rubyJa": [
             {
               "text": "分娩",
@@ -5849,7 +5785,7 @@
         "text": {
           "ja": "分娩後2～3か月",
           "easyJa": "出産したあと2～3か月",
-          "id": "2–3 bulan setelah melahirkan",
+          "id": "2–3 bulan setelah melahirkan（分娩後2～3か月／ぶんべんご2～3かげつ）",
           "rubyJa": [
             {
               "text": "分娩",
@@ -5960,12 +5896,8 @@
           "reading": "まわす"
         },
         {
-          "text": "乾",
-          "reading": "いぬい"
-        },
-        {
-          "text": "乳",
-          "reading": "ちち"
+          "text": "乾乳",
+          "reading": "かんにゅう"
         },
         {
           "text": "期間",
@@ -6018,7 +5950,10 @@
       "reviewerType": "ai_source_review",
       "reviewedAt": "2026-08-11",
       "approvalByUser": "pending",
-      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。"
+      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。",
+      "furigana": "pending",
+      "japaneseLearning": "pending",
+      "answerLeak": "pending"
     },
     "errorReasonOptions": [
       "knowledge",
@@ -6030,93 +5965,52 @@
     ],
     "choiceRationales": {
       "a": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「分娩の2～3か月前」です。",
-        "easyJa": "これは正解ではありません。正解は「出産の2～3か月前」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “2–3 bulan sebelum melahirkan”. Pemerahan dihentikan 2–3 bulan sebelum kelahiran berikutnya agar nutrisi digunakan untuk induk dan janin.",
+        "ja": "乾乳は分娩の2～3か月前から設けるため、「前日」では遅すぎます。",
+        "easyJa": "乳をしぼるのは分娩の2～3か月前に止めます。前日では遅いです。",
+        "id": "Masa kering dimulai 2–3 bulan sebelum kelahiran, sehingga “sehari sebelumnya” terlalu terlambat.",
         "rubyJa": [
           {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "乾乳",
+            "reading": "かんにゅう"
           },
           {
             "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
-          {
-            "text": "教材",
-            "reading": "きょうざい"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
           },
           {
             "text": "分娩",
             "reading": "ぶんべん"
           },
           {
-            "text": "の"
+            "text": "の2～3か"
           },
           {
-            "text": "2"
-          },
-          {
-            "text": "～"
-          },
-          {
-            "text": "3"
-          },
-          {
-            "text": "か月",
-            "reading": "かげつ"
+            "text": "月",
+            "reading": "げつ"
           },
           {
             "text": "前",
             "reading": "まえ"
           },
           {
-            "text": "」"
+            "text": "から"
           },
           {
-            "text": "です"
+            "text": "設ける",
+            "reading": "もうける"
+          },
+          {
+            "text": "ため、「"
+          },
+          {
+            "text": "前日",
+            "reading": "ぜんじつ"
+          },
+          {
+            "text": "」では"
+          },
+          {
+            "text": "遅すぎます",
+            "reading": "おそすぎます"
           },
           {
             "text": "。"
@@ -6124,96 +6018,52 @@
         ]
       },
       "b": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「分娩の2～3か月前」です。",
-        "easyJa": "これは正解ではありません。正解は「出産の2～3か月前」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “2–3 bulan sebelum melahirkan”. Pemerahan dihentikan 2–3 bulan sebelum kelahiran berikutnya agar nutrisi digunakan untuk induk dan janin.",
+        "ja": "乾乳は分娩の2～3か月前から設けるため、「1週間前」ではありません。",
+        "easyJa": "乳をしぼるのは分娩の2～3か月前に止めます。1週間前ではありません。",
+        "id": "Masa kering dimulai 2–3 bulan sebelum kelahiran, bukan satu minggu sebelumnya.",
         "rubyJa": [
           {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "乾乳",
+            "reading": "かんにゅう"
           },
           {
             "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
-          {
-            "text": "教材",
-            "reading": "きょうざい"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
           },
           {
             "text": "分娩",
             "reading": "ぶんべん"
           },
           {
-            "text": "の"
+            "text": "の2～3か"
           },
           {
-            "text": "2"
-          },
-          {
-            "text": "～"
-          },
-          {
-            "text": "3"
-          },
-          {
-            "text": "か月",
-            "reading": "かげつ"
+            "text": "月",
+            "reading": "げつ"
           },
           {
             "text": "前",
             "reading": "まえ"
           },
           {
-            "text": "」"
+            "text": "から"
           },
           {
-            "text": "です"
+            "text": "設ける",
+            "reading": "もうける"
           },
           {
-            "text": "。"
+            "text": "ため、「1"
+          },
+          {
+            "text": "週間",
+            "reading": "しゅうかん"
+          },
+          {
+            "text": "前",
+            "reading": "まえ"
+          },
+          {
+            "text": "」ではありません。"
           }
         ]
       },
@@ -6343,12 +6193,8 @@
             "reading": "まわす"
           },
           {
-            "text": "乾",
-            "reading": "いぬい"
-          },
-          {
-            "text": "乳",
-            "reading": "ちち"
+            "text": "乾乳",
+            "reading": "かんにゅう"
           },
           {
             "text": "期間",
@@ -6370,96 +6216,62 @@
         ]
       },
       "d": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「分娩の2～3か月前」です。",
-        "easyJa": "これは正解ではありません。正解は「出産の2～3か月前」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “2–3 bulan sebelum melahirkan”. Pemerahan dihentikan 2–3 bulan sebelum kelahiran berikutnya agar nutrisi digunakan untuk induk dan janin.",
+        "ja": "乾乳は次の分娩より前に始めるため、「分娩後2～3か月」ではありません。",
+        "easyJa": "乳をしぼるのは次の分娩より前に止めます。分娩のあとではありません。",
+        "id": "Masa kering dimulai sebelum kelahiran berikutnya, bukan 2–3 bulan sesudah kelahiran.",
         "rubyJa": [
           {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "乾乳",
+            "reading": "かんにゅう"
           },
           {
             "text": "は"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
-          {
-            "text": "教材",
-            "reading": "きょうざい"
+            "text": "次",
+            "reading": "つぎ"
           },
           {
             "text": "の"
-          },
-          {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
           },
           {
             "text": "分娩",
             "reading": "ぶんべん"
           },
           {
-            "text": "の"
-          },
-          {
-            "text": "2"
-          },
-          {
-            "text": "～"
-          },
-          {
-            "text": "3"
-          },
-          {
-            "text": "か月",
-            "reading": "かげつ"
+            "text": "より"
           },
           {
             "text": "前",
             "reading": "まえ"
           },
           {
-            "text": "」"
+            "text": "に"
           },
           {
-            "text": "です"
+            "text": "始める",
+            "reading": "はじめる"
           },
           {
-            "text": "。"
+            "text": "ため、「"
+          },
+          {
+            "text": "分娩",
+            "reading": "ぶんべん"
+          },
+          {
+            "text": "後",
+            "reading": "ご"
+          },
+          {
+            "text": "2～3か"
+          },
+          {
+            "text": "月",
+            "reading": "げつ"
+          },
+          {
+            "text": "」ではありません。"
           }
         ]
       }
@@ -6468,8 +6280,7 @@
       "questionPattern": "which",
       "keyTermIds": [
         "g009",
-        "g010",
-        "g041"
+        "g010"
       ],
       "lessonObjective": {
         "ja": "乳用牛の「搾乳管理」を、日本語の問題で理解する。",
@@ -6477,16 +6288,8 @@
         "id": "Memahami topik “搾乳管理” pada bidang sapi perah melalui soal bahasa Jepang.",
         "rubyJa": [
           {
-            "text": "乳",
-            "reading": "ちち"
-          },
-          {
-            "text": "用",
-            "reading": "よう"
-          },
-          {
-            "text": "牛",
-            "reading": "うし"
+            "text": "乳用牛",
+            "reading": "にゅうようぎゅう"
           },
           {
             "text": "の"
@@ -6620,12 +6423,8 @@
             "reading": "まわす"
           },
           {
-            "text": "乾",
-            "reading": "いぬい"
-          },
-          {
-            "text": "乳",
-            "reading": "ちち"
+            "text": "乾乳",
+            "reading": "かんにゅう"
           },
           {
             "text": "期間",
@@ -6645,7 +6444,10 @@
             "text": "。"
           }
         ]
-      }
+      },
+      "languagePointKeys": [
+        "before_after"
+      ]
     }
   },
   {
@@ -10274,7 +10076,7 @@
   },
   {
     "id": "q013",
-    "schemaVersion": "0.3.0",
+    "schemaVersion": "0.4.0",
     "status": "source_checked",
     "prototypeOnly": true,
     "category": "肉用牛",
@@ -10287,7 +10089,7 @@
     "question": {
       "ja": "乳牛に和牛の精液を人工授精して交雑種子牛を産ませる利点として、教材が挙げるものはどれですか。",
       "easyJa": "乳牛からF1の子牛を産ませる利点は何ですか。",
-      "id": "Apa keuntungan menghasilkan pedet silang F1 dari sapi perah menurut buku?",
+      "id": "Menurut materi, apa keuntungan melakukan inseminasi buatan（人工授精／じんこうじゅせい）pada sapi perah dengan semen sapi Wagyu untuk menghasilkan pedet silang（交雑種子牛／こうざつしゅこうし）?",
       "rubyJa": [
         {
           "text": "乳牛",
@@ -10325,16 +10127,8 @@
           "text": "て"
         },
         {
-          "text": "交雑",
-          "reading": "こうざつ"
-        },
-        {
-          "text": "種子",
-          "reading": "しゅし"
-        },
-        {
-          "text": "牛",
-          "reading": "うし"
+          "text": "交雑種子牛",
+          "reading": "こうざつしゅこうし"
         },
         {
           "text": "を"
@@ -10393,19 +10187,11 @@
         "text": {
           "ja": "出生時体重が大きくなりやすい",
           "easyJa": "子牛がとても大きくなる",
-          "id": "berat lahir menjadi jauh lebih besar",
+          "id": "berat lahir cenderung lebih besar（出生時体重が大きくなりやすい／しゅっせいじたいじゅうがおおきくなりやすい）",
           "rubyJa": [
             {
-              "text": "出生",
-              "reading": "しゅっしょう"
-            },
-            {
-              "text": "時",
-              "reading": "じ"
-            },
-            {
-              "text": "体重",
-              "reading": "たいじゅう"
+              "text": "出生時体重",
+              "reading": "しゅっせいじたいじゅう"
             },
             {
               "text": "が"
@@ -10428,7 +10214,7 @@
         "text": {
           "ja": "初産乳牛の難産を防ぎやすい",
           "easyJa": "初めて産む牛の難産を減らしやすい",
-          "id": "membantu mengurangi sulit melahirkan pada sapi perah dara",
+          "id": "membantu mengurangi sulit melahirkan pada sapi perah yang pertama kali melahirkan（初産乳牛の難産を防ぎやすい／しょさんにゅうぎゅうのなんざんをふせぎやすい）",
           "rubyJa": [
             {
               "text": "初産",
@@ -10463,7 +10249,7 @@
         "text": {
           "ja": "妊娠期間が半分になる",
           "easyJa": "妊娠が半分の長さになる",
-          "id": "masa kebuntingan menjadi setengah",
+          "id": "masa kebuntingan menjadi setengah（妊娠期間が半分になる／にんしんきかんがはんぶんになる）",
           "rubyJa": [
             {
               "text": "妊娠",
@@ -10494,15 +10280,11 @@
         "text": {
           "ja": "耳標が不要になる",
           "easyJa": "耳標を付けなくてよい",
-          "id": "tag telinga tidak diperlukan",
+          "id": "tag telinga tidak diperlukan（耳標が不要になる／じひょうがふようになる）",
           "rubyJa": [
             {
-              "text": "耳",
-              "reading": "みみ"
-            },
-            {
-              "text": "標",
-              "reading": "しるべ"
+              "text": "耳標",
+              "reading": "じひょう"
             },
             {
               "text": "が"
@@ -10528,50 +10310,22 @@
       "id": "Pedet F1 sedikit lebih kecil saat lahir, sehingga membantu mengurangi risiko sulit melahirkan.",
       "rubyJa": [
         {
-          "text": "交雑",
-          "reading": "こうざつ"
-        },
-        {
-          "text": "種子",
-          "reading": "しゅし"
-        },
-        {
-          "text": "牛",
-          "reading": "うし"
+          "text": "交雑種子牛",
+          "reading": "こうざつしゅこうし"
         },
         {
           "text": "は"
         },
         {
-          "text": "乳",
-          "reading": "ちち"
-        },
-        {
-          "text": "用",
-          "reading": "よう"
-        },
-        {
-          "text": "種子",
-          "reading": "しゅし"
-        },
-        {
-          "text": "牛",
-          "reading": "うし"
+          "text": "乳用種子牛",
+          "reading": "にゅうようしゅこうし"
         },
         {
           "text": "より"
         },
         {
-          "text": "出生",
-          "reading": "しゅっしょう"
-        },
-        {
-          "text": "時",
-          "reading": "じ"
-        },
-        {
-          "text": "体重",
-          "reading": "たいじゅう"
+          "text": "出生時体重",
+          "reading": "しゅっせいじたいじゅう"
         },
         {
           "text": "が"
@@ -10671,7 +10425,10 @@
       "reviewerType": "ai_source_review",
       "reviewedAt": "2026-08-11",
       "approvalByUser": "pending",
-      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。"
+      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。",
+      "furigana": "pending",
+      "japaneseLearning": "pending",
+      "answerLeak": "pending"
     },
     "errorReasonOptions": [
       "knowledge",
@@ -10683,97 +10440,65 @@
     ],
     "choiceRationales": {
       "a": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「初産乳牛の難産を防ぎやすい」です。",
-        "easyJa": "これは正解ではありません。正解は「初めて産む牛の難産を減らしやすい」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “membantu mengurangi sulit melahirkan pada sapi perah dara”. Pedet F1 sedikit lebih kecil saat lahir, sehingga membantu mengurangi risiko sulit melahirkan.",
+        "ja": "交雑種子牛の出生時体重は約40kgで、乳用種子牛の約45kgより小さいため、「大きくなりやすい」は反対です。",
+        "easyJa": "交雑種の子牛は約40kgで、乳用種の子牛より小さいです。大きくなるのではありません。",
+        "id": "Berat lahir pedet silang sekitar 40 kg, lebih kecil daripada pedet sapi perah sekitar 45 kg; jadi bukan “cenderung lebih besar”.",
         "rubyJa": [
           {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
-          {
-            "text": "教材",
-            "reading": "きょうざい"
+            "text": "交雑種子牛",
+            "reading": "こうざつしゅこうし"
           },
           {
             "text": "の"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
+            "text": "出生時体重",
+            "reading": "しゅっせいじたいじゅう"
           },
           {
             "text": "は"
           },
           {
-            "text": "「"
+            "text": "約",
+            "reading": "やく"
           },
           {
-            "text": "初産",
-            "reading": "しょさん"
+            "text": "40kgで、"
           },
           {
-            "text": "乳牛",
-            "reading": "にゅうぎゅう"
+            "text": "乳用種子牛",
+            "reading": "にゅうようしゅこうし"
           },
           {
             "text": "の"
           },
           {
-            "text": "難産",
-            "reading": "なんざん"
+            "text": "約",
+            "reading": "やく"
           },
           {
-            "text": "を"
+            "text": "45kgより"
           },
           {
-            "text": "防ぎ",
-            "reading": "ふせぎ"
+            "text": "小さい",
+            "reading": "ちいさい"
           },
           {
-            "text": "やすい"
+            "text": "ため、「"
           },
           {
-            "text": "」"
+            "text": "大きくなりやすい",
+            "reading": "おおきくなりやすい"
           },
           {
-            "text": "です"
+            "text": "」は"
           },
           {
-            "text": "。"
+            "text": "反対",
+            "reading": "はんたい"
+          },
+          {
+            "text": "です。"
           }
         ]
       },
@@ -10827,50 +10552,22 @@
             "text": "。"
           },
           {
-            "text": "交雑",
-            "reading": "こうざつ"
-          },
-          {
-            "text": "種子",
-            "reading": "しゅし"
-          },
-          {
-            "text": "牛",
-            "reading": "うし"
+            "text": "交雑種子牛",
+            "reading": "こうざつしゅこうし"
           },
           {
             "text": "は"
           },
           {
-            "text": "乳",
-            "reading": "ちち"
-          },
-          {
-            "text": "用",
-            "reading": "よう"
-          },
-          {
-            "text": "種子",
-            "reading": "しゅし"
-          },
-          {
-            "text": "牛",
-            "reading": "うし"
+            "text": "乳用種子牛",
+            "reading": "にゅうようしゅこうし"
           },
           {
             "text": "より"
           },
           {
-            "text": "出生",
-            "reading": "しゅっしょう"
-          },
-          {
-            "text": "時",
-            "reading": "じ"
-          },
-          {
-            "text": "体重",
-            "reading": "たいじゅう"
+            "text": "出生時体重",
+            "reading": "しゅっせいじたいじゅう"
           },
           {
             "text": "が"
@@ -10939,74 +10636,38 @@
         ]
       },
       "c": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「初産乳牛の難産を防ぎやすい」です。",
-        "easyJa": "これは正解ではありません。正解は「初めて産む牛の難産を減らしやすい」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “membantu mengurangi sulit melahirkan pada sapi perah dara”. Pedet F1 sedikit lebih kecil saat lahir, sehingga membantu mengurangi risiko sulit melahirkan.",
+        "ja": "教材が挙げる利点は、出生時体重が小さく難産を防ぎやすいことです。妊娠期間が半分になることではありません。",
+        "easyJa": "利点は、子牛が少し小さく、難産を減らしやすいことです。妊娠期間が半分になることではありません。",
+        "id": "Manfaat yang dijelaskan materi adalah berat lahir yang lebih kecil sehingga membantu mencegah sulit melahirkan, bukan mempersingkat masa kebuntingan menjadi setengah.",
         "rubyJa": [
-          {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
-            "text": "の"
+            "text": "が"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "挙げる",
+            "reading": "あげる"
           },
           {
-            "text": "と"
+            "text": "利点",
+            "reading": "りてん"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
+            "text": "は、"
           },
           {
-            "text": "し"
+            "text": "出生時体重",
+            "reading": "しゅっせいじたいじゅう"
           },
           {
-            "text": "ませ"
+            "text": "が"
           },
           {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "初産",
-            "reading": "しょさん"
-          },
-          {
-            "text": "乳牛",
-            "reading": "にゅうぎゅう"
-          },
-          {
-            "text": "の"
+            "text": "小さく",
+            "reading": "ちいさく"
           },
           {
             "text": "難産",
@@ -11016,92 +10677,61 @@
             "text": "を"
           },
           {
-            "text": "防ぎ",
-            "reading": "ふせぎ"
+            "text": "防ぎやすい",
+            "reading": "ふせぎやすい"
           },
           {
-            "text": "やすい"
+            "text": "ことです。"
           },
           {
-            "text": "」"
+            "text": "妊娠期間",
+            "reading": "にんしんきかん"
           },
           {
-            "text": "です"
+            "text": "が"
           },
           {
-            "text": "。"
+            "text": "半分",
+            "reading": "はんぶん"
+          },
+          {
+            "text": "になることではありません。"
           }
         ]
       },
       "d": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「初産乳牛の難産を防ぎやすい」です。",
-        "easyJa": "これは正解ではありません。正解は「初めて産む牛の難産を減らしやすい」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “membantu mengurangi sulit melahirkan pada sapi perah dara”. Pedet F1 sedikit lebih kecil saat lahir, sehingga membantu mengurangi risiko sulit melahirkan.",
+        "ja": "教材が挙げる利点は、出生時体重が小さく難産を防ぎやすいことです。耳標が不要になることではありません。",
+        "easyJa": "利点は、子牛が少し小さく、難産を減らしやすいことです。耳標がいらなくなることではありません。",
+        "id": "Manfaat yang dijelaskan materi adalah berat lahir yang lebih kecil sehingga membantu mencegah sulit melahirkan, bukan membuat tag telinga tidak diperlukan.",
         "rubyJa": [
-          {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
-            "text": "の"
+            "text": "が"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "挙げる",
+            "reading": "あげる"
           },
           {
-            "text": "と"
+            "text": "利点",
+            "reading": "りてん"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
+            "text": "は、"
           },
           {
-            "text": "し"
+            "text": "出生時体重",
+            "reading": "しゅっせいじたいじゅう"
           },
           {
-            "text": "ませ"
+            "text": "が"
           },
           {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "初産",
-            "reading": "しょさん"
-          },
-          {
-            "text": "乳牛",
-            "reading": "にゅうぎゅう"
-          },
-          {
-            "text": "の"
+            "text": "小さく",
+            "reading": "ちいさく"
           },
           {
             "text": "難産",
@@ -11111,20 +10741,25 @@
             "text": "を"
           },
           {
-            "text": "防ぎ",
-            "reading": "ふせぎ"
+            "text": "防ぎやすい",
+            "reading": "ふせぎやすい"
           },
           {
-            "text": "やすい"
+            "text": "ことです。"
           },
           {
-            "text": "」"
+            "text": "耳標",
+            "reading": "じひょう"
           },
           {
-            "text": "です"
+            "text": "が"
           },
           {
-            "text": "。"
+            "text": "不要",
+            "reading": "ふよう"
+          },
+          {
+            "text": "になることではありません。"
           }
         ]
       }
@@ -11133,10 +10768,7 @@
       "questionPattern": "which",
       "keyTermIds": [
         "g007",
-        "g008",
-        "g013",
-        "g012",
-        "g005"
+        "g013"
       ],
       "lessonObjective": {
         "ja": "肉用牛の「交雑種」を、日本語の問題で理解する。",
@@ -11144,16 +10776,8 @@
         "id": "Memahami topik “交雑種” pada bidang sapi potong melalui soal bahasa Jepang.",
         "rubyJa": [
           {
-            "text": "肉",
-            "reading": "にく"
-          },
-          {
-            "text": "用",
-            "reading": "よう"
-          },
-          {
-            "text": "牛",
-            "reading": "うし"
+            "text": "肉用牛",
+            "reading": "にくようぎゅう"
           },
           {
             "text": "の"
@@ -11210,50 +10834,22 @@
         "id": "Pedet F1 sedikit lebih kecil saat lahir, sehingga membantu mengurangi risiko sulit melahirkan.",
         "rubyJa": [
           {
-            "text": "交雑",
-            "reading": "こうざつ"
-          },
-          {
-            "text": "種子",
-            "reading": "しゅし"
-          },
-          {
-            "text": "牛",
-            "reading": "うし"
+            "text": "交雑種子牛",
+            "reading": "こうざつしゅこうし"
           },
           {
             "text": "は"
           },
           {
-            "text": "乳",
-            "reading": "ちち"
-          },
-          {
-            "text": "用",
-            "reading": "よう"
-          },
-          {
-            "text": "種子",
-            "reading": "しゅし"
-          },
-          {
-            "text": "牛",
-            "reading": "うし"
+            "text": "乳用種子牛",
+            "reading": "にゅうようしゅこうし"
           },
           {
             "text": "より"
           },
           {
-            "text": "出生",
-            "reading": "しゅっしょう"
-          },
-          {
-            "text": "時",
-            "reading": "じ"
-          },
-          {
-            "text": "体重",
-            "reading": "たいじゅう"
+            "text": "出生時体重",
+            "reading": "しゅっせいじたいじゅう"
           },
           {
             "text": "が"
@@ -11320,7 +10916,10 @@
             "text": "。"
           }
         ]
-      }
+      },
+      "languagePointKeys": [
+        "purpose"
+      ]
     }
   },
   {
@@ -12976,7 +12575,7 @@
   },
   {
     "id": "q016",
-    "schemaVersion": "0.3.0",
+    "schemaVersion": "0.4.0",
     "status": "source_checked",
     "prototypeOnly": true,
     "category": "豚",
@@ -12989,7 +12588,7 @@
     "question": {
       "ja": "代表的な三元交配で、LとWから作った母豚に交配する雄の品種はどれですか。",
       "easyJa": "LとWから生まれた母豚に、どの雄豚を交配しますか。",
-      "id": "Dalam persilangan tiga bangsa umum, pejantan apa yang dikawinkan dengan induk hasil L × W?",
+      "id": "Dalam persilangan tiga bangsa（三元交配／さんげんこうはい）yang umum, jenis pejantan（雄／おす）manakah yang dikawinkan dengan induk babi hasil L × W?",
       "rubyJa": [
         {
           "text": "代表",
@@ -13003,16 +12602,8 @@
           "text": "な"
         },
         {
-          "text": "三",
-          "reading": "さん"
-        },
-        {
-          "text": "元",
-          "reading": "もと"
-        },
-        {
-          "text": "交配",
-          "reading": "こうはい"
+          "text": "三元交配",
+          "reading": "さんげんこうはい"
         },
         {
           "text": "で"
@@ -13059,7 +12650,7 @@
         },
         {
           "text": "雄",
-          "reading": "ゆう"
+          "reading": "おす"
         },
         {
           "text": "の"
@@ -13091,7 +12682,7 @@
         "text": {
           "ja": "ランドレース（L）",
           "easyJa": "L",
-          "id": "Landrace (L)",
+          "id": "Landrace (L)（ランドレース）",
           "rubyJa": [
             {
               "text": "ランド"
@@ -13116,7 +12707,7 @@
         "text": {
           "ja": "大ヨークシャー（W）",
           "easyJa": "W",
-          "id": "Large White (W)",
+          "id": "Large Yorkshire (W)（大ヨークシャー／だいよーくしゃー）",
           "rubyJa": [
             {
               "text": "大",
@@ -13142,7 +12733,7 @@
         "text": {
           "ja": "デュロック（D）",
           "easyJa": "D",
-          "id": "Duroc (D)",
+          "id": "Duroc (D)（デュロック）",
           "rubyJa": [
             {
               "text": "デュロック"
@@ -13164,7 +12755,7 @@
         "text": {
           "ja": "バークシャー（B）",
           "easyJa": "B",
-          "id": "Berkshire (B)",
+          "id": "Berkshire (B)（バークシャー）",
           "rubyJa": [
             {
               "text": "バークシャー"
@@ -13217,7 +12808,7 @@
         },
         {
           "text": "雄",
-          "reading": "ゆう"
+          "reading": "おす"
         },
         {
           "text": "を"
@@ -13233,16 +12824,8 @@
           "text": "、"
         },
         {
-          "text": "三",
-          "reading": "さん"
-        },
-        {
-          "text": "元",
-          "reading": "げん"
-        },
-        {
-          "text": "雑種",
-          "reading": "ざっしゅ"
+          "text": "三元雑種",
+          "reading": "さんげんざっしゅ"
         },
         {
           "text": "LWD"
@@ -13294,7 +12877,10 @@
       "reviewerType": "ai_source_review",
       "reviewedAt": "2026-08-11",
       "approvalByUser": "pending",
-      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。"
+      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。",
+      "furigana": "pending",
+      "japaneseLearning": "pending",
+      "answerLeak": "pending"
     },
     "errorReasonOptions": [
       "knowledge",
@@ -13306,166 +12892,136 @@
     ],
     "choiceRationales": {
       "a": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「デュロック（D）」です。",
-        "easyJa": "これは正解ではありません。正解は「D」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “Duroc (D)”. Induk L×W dikawinkan dengan pejantan Duroc untuk menghasilkan LWD.",
+        "ja": "ランドレースはLとWから母豚を作る側の品種で、その母豚に交配する雄はデュロックです。",
+        "easyJa": "ランドレースは母豚を作る側です。その母豚にはデュロックの雄を交配します。",
+        "id": "Landrace adalah bangsa pada sisi pembentukan induk betina dari L dan W; pejantan yang dikawinkan dengan induk itu adalah Duroc.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "ランドレース",
+            "reading": "らんどれーす"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "はLとWから"
           },
           {
-            "text": "は"
+            "text": "母豚",
+            "reading": "ははぶた"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
+            "text": "を"
           },
           {
-            "text": "教材",
-            "reading": "きょうざい"
+            "text": "作る",
+            "reading": "つくる"
+          },
+          {
+            "text": "側",
+            "reading": "がわ"
           },
           {
             "text": "の"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "品種",
+            "reading": "ひんしゅ"
           },
           {
-            "text": "と"
+            "text": "で、その"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
+            "text": "母豚",
+            "reading": "ははぶた"
           },
           {
-            "text": "し"
+            "text": "に"
           },
           {
-            "text": "ませ"
+            "text": "交配",
+            "reading": "こうはい"
           },
           {
-            "text": "ん"
+            "text": "する"
           },
           {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
+            "text": "雄",
+            "reading": "おす"
           },
           {
             "text": "は"
           },
           {
-            "text": "「"
+            "text": "デュロック",
+            "reading": "でゅろっく"
           },
           {
-            "text": "デュロック"
-          },
-          {
-            "text": "（"
-          },
-          {
-            "text": "D"
-          },
-          {
-            "text": "）"
-          },
-          {
-            "text": "」"
-          },
-          {
-            "text": "です"
-          },
-          {
-            "text": "。"
+            "text": "です。"
           }
         ]
       },
       "b": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「デュロック（D）」です。",
-        "easyJa": "これは正解ではありません。正解は「D」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “Duroc (D)”. Induk L×W dikawinkan dengan pejantan Duroc untuk menghasilkan LWD.",
+        "ja": "大ヨークシャーはLとWから母豚を作る側の品種で、その母豚に交配する雄はデュロックです。",
+        "easyJa": "大ヨークシャーは母豚を作る側です。その母豚にはデュロックの雄を交配します。",
+        "id": "Large Yorkshire adalah bangsa pada sisi pembentukan induk betina dari L dan W; pejantan yang dikawinkan dengan induk itu adalah Duroc.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "大ヨークシャー",
+            "reading": "だいよーくしゃー"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "はLとWから"
           },
           {
-            "text": "は"
+            "text": "母豚",
+            "reading": "ははぶた"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
+            "text": "を"
           },
           {
-            "text": "教材",
-            "reading": "きょうざい"
+            "text": "作る",
+            "reading": "つくる"
+          },
+          {
+            "text": "側",
+            "reading": "がわ"
           },
           {
             "text": "の"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "品種",
+            "reading": "ひんしゅ"
           },
           {
-            "text": "と"
+            "text": "で、その"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
+            "text": "母豚",
+            "reading": "ははぶた"
           },
           {
-            "text": "し"
+            "text": "に"
           },
           {
-            "text": "ませ"
+            "text": "交配",
+            "reading": "こうはい"
           },
           {
-            "text": "ん"
+            "text": "する"
           },
           {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
+            "text": "雄",
+            "reading": "おす"
           },
           {
             "text": "は"
           },
           {
-            "text": "「"
+            "text": "デュロック",
+            "reading": "でゅろっく"
           },
           {
-            "text": "デュロック"
-          },
-          {
-            "text": "（"
-          },
-          {
-            "text": "D"
-          },
-          {
-            "text": "）"
-          },
-          {
-            "text": "」"
-          },
-          {
-            "text": "です"
-          },
-          {
-            "text": "。"
+            "text": "です。"
           }
         ]
       },
@@ -13534,7 +13090,7 @@
           },
           {
             "text": "雄",
-            "reading": "ゆう"
+            "reading": "おす"
           },
           {
             "text": "を"
@@ -13550,16 +13106,8 @@
             "text": "、"
           },
           {
-            "text": "三",
-            "reading": "さん"
-          },
-          {
-            "text": "元",
-            "reading": "げん"
-          },
-          {
-            "text": "雑種",
-            "reading": "ざっしゅ"
+            "text": "三元雑種",
+            "reading": "さんげんざっしゅ"
           },
           {
             "text": "LWD"
@@ -13580,84 +13128,51 @@
         ]
       },
       "d": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「デュロック（D）」です。",
-        "easyJa": "これは正解ではありません。正解は「D」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “Duroc (D)”. Induk L×W dikawinkan dengan pejantan Duroc untuk menghasilkan LWD.",
+        "ja": "代表的なLWDの三元交配で母豚に交配する雄はデュロックで、バークシャーではありません。",
+        "easyJa": "代表的なLWDでは、母豚にデュロックの雄を交配します。バークシャーではありません。",
+        "id": "Dalam persilangan tiga bangsa LWD yang umum, pejantan untuk induk betina adalah Duroc, bukan Berkshire.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "代表的",
+            "reading": "だいひょうてき"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "なLWDの"
           },
           {
-            "text": "は"
+            "text": "三元交配",
+            "reading": "さんげんこうはい"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
+            "text": "で"
           },
           {
-            "text": "教材",
-            "reading": "きょうざい"
+            "text": "母豚",
+            "reading": "ははぶた"
           },
           {
-            "text": "の"
+            "text": "に"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "交配",
+            "reading": "こうはい"
           },
           {
-            "text": "と"
+            "text": "する"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
+            "text": "雄",
+            "reading": "おす"
           },
           {
             "text": "は"
           },
           {
-            "text": "「"
+            "text": "デュロック",
+            "reading": "でゅろっく"
           },
           {
-            "text": "デュロック"
-          },
-          {
-            "text": "（"
-          },
-          {
-            "text": "D"
-          },
-          {
-            "text": "）"
-          },
-          {
-            "text": "」"
-          },
-          {
-            "text": "です"
-          },
-          {
-            "text": "。"
+            "text": "で、バークシャーではありません。"
           }
         ]
       }
@@ -13665,9 +13180,6 @@
     "learningSupport": {
       "questionPattern": "which",
       "keyTermIds": [
-        "g045",
-        "g044",
-        "g046",
         "g014"
       ],
       "lessonObjective": {
@@ -13758,7 +13270,7 @@
           },
           {
             "text": "雄",
-            "reading": "ゆう"
+            "reading": "おす"
           },
           {
             "text": "を"
@@ -13774,16 +13286,8 @@
             "text": "、"
           },
           {
-            "text": "三",
-            "reading": "さん"
-          },
-          {
-            "text": "元",
-            "reading": "げん"
-          },
-          {
-            "text": "雑種",
-            "reading": "ざっしゅ"
+            "text": "三元雑種",
+            "reading": "さんげんざっしゅ"
           },
           {
             "text": "LWD"
@@ -13802,7 +13306,10 @@
             "text": "。"
           }
         ]
-      }
+      },
+      "languagePointKeys": [
+        "which"
+      ]
     }
   },
   {
@@ -23179,7 +22686,7 @@
   },
   {
     "id": "q029",
-    "schemaVersion": "0.3.0",
+    "schemaVersion": "0.4.0",
     "status": "source_checked",
     "prototypeOnly": true,
     "category": "採卵鶏",
@@ -23192,7 +22699,7 @@
     "question": {
       "ja": "鶏舎の近くで野鳥の死体を発見したとき、最初に取るべき行動はどれですか。",
       "easyJa": "鶏舎の近くで死んだ野鳥を見つけたら、どうしますか。",
-      "id": "Apa tindakan pertama saat menemukan bangkai burung liar dekat kandang ayam?",
+      "id": "Dari sisi biosekuriti/pencegahan penyakit（防疫／ぼうえき）, saat menemukan bangkai burung liar di dekat kandang ayam（鶏舎／けいしゃ）, tindakan pertama（最初／さいしょ）apa yang harus dilakukan?",
       "rubyJa": [
         {
           "text": "鶏舎",
@@ -23279,7 +22786,7 @@
         "text": {
           "ja": "素手で拾って捨てる",
           "easyJa": "手で拾ってゴミ箱へ捨てる",
-          "id": "mengambil dengan tangan kosong dan membuangnya",
+          "id": "mengambil dengan tangan kosong dan membuangnya（素手で拾って捨てる／すででひろってすてる）",
           "rubyJa": [
             {
               "text": "素手",
@@ -23307,7 +22814,7 @@
         "text": {
           "ja": "すぐ管理者へ知らせる",
           "easyJa": "すぐ責任者に知らせる",
-          "id": "segera melapor kepada penanggung jawab",
+          "id": "segera melapor kepada penanggung jawab（すぐ管理者へ知らせる／すぐかんりしゃへしらせる）",
           "rubyJa": [
             {
               "text": "すぐ"
@@ -23335,7 +22842,7 @@
         "text": {
           "ja": "鶏舎内へ持ち込む",
           "easyJa": "鶏舎の中へ持って入る",
-          "id": "membawanya ke dalam kandang",
+          "id": "membawanya ke dalam kandang（鶏舎内へ持ち込む／けいしゃないへもちこむ）",
           "rubyJa": [
             {
               "text": "鶏舎",
@@ -23360,7 +22867,7 @@
         "text": {
           "ja": "何もしない",
           "easyJa": "そのままにする",
-          "id": "tidak melakukan apa-apa",
+          "id": "tidak melakukan apa-apa（何もしない／なにもしない）",
           "rubyJa": [
             {
               "text": "何",
@@ -23492,7 +22999,10 @@
       "reviewerType": "ai_source_review",
       "reviewedAt": "2026-08-11",
       "approvalByUser": "pending",
-      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。"
+      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。",
+      "furigana": "pending",
+      "japaneseLearning": "pending",
+      "answerLeak": "pending"
     },
     "errorReasonOptions": [
       "knowledge",
@@ -23504,90 +23014,62 @@
     ],
     "choiceRationales": {
       "a": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「すぐ管理者へ知らせる」です。",
-        "easyJa": "これは正解ではありません。正解は「すぐ責任者に知らせる」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “segera melapor kepada penanggung jawab”. Bangkai burung liar penting dari sisi biosekuriti, sehingga harus segera dilaporkan.",
+        "ja": "最初に取るべき行動は管理者への連絡です。「素手で拾って捨てる」ことではありません。",
+        "easyJa": "最初に管理者へ知らせます。素手で拾うことではありません。",
+        "id": "Tindakan pertama adalah melapor kepada penanggung jawab, bukan “mengambil dengan tangan kosong lalu membuangnya”.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "最初",
+            "reading": "さいしょ"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "に"
           },
           {
-            "text": "は"
+            "text": "取る",
+            "reading": "とる"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
+            "text": "べき"
           },
           {
-            "text": "教材",
-            "reading": "きょうざい"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
+            "text": "行動",
+            "reading": "こうどう"
           },
           {
             "text": "は"
           },
           {
-            "text": "「"
+            "text": "管理者",
+            "reading": "かんりしゃ"
           },
           {
-            "text": "すぐ"
+            "text": "への"
           },
           {
-            "text": "管理",
-            "reading": "かんり"
+            "text": "連絡",
+            "reading": "れんらく"
           },
           {
-            "text": "者",
-            "reading": "しゃ"
+            "text": "です。「"
           },
           {
-            "text": "へ"
+            "text": "素手",
+            "reading": "すで"
           },
           {
-            "text": "知らせる",
-            "reading": "しらせる"
+            "text": "で"
           },
           {
-            "text": "」"
+            "text": "拾って",
+            "reading": "ひろって"
           },
           {
-            "text": "です"
+            "text": "捨てる",
+            "reading": "すてる"
           },
           {
-            "text": "。"
+            "text": "」ことではありません。"
           }
         ]
       },
@@ -23709,178 +23191,107 @@
         ]
       },
       "c": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「すぐ管理者へ知らせる」です。",
-        "easyJa": "これは正解ではありません。正解は「すぐ責任者に知らせる」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “segera melapor kepada penanggung jawab”. Bangkai burung liar penting dari sisi biosekuriti, sehingga harus segera dilaporkan.",
+        "ja": "最初に取るべき行動は管理者への連絡です。「鶏舎内へ持ち込む」ことではありません。",
+        "easyJa": "最初に管理者へ知らせます。鶏舎の中へ持ち込むことではありません。",
+        "id": "Tindakan pertama adalah melapor kepada penanggung jawab, bukan “membawanya ke dalam kandang”.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "最初",
+            "reading": "さいしょ"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "に"
           },
           {
-            "text": "は"
+            "text": "取る",
+            "reading": "とる"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
+            "text": "べき"
           },
           {
-            "text": "教材",
-            "reading": "きょうざい"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
+            "text": "行動",
+            "reading": "こうどう"
           },
           {
             "text": "は"
           },
           {
-            "text": "「"
+            "text": "管理者",
+            "reading": "かんりしゃ"
           },
           {
-            "text": "すぐ"
+            "text": "への"
           },
           {
-            "text": "管理",
-            "reading": "かんり"
+            "text": "連絡",
+            "reading": "れんらく"
           },
           {
-            "text": "者",
-            "reading": "しゃ"
+            "text": "です。「"
+          },
+          {
+            "text": "鶏舎内",
+            "reading": "けいしゃない"
           },
           {
             "text": "へ"
           },
           {
-            "text": "知らせる",
-            "reading": "しらせる"
+            "text": "持ち込む",
+            "reading": "もちこむ"
           },
           {
-            "text": "」"
-          },
-          {
-            "text": "です"
-          },
-          {
-            "text": "。"
+            "text": "」ことではありません。"
           }
         ]
       },
       "d": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「すぐ管理者へ知らせる」です。",
-        "easyJa": "これは正解ではありません。正解は「すぐ責任者に知らせる」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “segera melapor kepada penanggung jawab”. Bangkai burung liar penting dari sisi biosekuriti, sehingga harus segera dilaporkan.",
+        "ja": "最初に取るべき行動は管理者への連絡です。「何もしない」ことではありません。",
+        "easyJa": "最初に管理者へ知らせます。何もしないのは違います。",
+        "id": "Tindakan pertama adalah melapor kepada penanggung jawab, bukan “tidak melakukan apa-apa”.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "最初",
+            "reading": "さいしょ"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "に"
           },
           {
-            "text": "は"
+            "text": "取る",
+            "reading": "とる"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
+            "text": "べき"
           },
           {
-            "text": "教材",
-            "reading": "きょうざい"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
+            "text": "行動",
+            "reading": "こうどう"
           },
           {
             "text": "は"
           },
           {
-            "text": "「"
+            "text": "管理者",
+            "reading": "かんりしゃ"
           },
           {
-            "text": "すぐ"
+            "text": "への"
           },
           {
-            "text": "管理",
-            "reading": "かんり"
+            "text": "連絡",
+            "reading": "れんらく"
           },
           {
-            "text": "者",
-            "reading": "しゃ"
+            "text": "です。「"
           },
           {
-            "text": "へ"
+            "text": "何",
+            "reading": "なに"
           },
           {
-            "text": "知らせる",
-            "reading": "しらせる"
-          },
-          {
-            "text": "」"
-          },
-          {
-            "text": "です"
-          },
-          {
-            "text": "。"
+            "text": "もしない」ことではありません。"
           }
         ]
       }
@@ -23888,7 +23299,6 @@
     "learningSupport": {
       "questionPattern": "procedure",
       "keyTermIds": [
-        "g017",
         "g023"
       ],
       "lessonObjective": {
@@ -23897,12 +23307,8 @@
         "id": "Memahami topik “防疫” pada bidang ayam petelur melalui soal bahasa Jepang.",
         "rubyJa": [
           {
-            "text": "採卵",
-            "reading": "さいらん"
-          },
-          {
-            "text": "鶏",
-            "reading": "にわとり"
+            "text": "採卵鶏",
+            "reading": "さいらんけい"
           },
           {
             "text": "の"
@@ -24028,7 +23434,10 @@
             "text": "。"
           }
         ]
-      }
+      },
+      "languagePointKeys": [
+        "procedure_first"
+      ]
     }
   },
   {
@@ -26678,7 +26087,7 @@
   },
   {
     "id": "q033",
-    "schemaVersion": "0.3.0",
+    "schemaVersion": "0.4.0",
     "status": "source_checked",
     "prototypeOnly": true,
     "category": "安全衛生",
@@ -26691,7 +26100,7 @@
     "question": {
       "ja": "次のうち、賃金支払いの5原則に含まれないものはどれですか。",
       "easyJa": "賃金の5つの決まりに入らないものはどれですか。",
-      "id": "Manakah yang tidak termasuk lima prinsip pembayaran upah?",
+      "id": "Manakah yang tidak termasuk（含まれない／ふくまれない）dalam lima prinsip pembayaran upah（賃金支払いの5原則／ちんぎんしはらいのごげんそく）?",
       "rubyJa": [
         {
           "text": "次",
@@ -26763,7 +26172,7 @@
         "text": {
           "ja": "通貨で支払う",
           "easyJa": "お金で払う",
-          "id": "dibayar dengan uang",
+          "id": "dibayar dengan uang（通貨で支払う／つうかでしはらう）",
           "rubyJa": [
             {
               "text": "通貨",
@@ -26784,7 +26193,7 @@
         "text": {
           "ja": "労働者へ直接支払う",
           "easyJa": "本人へ直接払う",
-          "id": "dibayar langsung kepada pekerja",
+          "id": "dibayar langsung kepada pekerja（労働者へ直接支払う／ろうどうしゃへちょくせつしはらう）",
           "rubyJa": [
             {
               "text": "労働",
@@ -26813,7 +26222,7 @@
         "text": {
           "ja": "毎月1回以上支払う",
           "easyJa": "毎月1回以上払う",
-          "id": "dibayar minimal sekali sebulan",
+          "id": "dibayar minimal sekali sebulan（毎月1回以上支払う／まいつき1かいいじょうしはらう）",
           "rubyJa": [
             {
               "text": "毎月",
@@ -26842,7 +26251,7 @@
         "text": {
           "ja": "使用者の都合のよい日に自由に支払う",
           "easyJa": "会社が好きな日に払う",
-          "id": "dibayar kapan saja sesuai keinginan pemberi kerja",
+          "id": "dibayar kapan saja sesuai keinginan pemberi kerja（使用者の都合のよい日に自由に支払う／しようしゃのつごうのよいひにじゆうにしはらう）",
           "rubyJa": [
             {
               "text": "使用",
@@ -27016,7 +26425,10 @@
       "reviewerType": "ai_source_review",
       "reviewedAt": "2026-08-11",
       "approvalByUser": "pending",
-      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。"
+      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。",
+      "furigana": "pending",
+      "japaneseLearning": "pending",
+      "answerLeak": "pending"
     },
     "errorReasonOptions": [
       "knowledge",
@@ -27028,329 +26440,170 @@
     ],
     "choiceRationales": {
       "a": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「使用者の都合のよい日に自由に支払う」です。",
-        "easyJa": "これは正解ではありません。正解は「会社が好きな日に払う」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “dibayar kapan saja sesuai keinginan pemberi kerja”. Pembayaran harus dilakukan pada tanggal tetap, bukan kapan saja sesuai keinginan pemberi kerja.",
+        "ja": "「通貨で支払う」は賃金支払いの5原則に含まれるため、「含まれないもの」ではありません。",
+        "easyJa": "お金で払うことは5原則に入っています。",
+        "id": "“Dibayar dengan uang” termasuk dalam lima prinsip pembayaran upah, sehingga bukan jawaban yang “tidak termasuk”.",
         "rubyJa": [
-          {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
-          {
-            "text": "教材",
-            "reading": "きょうざい"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
           {
             "text": "「"
           },
           {
-            "text": "使用",
-            "reading": "しよう"
+            "text": "通貨",
+            "reading": "つうか"
           },
           {
-            "text": "者",
-            "reading": "しゃ"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "都合",
-            "reading": "つごう"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "よい"
-          },
-          {
-            "text": "日",
-            "reading": "ひ"
-          },
-          {
-            "text": "に"
-          },
-          {
-            "text": "自由",
-            "reading": "じゆう"
-          },
-          {
-            "text": "に"
+            "text": "で"
           },
           {
             "text": "支払う",
             "reading": "しはらう"
           },
           {
-            "text": "」"
+            "text": "」は"
           },
           {
-            "text": "です"
+            "text": "賃金支払い",
+            "reading": "ちんぎんしはらい"
           },
           {
-            "text": "。"
+            "text": "の5"
+          },
+          {
+            "text": "原則",
+            "reading": "げんそく"
+          },
+          {
+            "text": "に"
+          },
+          {
+            "text": "含まれる",
+            "reading": "ふくまれる"
+          },
+          {
+            "text": "ため、「"
+          },
+          {
+            "text": "含まれない",
+            "reading": "ふくまれない"
+          },
+          {
+            "text": "もの」ではありません。"
           }
         ]
       },
       "b": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「使用者の都合のよい日に自由に支払う」です。",
-        "easyJa": "これは正解ではありません。正解は「会社が好きな日に払う」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “dibayar kapan saja sesuai keinginan pemberi kerja”. Pembayaran harus dilakukan pada tanggal tetap, bukan kapan saja sesuai keinginan pemberi kerja.",
+        "ja": "「労働者へ直接支払う」は賃金支払いの5原則に含まれるため、「含まれないもの」ではありません。",
+        "easyJa": "労働者へ直接払うことは5原則に入っています。",
+        "id": "“Dibayar langsung kepada pekerja” termasuk dalam lima prinsip pembayaran upah, sehingga bukan jawaban yang “tidak termasuk”.",
         "rubyJa": [
-          {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
-          {
-            "text": "教材",
-            "reading": "きょうざい"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
           {
             "text": "「"
           },
           {
-            "text": "使用",
-            "reading": "しよう"
+            "text": "労働者",
+            "reading": "ろうどうしゃ"
           },
           {
-            "text": "者",
-            "reading": "しゃ"
+            "text": "へ"
           },
           {
-            "text": "の"
-          },
-          {
-            "text": "都合",
-            "reading": "つごう"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "よい"
-          },
-          {
-            "text": "日",
-            "reading": "ひ"
-          },
-          {
-            "text": "に"
-          },
-          {
-            "text": "自由",
-            "reading": "じゆう"
-          },
-          {
-            "text": "に"
+            "text": "直接",
+            "reading": "ちょくせつ"
           },
           {
             "text": "支払う",
             "reading": "しはらう"
           },
           {
-            "text": "」"
+            "text": "」は"
           },
           {
-            "text": "です"
+            "text": "賃金支払い",
+            "reading": "ちんぎんしはらい"
           },
           {
-            "text": "。"
+            "text": "の5"
+          },
+          {
+            "text": "原則",
+            "reading": "げんそく"
+          },
+          {
+            "text": "に"
+          },
+          {
+            "text": "含まれる",
+            "reading": "ふくまれる"
+          },
+          {
+            "text": "ため、「"
+          },
+          {
+            "text": "含まれない",
+            "reading": "ふくまれない"
+          },
+          {
+            "text": "もの」ではありません。"
           }
         ]
       },
       "c": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「使用者の都合のよい日に自由に支払う」です。",
-        "easyJa": "これは正解ではありません。正解は「会社が好きな日に払う」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “dibayar kapan saja sesuai keinginan pemberi kerja”. Pembayaran harus dilakukan pada tanggal tetap, bukan kapan saja sesuai keinginan pemberi kerja.",
+        "ja": "「毎月1回以上支払う」は賃金支払いの5原則に含まれるため、「含まれないもの」ではありません。",
+        "easyJa": "毎月1回以上払うことは5原則に入っています。",
+        "id": "“Dibayar minimal sekali sebulan” termasuk dalam lima prinsip pembayaran upah, sehingga bukan jawaban yang “tidak termasuk”.",
         "rubyJa": [
-          {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
-          {
-            "text": "教材",
-            "reading": "きょうざい"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
           {
             "text": "「"
           },
           {
-            "text": "使用",
-            "reading": "しよう"
+            "text": "毎月",
+            "reading": "まいつき"
           },
           {
-            "text": "者",
-            "reading": "しゃ"
+            "text": "1"
           },
           {
-            "text": "の"
+            "text": "回",
+            "reading": "かい"
           },
           {
-            "text": "都合",
-            "reading": "つごう"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "よい"
-          },
-          {
-            "text": "日",
-            "reading": "ひ"
-          },
-          {
-            "text": "に"
-          },
-          {
-            "text": "自由",
-            "reading": "じゆう"
-          },
-          {
-            "text": "に"
+            "text": "以上",
+            "reading": "いじょう"
           },
           {
             "text": "支払う",
             "reading": "しはらう"
           },
           {
-            "text": "」"
+            "text": "」は"
           },
           {
-            "text": "です"
+            "text": "賃金支払い",
+            "reading": "ちんぎんしはらい"
           },
           {
-            "text": "。"
+            "text": "の5"
+          },
+          {
+            "text": "原則",
+            "reading": "げんそく"
+          },
+          {
+            "text": "に"
+          },
+          {
+            "text": "含まれる",
+            "reading": "ふくまれる"
+          },
+          {
+            "text": "ため、「"
+          },
+          {
+            "text": "含まれない",
+            "reading": "ふくまれない"
+          },
+          {
+            "text": "もの」ではありません。"
           }
         ]
       },
@@ -27510,9 +26763,9 @@
       }
     },
     "learningSupport": {
-      "questionPattern": "which",
+      "questionPattern": "incorrect",
       "keyTermIds": [
-        "g025"
+        "g061"
       ],
       "lessonObjective": {
         "ja": "安全衛生の「労務管理」を、日本語の問題で理解する。",
@@ -27671,7 +26924,10 @@
             "text": "。"
           }
         ]
-      }
+      },
+      "languagePointKeys": [
+        "not_included"
+      ]
     }
   },
   {
@@ -28565,7 +27821,7 @@
   },
   {
     "id": "q035",
-    "schemaVersion": "0.3.0",
+    "schemaVersion": "0.4.0",
     "status": "source_checked",
     "prototypeOnly": true,
     "category": "安全衛生",
@@ -28578,7 +27834,7 @@
     "question": {
       "ja": "6か月継続勤務し、全労働日の8割以上勤務した場合に最初に付与される年次有給休暇は何日ですか。",
       "easyJa": "6か月働き、出勤が8割以上なら、有給休暇は最初に何日ありますか。",
-      "id": "Setelah bekerja 6 bulan dan hadir minimal 80%, berapa hari cuti berbayar pertama yang diberikan?",
+      "id": "Setelah bekerja terus-menerus selama 6 bulan dan masuk kerja sekurang-kurangnya 80%（8割以上／はちわりいじょう）dari seluruh hari kerja, berapa hari cuti berbayar tahunan（年次有給休暇／ねんじゆうきゅうきゅうか）yang pertama kali diberikan?",
       "rubyJa": [
         {
           "text": "6"
@@ -28701,7 +27957,7 @@
         "text": {
           "ja": "3日",
           "easyJa": "3日",
-          "id": "3 hari",
+          "id": "3 hari（3日／3にち）",
           "rubyJa": [
             {
               "text": "3"
@@ -28718,7 +27974,7 @@
         "text": {
           "ja": "5日",
           "easyJa": "5日",
-          "id": "5 hari",
+          "id": "5 hari（5日／5にち）",
           "rubyJa": [
             {
               "text": "5"
@@ -28735,7 +27991,7 @@
         "text": {
           "ja": "10日",
           "easyJa": "10日",
-          "id": "10 hari",
+          "id": "10 hari（10日／10にち）",
           "rubyJa": [
             {
               "text": "10"
@@ -28752,7 +28008,7 @@
         "text": {
           "ja": "20日",
           "easyJa": "20日",
-          "id": "20 hari",
+          "id": "20 hari（20日／20にち）",
           "rubyJa": [
             {
               "text": "20"
@@ -28888,7 +28144,10 @@
       "reviewerType": "ai_source_review",
       "reviewedAt": "2026-08-11",
       "approvalByUser": "pending",
-      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。"
+      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。",
+      "furigana": "pending",
+      "japaneseLearning": "pending",
+      "answerLeak": "pending"
     },
     "errorReasonOptions": [
       "knowledge",
@@ -28900,156 +28159,106 @@
     ],
     "choiceRationales": {
       "a": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「10日」です。",
-        "easyJa": "これは正解ではありません。正解は「10日」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “10 hari”. Buku menyebut 10 hari cuti berbayar pada syarat tersebut.",
+        "ja": "この条件で最初に付与される年次有給休暇は10日なので、3日ではありません。",
+        "easyJa": "この条件では最初に10日もらいます。3日ではありません。",
+        "id": "Dalam kondisi ini, cuti berbayar tahunan yang pertama diberikan adalah 10 hari, bukan 3 hari.",
         "rubyJa": [
           {
             "text": "この"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "条件",
+            "reading": "じょうけん"
           },
           {
-            "text": "は"
+            "text": "で"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
+            "text": "最初",
+            "reading": "さいしょ"
           },
           {
-            "text": "教材",
-            "reading": "きょうざい"
+            "text": "に"
           },
           {
-            "text": "の"
+            "text": "付与",
+            "reading": "ふよ"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "される"
           },
           {
-            "text": "と"
+            "text": "年次有給休暇",
+            "reading": "ねんじゆうきゅうきゅうか"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "10"
+            "text": "は10"
           },
           {
             "text": "日",
             "reading": "にち"
           },
           {
-            "text": "」"
+            "text": "なので、3"
           },
           {
-            "text": "です"
+            "text": "日",
+            "reading": "にち"
           },
           {
-            "text": "。"
+            "text": "ではありません。"
           }
         ]
       },
       "b": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「10日」です。",
-        "easyJa": "これは正解ではありません。正解は「10日」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “10 hari”. Buku menyebut 10 hari cuti berbayar pada syarat tersebut.",
+        "ja": "この条件で最初に付与される年次有給休暇は10日なので、5日ではありません。",
+        "easyJa": "この条件では最初に10日もらいます。5日ではありません。",
+        "id": "Dalam kondisi ini, cuti berbayar tahunan yang pertama diberikan adalah 10 hari, bukan 5 hari.",
         "rubyJa": [
           {
             "text": "この"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "条件",
+            "reading": "じょうけん"
           },
           {
-            "text": "は"
+            "text": "で"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
+            "text": "最初",
+            "reading": "さいしょ"
           },
           {
-            "text": "教材",
-            "reading": "きょうざい"
+            "text": "に"
           },
           {
-            "text": "の"
+            "text": "付与",
+            "reading": "ふよ"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "される"
           },
           {
-            "text": "と"
+            "text": "年次有給休暇",
+            "reading": "ねんじゆうきゅうきゅうか"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "10"
+            "text": "は10"
           },
           {
             "text": "日",
             "reading": "にち"
           },
           {
-            "text": "」"
+            "text": "なので、5"
           },
           {
-            "text": "です"
+            "text": "日",
+            "reading": "にち"
           },
           {
-            "text": "。"
+            "text": "ではありません。"
           }
         ]
       },
@@ -29169,79 +28378,54 @@
         ]
       },
       "d": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「10日」です。",
-        "easyJa": "これは正解ではありません。正解は「10日」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “10 hari”. Buku menyebut 10 hari cuti berbayar pada syarat tersebut.",
+        "ja": "この条件で最初に付与される年次有給休暇は10日なので、20日ではありません。",
+        "easyJa": "この条件では最初に10日もらいます。20日ではありません。",
+        "id": "Dalam kondisi ini, cuti berbayar tahunan yang pertama diberikan adalah 10 hari, bukan 20 hari.",
         "rubyJa": [
           {
             "text": "この"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "条件",
+            "reading": "じょうけん"
           },
           {
-            "text": "は"
+            "text": "で"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
+            "text": "最初",
+            "reading": "さいしょ"
           },
           {
-            "text": "教材",
-            "reading": "きょうざい"
+            "text": "に"
           },
           {
-            "text": "の"
+            "text": "付与",
+            "reading": "ふよ"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "される"
           },
           {
-            "text": "と"
+            "text": "年次有給休暇",
+            "reading": "ねんじゆうきゅうきゅうか"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "10"
+            "text": "は10"
           },
           {
             "text": "日",
             "reading": "にち"
           },
           {
-            "text": "」"
+            "text": "なので、20"
           },
           {
-            "text": "です"
+            "text": "日",
+            "reading": "にち"
           },
           {
-            "text": "。"
+            "text": "ではありません。"
           }
         ]
       }
@@ -29249,8 +28433,7 @@
     "learningSupport": {
       "questionPattern": "procedure",
       "keyTermIds": [
-        "g027",
-        "g025"
+        "g027"
       ],
       "lessonObjective": {
         "ja": "安全衛生の「労務管理」を、日本語の問題で理解する。",
@@ -29402,7 +28585,11 @@
             "text": "。"
           }
         ]
-      }
+      },
+      "languagePointKeys": [
+        "condition",
+        "at_least"
+      ]
     }
   },
   {
@@ -36585,7 +35772,7 @@
   },
   {
     "id": "q044",
-    "schemaVersion": "0.3.0",
+    "schemaVersion": "0.4.0",
     "status": "source_checked",
     "prototypeOnly": true,
     "category": "安全衛生",
@@ -36598,29 +35785,18 @@
     "question": {
       "ja": "複数人で刈払機作業をするときに必要な作業者間の距離はどれですか。",
       "easyJa": "何人かで刈払機を使うとき、何m以上離れますか。",
-      "id": "Berapa jarak minimum antarpekerja saat beberapa orang memakai mesin potong rumput?",
+      "id": "Berapa jarak antarpekerja yang diperlukan saat beberapa orang bekerja dengan mesin potong rumput（刈払機／かりはらいき）?",
       "rubyJa": [
         {
-          "text": "複数",
-          "reading": "ふくすう"
-        },
-        {
-          "text": "人",
-          "reading": "じん"
+          "text": "複数人",
+          "reading": "ふくすうにん"
         },
         {
           "text": "で"
         },
         {
-          "text": "刈",
-          "reading": "かり"
-        },
-        {
-          "text": "払"
-        },
-        {
-          "text": "機",
-          "reading": "き"
+          "text": "刈払機",
+          "reading": "かりはらいき"
         },
         {
           "text": "作業",
@@ -36687,7 +35863,7 @@
         "text": {
           "ja": "1m以上",
           "easyJa": "1m以上",
-          "id": "minimal 1 m",
+          "id": "minimal 1 m（1m以上／1mいじょう）",
           "rubyJa": [
             {
               "text": "1"
@@ -36707,7 +35883,7 @@
         "text": {
           "ja": "3m以上",
           "easyJa": "3m以上",
-          "id": "minimal 3 m",
+          "id": "minimal 3 m（3m以上／3mいじょう）",
           "rubyJa": [
             {
               "text": "3"
@@ -36727,7 +35903,7 @@
         "text": {
           "ja": "5m以上",
           "easyJa": "5m以上",
-          "id": "minimal 5 m",
+          "id": "minimal 5 m（5m以上／5mいじょう）",
           "rubyJa": [
             {
               "text": "5"
@@ -36747,7 +35923,7 @@
         "text": {
           "ja": "15m以上",
           "easyJa": "15m以上",
-          "id": "minimal 15 m",
+          "id": "minimal 15 m（15m以上／15mいじょう）",
           "rubyJa": [
             {
               "text": "15"
@@ -36885,7 +36061,10 @@
       "reviewerType": "ai_source_review",
       "reviewedAt": "2026-08-11",
       "approvalByUser": "pending",
-      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。"
+      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。",
+      "furigana": "pending",
+      "japaneseLearning": "pending",
+      "answerLeak": "pending"
     },
     "errorReasonOptions": [
       "knowledge",
@@ -36897,79 +36076,41 @@
     ],
     "choiceRationales": {
       "a": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「15m以上」です。",
-        "easyJa": "これは正解ではありません。正解は「15m以上」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “minimal 15 m”. Karena risiko benda terlempar dan pisau berputar, jarak antarpekerja harus minimal 15 m.",
+        "ja": "必要な間隔は15m以上なので、1m以上では足りません。",
+        "easyJa": "15m以上離れます。1mでは足りません。",
+        "id": "Jarak yang diperlukan adalah sekurang-kurangnya 15 m; 1 m tidak cukup.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "必要",
+            "reading": "ひつよう"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "な"
           },
           {
-            "text": "は"
+            "text": "間隔",
+            "reading": "かんかく"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
-          {
-            "text": "教材",
-            "reading": "きょうざい"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "15"
-          },
-          {
-            "text": "m"
+            "text": "は15m"
           },
           {
             "text": "以上",
             "reading": "いじょう"
           },
           {
-            "text": "」"
+            "text": "なので、1m"
           },
           {
-            "text": "です"
+            "text": "以上",
+            "reading": "いじょう"
+          },
+          {
+            "text": "では"
+          },
+          {
+            "text": "足りません",
+            "reading": "たりません"
           },
           {
             "text": "。"
@@ -36977,79 +36118,41 @@
         ]
       },
       "b": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「15m以上」です。",
-        "easyJa": "これは正解ではありません。正解は「15m以上」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “minimal 15 m”. Karena risiko benda terlempar dan pisau berputar, jarak antarpekerja harus minimal 15 m.",
+        "ja": "必要な間隔は15m以上なので、3m以上では足りません。",
+        "easyJa": "15m以上離れます。3mでは足りません。",
+        "id": "Jarak yang diperlukan adalah sekurang-kurangnya 15 m; 3 m tidak cukup.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "必要",
+            "reading": "ひつよう"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "な"
           },
           {
-            "text": "は"
+            "text": "間隔",
+            "reading": "かんかく"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
-          {
-            "text": "教材",
-            "reading": "きょうざい"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "15"
-          },
-          {
-            "text": "m"
+            "text": "は15m"
           },
           {
             "text": "以上",
             "reading": "いじょう"
           },
           {
-            "text": "」"
+            "text": "なので、3m"
           },
           {
-            "text": "です"
+            "text": "以上",
+            "reading": "いじょう"
+          },
+          {
+            "text": "では"
+          },
+          {
+            "text": "足りません",
+            "reading": "たりません"
           },
           {
             "text": "。"
@@ -37057,79 +36160,41 @@
         ]
       },
       "c": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「15m以上」です。",
-        "easyJa": "これは正解ではありません。正解は「15m以上」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “minimal 15 m”. Karena risiko benda terlempar dan pisau berputar, jarak antarpekerja harus minimal 15 m.",
+        "ja": "必要な間隔は15m以上なので、5m以上では足りません。",
+        "easyJa": "15m以上離れます。5mでは足りません。",
+        "id": "Jarak yang diperlukan adalah sekurang-kurangnya 15 m; 5 m tidak cukup.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "必要",
+            "reading": "ひつよう"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "な"
           },
           {
-            "text": "は"
+            "text": "間隔",
+            "reading": "かんかく"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
-          {
-            "text": "教材",
-            "reading": "きょうざい"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "15"
-          },
-          {
-            "text": "m"
+            "text": "は15m"
           },
           {
             "text": "以上",
             "reading": "いじょう"
           },
           {
-            "text": "」"
+            "text": "なので、5m"
           },
           {
-            "text": "です"
+            "text": "以上",
+            "reading": "いじょう"
+          },
+          {
+            "text": "では"
+          },
+          {
+            "text": "足りません",
+            "reading": "たりません"
           },
           {
             "text": "。"
@@ -37257,8 +36322,7 @@
     "learningSupport": {
       "questionPattern": "which",
       "keyTermIds": [
-        "g028",
-        "g025"
+        "g028"
       ],
       "lessonObjective": {
         "ja": "安全衛生の「刈払機」を、日本語の問題で理解する。",
@@ -37280,15 +36344,8 @@
             "text": "「"
           },
           {
-            "text": "刈",
-            "reading": "かり"
-          },
-          {
-            "text": "払"
-          },
-          {
-            "text": "機",
-            "reading": "き"
+            "text": "刈払機",
+            "reading": "かりはらいき"
           },
           {
             "text": "」"
@@ -37412,12 +36469,15 @@
             "text": "。"
           }
         ]
-      }
+      },
+      "languagePointKeys": [
+        "at_least"
+      ]
     }
   },
   {
     "id": "q045",
-    "schemaVersion": "0.3.0",
+    "schemaVersion": "0.4.0",
     "status": "source_checked",
     "prototypeOnly": true,
     "category": "肉用牛",
@@ -37430,19 +36490,11 @@
     "question": {
       "ja": "肉用牛の発育確認で用いる主な測定部位に含まれないものはどれですか。",
       "easyJa": "牛の大きさを測る場所に入らないものはどれですか。",
-      "id": "Manakah yang tidak termasuk ukuran utama untuk memeriksa pertumbuhan sapi potong?",
+      "id": "Manakah yang tidak termasuk（含まれない／ふくまれない）bagian pengukuran utama（測定部位／そくていぶい）untuk memeriksa pertumbuhan sapi potong（肉用牛／にくようぎゅう）?",
       "rubyJa": [
         {
-          "text": "肉",
-          "reading": "にく"
-        },
-        {
-          "text": "用",
-          "reading": "よう"
-        },
-        {
-          "text": "牛",
-          "reading": "うし"
+          "text": "肉用牛",
+          "reading": "にくようぎゅう"
         },
         {
           "text": "の"
@@ -37516,7 +36568,7 @@
         "text": {
           "ja": "体長",
           "easyJa": "体の長さ",
-          "id": "panjang badan",
+          "id": "panjang badan（体長／たいちょう）",
           "rubyJa": [
             {
               "text": "体長",
@@ -37530,7 +36582,7 @@
         "text": {
           "ja": "体高",
           "easyJa": "体の高さ",
-          "id": "tinggi badan",
+          "id": "tinggi badan（体高／たいこう）",
           "rubyJa": [
             {
               "text": "体高",
@@ -37544,19 +36596,11 @@
         "text": {
           "ja": "十字部高",
           "easyJa": "腰の高い所の高さ",
-          "id": "tinggi pinggul/sacrum",
+          "id": "tinggi pinggul/sacrum（十字部高／じゅうじぶこう）",
           "rubyJa": [
             {
-              "text": "十字",
-              "reading": "じゅうじ"
-            },
-            {
-              "text": "部",
-              "reading": "ぶ"
-            },
-            {
-              "text": "高",
-              "reading": "だか"
+              "text": "十字部高",
+              "reading": "じゅうじぶこう"
             }
           ]
         }
@@ -37566,11 +36610,11 @@
         "text": {
           "ja": "角の長さ",
           "easyJa": "角の長さ",
-          "id": "panjang tanduk",
+          "id": "panjang tanduk（角の長さ／つののながさ）",
           "rubyJa": [
             {
               "text": "角",
-              "reading": "かく"
+              "reading": "つの"
             },
             {
               "text": "の"
@@ -37642,16 +36686,8 @@
           "text": "、"
         },
         {
-          "text": "十字",
-          "reading": "じゅうじ"
-        },
-        {
-          "text": "部",
-          "reading": "ぶ"
-        },
-        {
-          "text": "高",
-          "reading": "だか"
+          "text": "十字部高",
+          "reading": "じゅうじぶこう"
         },
         {
           "text": "です"
@@ -37661,7 +36697,7 @@
         },
         {
           "text": "角",
-          "reading": "かく"
+          "reading": "つの"
         },
         {
           "text": "の"
@@ -37740,7 +36776,10 @@
       "reviewerType": "ai_source_review",
       "reviewedAt": "2026-08-11",
       "approvalByUser": "pending",
-      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。"
+      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。",
+      "furigana": "pending",
+      "japaneseLearning": "pending",
+      "answerLeak": "pending"
     },
     "errorReasonOptions": [
       "knowledge",
@@ -37757,254 +36796,161 @@
     },
     "choiceRationales": {
       "a": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「角の長さ」です。",
-        "easyJa": "これは正解ではありません。正解は「角の長さ」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “panjang tanduk”. Ukuran utama yang disebut adalah panjang badan, tinggi badan, dan tinggi pinggul; panjang tanduk tidak termasuk.",
+        "ja": "体長は教材が挙げる主な測定部位に含まれるため、「含まれないもの」ではありません。",
+        "easyJa": "体長は主な測定部位に入っています。",
+        "id": "Panjang badan termasuk bagian pengukuran utama yang disebut materi, sehingga bukan jawaban yang “tidak termasuk”.",
         "rubyJa": [
           {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "体長",
+            "reading": "たいちょう"
           },
           {
             "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
           },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
-            "text": "の"
+            "text": "が"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "挙げる",
+            "reading": "あげる"
           },
           {
-            "text": "と"
+            "text": "主",
+            "reading": "おも"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
+            "text": "な"
           },
           {
-            "text": "し"
+            "text": "測定部位",
+            "reading": "そくていぶい"
           },
           {
-            "text": "ませ"
+            "text": "に"
           },
           {
-            "text": "ん"
+            "text": "含まれる",
+            "reading": "ふくまれる"
           },
           {
-            "text": "。"
+            "text": "ため、「"
           },
           {
-            "text": "正解",
-            "reading": "せいかい"
+            "text": "含まれない",
+            "reading": "ふくまれない"
           },
           {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "角",
-            "reading": "かく"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "長",
-            "reading": "なが"
-          },
-          {
-            "text": "さ"
-          },
-          {
-            "text": "」"
-          },
-          {
-            "text": "です"
-          },
-          {
-            "text": "。"
+            "text": "もの」ではありません。"
           }
         ]
       },
       "b": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「角の長さ」です。",
-        "easyJa": "これは正解ではありません。正解は「角の長さ」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “panjang tanduk”. Ukuran utama yang disebut adalah panjang badan, tinggi badan, dan tinggi pinggul; panjang tanduk tidak termasuk.",
+        "ja": "体高は教材が挙げる主な測定部位に含まれるため、「含まれないもの」ではありません。",
+        "easyJa": "体高は主な測定部位に入っています。",
+        "id": "Tinggi badan termasuk bagian pengukuran utama yang disebut materi, sehingga bukan jawaban yang “tidak termasuk”.",
         "rubyJa": [
           {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "体高",
+            "reading": "たいこう"
           },
           {
             "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
           },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
-            "text": "の"
+            "text": "が"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "挙げる",
+            "reading": "あげる"
           },
           {
-            "text": "と"
+            "text": "主",
+            "reading": "おも"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
+            "text": "な"
           },
           {
-            "text": "し"
+            "text": "測定部位",
+            "reading": "そくていぶい"
           },
           {
-            "text": "ませ"
+            "text": "に"
           },
           {
-            "text": "ん"
+            "text": "含まれる",
+            "reading": "ふくまれる"
           },
           {
-            "text": "。"
+            "text": "ため、「"
           },
           {
-            "text": "正解",
-            "reading": "せいかい"
+            "text": "含まれない",
+            "reading": "ふくまれない"
           },
           {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "角",
-            "reading": "かく"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "長",
-            "reading": "なが"
-          },
-          {
-            "text": "さ"
-          },
-          {
-            "text": "」"
-          },
-          {
-            "text": "です"
-          },
-          {
-            "text": "。"
+            "text": "もの」ではありません。"
           }
         ]
       },
       "c": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「角の長さ」です。",
-        "easyJa": "これは正解ではありません。正解は「角の長さ」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “panjang tanduk”. Ukuran utama yang disebut adalah panjang badan, tinggi badan, dan tinggi pinggul; panjang tanduk tidak termasuk.",
+        "ja": "十字部高は教材が挙げる主な測定部位に含まれるため、「含まれないもの」ではありません。",
+        "easyJa": "十字部高は主な測定部位に入っています。",
+        "id": "Tinggi pinggul atau sacrum termasuk bagian pengukuran utama yang disebut materi, sehingga bukan jawaban yang “tidak termasuk”.",
         "rubyJa": [
           {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "十字部高",
+            "reading": "じゅうじぶこう"
           },
           {
             "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
           },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
-            "text": "の"
+            "text": "が"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "挙げる",
+            "reading": "あげる"
           },
           {
-            "text": "と"
+            "text": "主",
+            "reading": "おも"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
+            "text": "な"
           },
           {
-            "text": "し"
+            "text": "測定部位",
+            "reading": "そくていぶい"
           },
           {
-            "text": "ませ"
+            "text": "に"
           },
           {
-            "text": "ん"
+            "text": "含まれる",
+            "reading": "ふくまれる"
           },
           {
-            "text": "。"
+            "text": "ため、「"
           },
           {
-            "text": "正解",
-            "reading": "せいかい"
+            "text": "含まれない",
+            "reading": "ふくまれない"
           },
           {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "角",
-            "reading": "かく"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "長",
-            "reading": "なが"
-          },
-          {
-            "text": "さ"
-          },
-          {
-            "text": "」"
-          },
-          {
-            "text": "です"
-          },
-          {
-            "text": "。"
+            "text": "もの」ではありません。"
           }
         ]
       },
@@ -38018,7 +36964,7 @@
           },
           {
             "text": "角",
-            "reading": "かく"
+            "reading": "つの"
           },
           {
             "text": "の"
@@ -38096,16 +37042,8 @@
             "text": "、"
           },
           {
-            "text": "十字",
-            "reading": "じゅうじ"
-          },
-          {
-            "text": "部",
-            "reading": "ぶ"
-          },
-          {
-            "text": "高",
-            "reading": "だか"
+            "text": "十字部高",
+            "reading": "じゅうじぶこう"
           },
           {
             "text": "です"
@@ -38115,7 +37053,7 @@
           },
           {
             "text": "角",
-            "reading": "かく"
+            "reading": "つの"
           },
           {
             "text": "の"
@@ -38163,9 +37101,9 @@
       }
     },
     "learningSupport": {
-      "questionPattern": "which",
+      "questionPattern": "incorrect",
       "keyTermIds": [
-        "g005"
+        "g062"
       ],
       "lessonObjective": {
         "ja": "肉用牛の「実技・測定」を、日本語の問題で理解する。",
@@ -38173,16 +37111,8 @@
         "id": "Memahami topik “実技・測定” pada bidang sapi potong melalui soal bahasa Jepang.",
         "rubyJa": [
           {
-            "text": "肉",
-            "reading": "にく"
-          },
-          {
-            "text": "用",
-            "reading": "よう"
-          },
-          {
-            "text": "牛",
-            "reading": "うし"
+            "text": "肉用牛",
+            "reading": "にくようぎゅう"
           },
           {
             "text": "の"
@@ -38291,16 +37221,8 @@
             "text": "、"
           },
           {
-            "text": "十字",
-            "reading": "じゅうじ"
-          },
-          {
-            "text": "部",
-            "reading": "ぶ"
-          },
-          {
-            "text": "高",
-            "reading": "だか"
+            "text": "十字部高",
+            "reading": "じゅうじぶこう"
           },
           {
             "text": "です"
@@ -38310,7 +37232,7 @@
           },
           {
             "text": "角",
-            "reading": "かく"
+            "reading": "つの"
           },
           {
             "text": "の"
@@ -38355,7 +37277,10 @@
             "text": "。"
           }
         ]
-      }
+      },
+      "languagePointKeys": [
+        "not_included"
+      ]
     }
   },
   {
@@ -40832,7 +39757,7 @@
   },
   {
     "id": "q049",
-    "schemaVersion": "0.3.0",
+    "schemaVersion": "0.4.0",
     "status": "source_checked",
     "prototypeOnly": true,
     "category": "安全衛生",
@@ -40845,7 +39770,7 @@
     "question": {
       "ja": "1,000倍液の消毒液を20L作るとき、必要な原液量は何mLですか。",
       "easyJa": "20Lの1,000倍消毒液には、原液を何mL入れますか。",
-      "id": "Berapa mL konsentrat diperlukan untuk membuat 20 L larutan disinfektan pengenceran 1.000 kali?",
+      "id": "Berapa mL larutan pekat（原液／げんえき）yang diperlukan untuk membuat 20 L larutan disinfektan dengan pengenceran 1.000 kali（1,000倍液／せんばいえき）?",
       "rubyJa": [
         {
           "text": "1"
@@ -40936,7 +39861,7 @@
         "text": {
           "ja": "2mL",
           "easyJa": "2mL",
-          "id": "2 mL",
+          "id": "2 mL（2ミリリットル）",
           "rubyJa": [
             {
               "text": "2"
@@ -40952,7 +39877,7 @@
         "text": {
           "ja": "20mL",
           "easyJa": "20mL",
-          "id": "20 mL",
+          "id": "20 mL（20ミリリットル）",
           "rubyJa": [
             {
               "text": "20"
@@ -40968,7 +39893,7 @@
         "text": {
           "ja": "200mL",
           "easyJa": "200mL",
-          "id": "200 mL",
+          "id": "200 mL（200ミリリットル）",
           "rubyJa": [
             {
               "text": "200"
@@ -40984,7 +39909,7 @@
         "text": {
           "ja": "2,000mL",
           "easyJa": "2,000mL",
-          "id": "2.000 mL",
+          "id": "2.000 mL（2,000ミリリットル）",
           "rubyJa": [
             {
               "text": "2"
@@ -41126,7 +40051,10 @@
       "reviewerType": "ai_source_review",
       "reviewedAt": "2026-08-11",
       "approvalByUser": "pending",
-      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。"
+      "notes": "既存50問を出典ページと再照合。インドネシア語はネイティブ確認前。",
+      "furigana": "pending",
+      "japaneseLearning": "pending",
+      "answerLeak": "pending"
     },
     "errorReasonOptions": [
       "knowledge",
@@ -41143,78 +40071,23 @@
     },
     "choiceRationales": {
       "a": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「20mL」です。",
-        "easyJa": "これは正解ではありません。正解は「20mL」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “20 mL”. 20 L = 20.000 mL. 20.000 ÷ 1.000 = 20 mL.",
+        "ja": "必要な原液量は20mLなので、2mLではありません。",
+        "easyJa": "原液は20mL必要です。2mLではありません。",
+        "id": "Konsentrat yang diperlukan adalah 20 mL, bukan 2 mL.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "必要",
+            "reading": "ひつよう"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "な"
           },
           {
-            "text": "は"
+            "text": "原液量",
+            "reading": "げんえきりょう"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
-          {
-            "text": "教材",
-            "reading": "きょうざい"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "20"
-          },
-          {
-            "text": "mL"
-          },
-          {
-            "text": "」"
-          },
-          {
-            "text": "です"
-          },
-          {
-            "text": "。"
+            "text": "は20mLなので、2mLではありません。"
           }
         ]
       },
@@ -41333,154 +40206,44 @@
         ]
       },
       "c": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「20mL」です。",
-        "easyJa": "これは正解ではありません。正解は「20mL」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “20 mL”. 20 L = 20.000 mL. 20.000 ÷ 1.000 = 20 mL.",
+        "ja": "必要な原液量は20mLなので、200mLではありません。",
+        "easyJa": "原液は20mL必要です。200mLではありません。",
+        "id": "Konsentrat yang diperlukan adalah 20 mL, bukan 200 mL.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "必要",
+            "reading": "ひつよう"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "な"
           },
           {
-            "text": "は"
+            "text": "原液量",
+            "reading": "げんえきりょう"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
-          {
-            "text": "教材",
-            "reading": "きょうざい"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "20"
-          },
-          {
-            "text": "mL"
-          },
-          {
-            "text": "」"
-          },
-          {
-            "text": "です"
-          },
-          {
-            "text": "。"
+            "text": "は20mLなので、200mLではありません。"
           }
         ]
       },
       "d": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「20mL」です。",
-        "easyJa": "これは正解ではありません。正解は「20mL」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “20 mL”. 20 L = 20.000 mL. 20.000 ÷ 1.000 = 20 mL.",
+        "ja": "必要な原液量は20mLなので、2,000mLではありません。",
+        "easyJa": "原液は20mL必要です。2,000mLではありません。",
+        "id": "Konsentrat yang diperlukan adalah 20 mL, bukan 2.000 mL.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "必要",
+            "reading": "ひつよう"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "な"
           },
           {
-            "text": "は"
+            "text": "原液量",
+            "reading": "げんえきりょう"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
-          {
-            "text": "教材",
-            "reading": "きょうざい"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "20"
-          },
-          {
-            "text": "mL"
-          },
-          {
-            "text": "」"
-          },
-          {
-            "text": "です"
-          },
-          {
-            "text": "。"
+            "text": "は20mLなので、2,000mLではありません。"
           }
         ]
       }
@@ -41488,8 +40251,7 @@
     "learningSupport": {
       "questionPattern": "calculation",
       "keyTermIds": [
-        "g030",
-        "g025"
+        "g030"
       ],
       "lessonObjective": {
         "ja": "安全衛生の「実技・希釈計算」を、日本語の問題で理解する。",
@@ -41648,7 +40410,10 @@
             "text": "。"
           }
         ]
-      }
+      },
+      "languagePointKeys": [
+        "calculation"
+      ]
     }
   },
   {
@@ -45856,7 +44621,7 @@
   },
   {
     "id": "q055",
-    "schemaVersion": "0.3.0",
+    "schemaVersion": "0.4.0",
     "status": "source_checked",
     "prototypeOnly": true,
     "category": "肉用鶏",
@@ -45869,7 +44634,7 @@
     "question": {
       "ja": "ウインドウレス鶏舎の光線管理と換気の組合せとして正しいものはどれですか。",
       "easyJa": "窓のない鶏舎では、明るさと空気をどう管理しますか。",
-      "id": "Kombinasi pengaturan cahaya dan ventilasi pada kandang tanpa jendela yang benar adalah apa?",
+      "id": "Manakah kombinasi yang benar antara pengaturan cahaya（光線管理／こうせんかんり）dan ventilasi（換気／かんき）pada kandang tanpa jendela untuk ayam（ウインドウレス鶏舎／ういんどうれすけいしゃ）?",
       "rubyJa": [
         {
           "text": "ウインドウ"
@@ -45939,7 +44704,7 @@
         "text": {
           "ja": "電灯と換気扇",
           "easyJa": "電灯と換気扇",
-          "id": "lampu dan kipas ventilasi",
+          "id": "lampu dan kipas ventilasi（電灯と換気扇／でんとうとかんきせん）",
           "rubyJa": [
             {
               "text": "電灯",
@@ -45960,7 +44725,7 @@
         "text": {
           "ja": "ろうそくと自然風だけ",
           "easyJa": "ろうそくと自然の風",
-          "id": "lilin dan angin alami saja",
+          "id": "lilin dan angin alami saja（ろうそくと自然風だけ／ろうそくとしぜんふうだけ）",
           "rubyJa": [
             {
               "text": "ろうそく"
@@ -45987,7 +44752,7 @@
         "text": {
           "ja": "太陽光と扇子",
           "easyJa": "太陽と扇子",
-          "id": "sinar matahari dan kipas tangan",
+          "id": "sinar matahari dan kipas tangan（太陽光と扇子／たいようこうとせんす）",
           "rubyJa": [
             {
               "text": "太陽光",
@@ -46008,7 +44773,7 @@
         "text": {
           "ja": "暗闇と密閉",
           "easyJa": "暗くして閉める",
-          "id": "gelap dan tertutup rapat",
+          "id": "gelap dan tertutup rapat（暗闇と密閉／くらやみとみっぺい）",
           "rubyJa": [
             {
               "text": "暗闇",
@@ -46127,7 +44892,10 @@
       "reviewerType": "ai_source_review",
       "reviewedAt": "2026-08-11",
       "approvalByUser": "pending",
-      "notes": "出典ページと正答を照合済み。インドネシア語はネイティブ確認前。"
+      "notes": "出典ページと正答を照合済み。インドネシア語はネイティブ確認前。",
+      "furigana": "pending",
+      "japaneseLearning": "pending",
+      "answerLeak": "pending"
     },
     "errorReasonOptions": [
       "knowledge",
@@ -46237,245 +45005,205 @@
         ]
       },
       "b": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「電灯と換気扇」です。",
-        "easyJa": "これは正解ではありません。正解は「電灯と換気扇」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “lampu dan kipas ventilasi”. Pencahayaan diatur dengan lampu dan ventilasi dengan kipas.",
+        "ja": "教材では光線管理に電灯、換気に換気扇を使います。「ろうそくと自然風だけ」の組合せではありません。",
+        "easyJa": "電灯と換気扇を使います。ろうそくと自然風だけではありません。",
+        "id": "Menurut materi, pencahayaan memakai lampu dan ventilasi memakai kipas; bukan kombinasi “lilin dan angin alami saja”.",
         "rubyJa": [
-          {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
-            "text": "の"
+            "text": "では"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "光線管理",
+            "reading": "こうせんかんり"
           },
           {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
+            "text": "に"
           },
           {
             "text": "電灯",
             "reading": "でんとう"
           },
           {
-            "text": "と"
+            "text": "、"
+          },
+          {
+            "text": "換気",
+            "reading": "かんき"
+          },
+          {
+            "text": "に"
           },
           {
             "text": "換気扇",
             "reading": "かんきせん"
           },
           {
-            "text": "」"
+            "text": "を"
           },
           {
-            "text": "です"
+            "text": "使います",
+            "reading": "つかいます"
           },
           {
-            "text": "。"
+            "text": "。「ろうそくと"
+          },
+          {
+            "text": "自然風",
+            "reading": "しぜんふう"
+          },
+          {
+            "text": "だけ」の"
+          },
+          {
+            "text": "組合せ",
+            "reading": "くみあわせ"
+          },
+          {
+            "text": "ではありません。"
           }
         ]
       },
       "c": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「電灯と換気扇」です。",
-        "easyJa": "これは正解ではありません。正解は「電灯と換気扇」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “lampu dan kipas ventilasi”. Pencahayaan diatur dengan lampu dan ventilasi dengan kipas.",
+        "ja": "教材では光線管理に電灯、換気に換気扇を使います。「太陽光と扇子」の組合せではありません。",
+        "easyJa": "電灯と換気扇を使います。太陽光と扇子ではありません。",
+        "id": "Menurut materi, pencahayaan memakai lampu dan ventilasi memakai kipas; bukan kombinasi “sinar matahari dan kipas tangan”.",
         "rubyJa": [
-          {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
-            "text": "の"
+            "text": "では"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "光線管理",
+            "reading": "こうせんかんり"
           },
           {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
+            "text": "に"
           },
           {
             "text": "電灯",
             "reading": "でんとう"
           },
           {
-            "text": "と"
+            "text": "、"
+          },
+          {
+            "text": "換気",
+            "reading": "かんき"
+          },
+          {
+            "text": "に"
           },
           {
             "text": "換気扇",
             "reading": "かんきせん"
           },
           {
-            "text": "」"
+            "text": "を"
           },
           {
-            "text": "です"
+            "text": "使います",
+            "reading": "つかいます"
           },
           {
-            "text": "。"
+            "text": "。「"
+          },
+          {
+            "text": "太陽光",
+            "reading": "たいようこう"
+          },
+          {
+            "text": "と"
+          },
+          {
+            "text": "扇子",
+            "reading": "せんす"
+          },
+          {
+            "text": "」の"
+          },
+          {
+            "text": "組合せ",
+            "reading": "くみあわせ"
+          },
+          {
+            "text": "ではありません。"
           }
         ]
       },
       "d": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「電灯と換気扇」です。",
-        "easyJa": "これは正解ではありません。正解は「電灯と換気扇」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “lampu dan kipas ventilasi”. Pencahayaan diatur dengan lampu dan ventilasi dengan kipas.",
+        "ja": "教材では光線管理に電灯、換気に換気扇を使います。「暗闇と密閉」の組合せではありません。",
+        "easyJa": "電灯と換気扇を使います。暗く閉めたままにはしません。",
+        "id": "Menurut materi, pencahayaan memakai lampu dan ventilasi memakai kipas; bukan kombinasi “gelap dan tertutup rapat”.",
         "rubyJa": [
-          {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
-            "text": "の"
+            "text": "では"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "光線管理",
+            "reading": "こうせんかんり"
           },
           {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
+            "text": "に"
           },
           {
             "text": "電灯",
             "reading": "でんとう"
           },
           {
-            "text": "と"
+            "text": "、"
+          },
+          {
+            "text": "換気",
+            "reading": "かんき"
+          },
+          {
+            "text": "に"
           },
           {
             "text": "換気扇",
             "reading": "かんきせん"
           },
           {
-            "text": "」"
+            "text": "を"
           },
           {
-            "text": "です"
+            "text": "使います",
+            "reading": "つかいます"
           },
           {
-            "text": "。"
+            "text": "。「"
+          },
+          {
+            "text": "暗闇",
+            "reading": "くらやみ"
+          },
+          {
+            "text": "と"
+          },
+          {
+            "text": "密閉",
+            "reading": "みっぺい"
+          },
+          {
+            "text": "」の"
+          },
+          {
+            "text": "組合せ",
+            "reading": "くみあわせ"
+          },
+          {
+            "text": "ではありません。"
           }
         ]
       }
@@ -46483,8 +45211,7 @@
     "learningSupport": {
       "questionPattern": "correct",
       "keyTermIds": [
-        "g034",
-        "g018"
+        "g056"
       ],
       "lessonObjective": {
         "ja": "肉用鶏の「鶏舎」を、日本語の問題で理解する。",
@@ -46492,16 +45219,8 @@
         "id": "Memahami topik “鶏舎” pada bidang ayam pedaging melalui soal bahasa Jepang.",
         "rubyJa": [
           {
-            "text": "肉",
-            "reading": "にく"
-          },
-          {
-            "text": "用",
-            "reading": "よう"
-          },
-          {
-            "text": "鶏",
-            "reading": "にわとり"
+            "text": "肉用鶏",
+            "reading": "にくようけい"
           },
           {
             "text": "の"
@@ -46615,7 +45334,10 @@
             "text": "。"
           }
         ]
-      }
+      },
+      "languagePointKeys": [
+        "correct_statement"
+      ]
     }
   },
   {
@@ -47590,7 +46312,7 @@
   },
   {
     "id": "q057",
-    "schemaVersion": "0.3.0",
+    "schemaVersion": "0.4.0",
     "status": "source_checked",
     "prototypeOnly": true,
     "category": "肉用鶏",
@@ -47603,23 +46325,11 @@
     "question": {
       "ja": "床面給温法の利点として、教材に沿うものはどれですか。",
       "easyJa": "床を温める方法のよい点はどれですか。",
-      "id": "Keuntungan pemanasan lantai yang sesuai buku adalah apa?",
+      "id": "Manakah keuntungan pemanasan dari lantai（床面給温／しょうめんきゅうおん）yang sesuai dengan materi?",
       "rubyJa": [
         {
-          "text": "床",
-          "reading": "ゆか"
-        },
-        {
-          "text": "面",
-          "reading": "めん"
-        },
-        {
-          "text": "給",
-          "reading": "きゅう"
-        },
-        {
-          "text": "温",
-          "reading": "ゆたか"
+          "text": "床面給温",
+          "reading": "しょうめんきゅうおん"
         },
         {
           "text": "法",
@@ -47675,7 +46385,7 @@
         "text": {
           "ja": "湿度の高い日本に適し、均一な環境を作りやすい",
           "easyJa": "日本の湿気に合い、同じ環境にしやすい",
-          "id": "cocok untuk Jepang yang lembap dan memudahkan lingkungan seragam",
+          "id": "cocok untuk Jepang yang lembap dan memudahkan lingkungan seragam（湿度の高い日本に適し、均一な環境を作りやすい／しつどのたかいにっぽんにてきし、きんいつなかんきょうをつくりやすい）",
           "rubyJa": [
             {
               "text": "湿度",
@@ -47731,7 +46441,7 @@
         "text": {
           "ja": "床を必ず濡らす",
           "easyJa": "床をいつも濡らす",
-          "id": "selalu membasahi lantai",
+          "id": "selalu membasahi lantai（床を必ず濡らす／ゆかをかならずぬらす）",
           "rubyJa": [
             {
               "text": "床",
@@ -47756,7 +46466,7 @@
         "text": {
           "ja": "換気が不要になる",
           "easyJa": "換気しなくてよい",
-          "id": "menghilangkan kebutuhan ventilasi",
+          "id": "menghilangkan kebutuhan ventilasi（換気が不要になる／かんきがふようになる）",
           "rubyJa": [
             {
               "text": "換気",
@@ -47783,7 +46493,7 @@
         "text": {
           "ja": "設備投資が全く不要",
           "easyJa": "設備費がいらない",
-          "id": "tidak memerlukan investasi",
+          "id": "sama sekali tidak memerlukan investasi peralatan（設備投資が全く不要／せつびとうしがまったくふよう）",
           "rubyJa": [
             {
               "text": "設備",
@@ -47812,23 +46522,11 @@
     "explanation": {
       "ja": "床面給温法は湿度の高い日本に適し、同じ環境条件で育すうしやすい方法です。",
       "easyJa": "正解は、日本の湿気に合い均一な環境を作りやすいことです。",
-      "id": "Pemanasan lantai cocok untuk kondisi lembap Jepang dan membantu menciptakan lingkungan seragam.",
+      "id": "Pemanasan dari lantai cocok untuk kondisi lembap Jepang dan membantu menciptakan lingkungan seragam.",
       "rubyJa": [
         {
-          "text": "床",
-          "reading": "ゆか"
-        },
-        {
-          "text": "面",
-          "reading": "めん"
-        },
-        {
-          "text": "給",
-          "reading": "きゅう"
-        },
-        {
-          "text": "温",
-          "reading": "ゆたか"
+          "text": "床面給温",
+          "reading": "しょうめんきゅうおん"
         },
         {
           "text": "法",
@@ -47935,7 +46633,10 @@
       "reviewerType": "ai_source_review",
       "reviewedAt": "2026-08-11",
       "approvalByUser": "pending",
-      "notes": "出典ページと正答を照合済み。インドネシア語はネイティブ確認前。"
+      "notes": "出典ページと正答を照合済み。インドネシア語はネイティブ確認前。",
+      "furigana": "pending",
+      "japaneseLearning": "pending",
+      "answerLeak": "pending"
     },
     "errorReasonOptions": [
       "knowledge",
@@ -47949,7 +46650,7 @@
       "a": {
         "ja": "「湿度の高い日本に適し、均一な環境を作りやすい」が正解です。床面給温法は湿度の高い日本に適し、同じ環境条件で育すうしやすい方法です。",
         "easyJa": "「日本の湿気に合い、同じ環境にしやすい」が正しいです。正解は、日本の湿気に合い均一な環境を作りやすいことです。",
-        "id": "Pilihan “cocok untuk Jepang yang lembap dan memudahkan lingkungan seragam” benar. Pemanasan lantai cocok untuk kondisi lembap Jepang dan membantu menciptakan lingkungan seragam.",
+        "id": "Pilihan “cocok untuk Jepang yang lembap dan memudahkan lingkungan seragam” benar. Pemanasan dari lantai cocok untuk kondisi lembap Jepang dan membantu menciptakan lingkungan seragam.",
         "rubyJa": [
           {
             "text": "「"
@@ -48017,20 +46718,8 @@
             "text": "。"
           },
           {
-            "text": "床",
-            "reading": "ゆか"
-          },
-          {
-            "text": "面",
-            "reading": "めん"
-          },
-          {
-            "text": "給",
-            "reading": "きゅう"
-          },
-          {
-            "text": "温",
-            "reading": "ゆたか"
+            "text": "床面給温",
+            "reading": "しょうめんきゅうおん"
           },
           {
             "text": "法",
@@ -48105,63 +46794,27 @@
         ]
       },
       "b": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「湿度の高い日本に適し、均一な環境を作りやすい」です。",
-        "easyJa": "これは正解ではありません。正解は「日本の湿気に合い、同じ環境にしやすい」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “cocok untuk Jepang yang lembap dan memudahkan lingkungan seragam”. Pemanasan lantai cocok untuk kondisi lembap Jepang dan membantu menciptakan lingkungan seragam.",
+        "ja": "教材が挙げる利点は、湿度の高い日本に適し、均一な環境を作りやすいことです。「床を必ず濡らす」ことではありません。",
+        "easyJa": "利点は、日本の湿気に合い、同じ環境を作りやすいことです。床を濡らすことではありません。",
+        "id": "Manfaat yang disebut materi adalah cocok untuk Jepang yang lembap dan memudahkan lingkungan yang seragam, bukan “selalu membasahi lantai”.",
         "rubyJa": [
-          {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
-            "text": "の"
+            "text": "が"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "挙げる",
+            "reading": "あげる"
           },
           {
-            "text": "と"
+            "text": "利点",
+            "reading": "りてん"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
+            "text": "は、"
           },
           {
             "text": "湿度",
@@ -48176,7 +46829,7 @@
           },
           {
             "text": "日本",
-            "reading": "にっぽん"
+            "reading": "にほん"
           },
           {
             "text": "に"
@@ -48203,81 +46856,54 @@
             "text": "を"
           },
           {
-            "text": "作り",
-            "reading": "つくり"
+            "text": "作りやすい",
+            "reading": "つくりやすい"
           },
           {
-            "text": "やすい"
+            "text": "ことです。「"
           },
           {
-            "text": "」"
+            "text": "床",
+            "reading": "ゆか"
           },
           {
-            "text": "です"
+            "text": "を"
           },
           {
-            "text": "。"
+            "text": "必ず",
+            "reading": "かならず"
+          },
+          {
+            "text": "濡らす",
+            "reading": "ぬらす"
+          },
+          {
+            "text": "」ことではありません。"
           }
         ]
       },
       "c": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「湿度の高い日本に適し、均一な環境を作りやすい」です。",
-        "easyJa": "これは正解ではありません。正解は「日本の湿気に合い、同じ環境にしやすい」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “cocok untuk Jepang yang lembap dan memudahkan lingkungan seragam”. Pemanasan lantai cocok untuk kondisi lembap Jepang dan membantu menciptakan lingkungan seragam.",
+        "ja": "教材が挙げる利点は、湿度の高い日本に適し、均一な環境を作りやすいことです。「換気が不要になる」ことではありません。",
+        "easyJa": "利点は、日本の湿気に合い、同じ環境を作りやすいことです。換気がいらなくなることではありません。",
+        "id": "Manfaat yang disebut materi adalah cocok untuk Jepang yang lembap dan memudahkan lingkungan yang seragam, bukan “ventilasi menjadi tidak diperlukan”.",
         "rubyJa": [
-          {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
-            "text": "の"
+            "text": "が"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "挙げる",
+            "reading": "あげる"
           },
           {
-            "text": "と"
+            "text": "利点",
+            "reading": "りてん"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
+            "text": "は、"
           },
           {
             "text": "湿度",
@@ -48292,7 +46918,7 @@
           },
           {
             "text": "日本",
-            "reading": "にっぽん"
+            "reading": "にほん"
           },
           {
             "text": "に"
@@ -48319,81 +46945,50 @@
             "text": "を"
           },
           {
-            "text": "作り",
-            "reading": "つくり"
+            "text": "作りやすい",
+            "reading": "つくりやすい"
           },
           {
-            "text": "やすい"
+            "text": "ことです。「"
           },
           {
-            "text": "」"
+            "text": "換気",
+            "reading": "かんき"
           },
           {
-            "text": "です"
+            "text": "が"
           },
           {
-            "text": "。"
+            "text": "不要",
+            "reading": "ふよう"
+          },
+          {
+            "text": "になる」ことではありません。"
           }
         ]
       },
       "d": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「湿度の高い日本に適し、均一な環境を作りやすい」です。",
-        "easyJa": "これは正解ではありません。正解は「日本の湿気に合い、同じ環境にしやすい」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “cocok untuk Jepang yang lembap dan memudahkan lingkungan seragam”. Pemanasan lantai cocok untuk kondisi lembap Jepang dan membantu menciptakan lingkungan seragam.",
+        "ja": "教材が挙げる利点は、湿度の高い日本に適し、均一な環境を作りやすいことです。「設備投資が全く不要」なことではありません。",
+        "easyJa": "利点は、日本の湿気に合い、同じ環境を作りやすいことです。設備のお金が全くいらないことではありません。",
+        "id": "Manfaat yang disebut materi adalah cocok untuk Jepang yang lembap dan memudahkan lingkungan yang seragam, bukan “sama sekali tidak memerlukan investasi peralatan”.",
         "rubyJa": [
-          {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
-            "text": "の"
+            "text": "が"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "挙げる",
+            "reading": "あげる"
           },
           {
-            "text": "と"
+            "text": "利点",
+            "reading": "りてん"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
+            "text": "は、"
           },
           {
             "text": "湿度",
@@ -48408,7 +47003,7 @@
           },
           {
             "text": "日本",
-            "reading": "にっぽん"
+            "reading": "にほん"
           },
           {
             "text": "に"
@@ -48435,20 +47030,29 @@
             "text": "を"
           },
           {
-            "text": "作り",
-            "reading": "つくり"
+            "text": "作りやすい",
+            "reading": "つくりやすい"
           },
           {
-            "text": "やすい"
+            "text": "ことです。「"
           },
           {
-            "text": "」"
+            "text": "設備投資",
+            "reading": "せつびとうし"
           },
           {
-            "text": "です"
+            "text": "が"
           },
           {
-            "text": "。"
+            "text": "全く",
+            "reading": "まったく"
+          },
+          {
+            "text": "不要",
+            "reading": "ふよう"
+          },
+          {
+            "text": "」なことではありません。"
           }
         ]
       }
@@ -48457,8 +47061,6 @@
       "questionPattern": "which",
       "keyTermIds": [
         "g060",
-        "g018",
-        "g036",
         "g035"
       ],
       "lessonObjective": {
@@ -48467,16 +47069,8 @@
         "id": "Memahami topik “給温” pada bidang ayam pedaging melalui soal bahasa Jepang.",
         "rubyJa": [
           {
-            "text": "肉",
-            "reading": "にく"
-          },
-          {
-            "text": "用",
-            "reading": "よう"
-          },
-          {
-            "text": "鶏",
-            "reading": "にわとり"
+            "text": "肉用鶏",
+            "reading": "にくようけい"
           },
           {
             "text": "の"
@@ -48485,12 +47079,8 @@
             "text": "「"
           },
           {
-            "text": "給",
-            "reading": "きゅう"
-          },
-          {
-            "text": "温",
-            "reading": "あつし"
+            "text": "給温",
+            "reading": "きゅうおん"
           },
           {
             "text": "」"
@@ -48530,23 +47120,11 @@
       "memoryPoint": {
         "ja": "床面給温法は湿度の高い日本に適し、同じ環境条件で育すうしやすい方法です。",
         "easyJa": "正解は、日本の湿気に合い均一な環境を作りやすいことです。",
-        "id": "Pemanasan lantai cocok untuk kondisi lembap Jepang dan membantu menciptakan lingkungan seragam.",
+        "id": "Pemanasan dari lantai cocok untuk kondisi lembap Jepang dan membantu menciptakan lingkungan seragam.",
         "rubyJa": [
           {
-            "text": "床",
-            "reading": "ゆか"
-          },
-          {
-            "text": "面",
-            "reading": "めん"
-          },
-          {
-            "text": "給",
-            "reading": "きゅう"
-          },
-          {
-            "text": "温",
-            "reading": "ゆたか"
+            "text": "床面給温",
+            "reading": "しょうめんきゅうおん"
           },
           {
             "text": "法",
@@ -48619,7 +47197,10 @@
             "text": "。"
           }
         ]
-      }
+      },
+      "languagePointKeys": [
+        "according_to_source"
+      ]
     }
   },
   {
@@ -63842,7 +62423,7 @@
   },
   {
     "id": "q078",
-    "schemaVersion": "0.3.0",
+    "schemaVersion": "0.4.0",
     "status": "source_checked",
     "prototypeOnly": true,
     "category": "豚",
@@ -63855,7 +62436,7 @@
     "question": {
       "ja": "豚の飼料の形状として教材に挙げられていないものはどれですか。",
       "easyJa": "豚のえさの形にないものはどれですか。",
-      "id": "Bentuk pakan babi yang tidak disebutkan dalam buku adalah yang mana?",
+      "id": "Manakah yang tidak dicantumkan（挙げられていない／あげられていない）dalam materi sebagai bentuk pakan babi（豚の飼料の形状／ぶたのしりょうのけいじょう）?",
       "rubyJa": [
         {
           "text": "豚",
@@ -63927,7 +62508,7 @@
         "text": {
           "ja": "マッシュ",
           "easyJa": "マッシュ",
-          "id": "mash",
+          "id": "pakan mash（マッシュ）",
           "rubyJa": [
             {
               "text": "マッシュ"
@@ -63940,7 +62521,7 @@
         "text": {
           "ja": "ペレット",
           "easyJa": "ペレット",
-          "id": "pellet",
+          "id": "pakan pellet（ペレット）",
           "rubyJa": [
             {
               "text": "ペレット"
@@ -63953,7 +62534,7 @@
         "text": {
           "ja": "クランブル",
           "easyJa": "クランブル",
-          "id": "crumble",
+          "id": "pakan crumble（クランブル）",
           "rubyJa": [
             {
               "text": "クランブル"
@@ -63966,7 +62547,7 @@
         "text": {
           "ja": "氷の塊",
           "easyJa": "氷",
-          "id": "balok es",
+          "id": "balok es（氷の塊／こおりのかたまり）",
           "rubyJa": [
             {
               "text": "氷",
@@ -64084,7 +62665,10 @@
       "reviewerType": "ai_source_review",
       "reviewedAt": "2026-08-11",
       "approvalByUser": "pending",
-      "notes": "出典ページと正答を照合済み。インドネシア語はネイティブ確認前。"
+      "notes": "出典ページと正答を照合済み。インドネシア語はネイティブ確認前。",
+      "furigana": "pending",
+      "japaneseLearning": "pending",
+      "answerLeak": "pending"
     },
     "errorReasonOptions": [
       "knowledge",
@@ -64096,245 +62680,140 @@
     ],
     "choiceRationales": {
       "a": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「氷の塊」です。",
-        "easyJa": "これは正解ではありません。正解は「氷」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “balok es”. Buku menyebut mash, pellet, crumble, dan pakan cair; balok es bukan bentuk pakan.",
+        "ja": "マッシュは教材に挙げられている飼料の形状なので、「挙げられていないもの」ではありません。",
+        "easyJa": "マッシュは教材に出ている飼料の形です。",
+        "id": "Mash adalah bentuk pakan yang disebut dalam materi, sehingga bukan jawaban yang “tidak disebut”.",
         "rubyJa": [
           {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "マッシュ",
+            "reading": "まっしゅ"
           },
           {
             "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
           },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
-            "text": "の"
+            "text": "に"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "挙げられている",
+            "reading": "あげられている"
           },
           {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "氷",
-            "reading": "こおり"
+            "text": "飼料",
+            "reading": "しりょう"
           },
           {
             "text": "の"
           },
           {
-            "text": "塊",
-            "reading": "かたまり"
+            "text": "形状",
+            "reading": "けいじょう"
           },
           {
-            "text": "」"
+            "text": "なので、「"
           },
           {
-            "text": "です"
+            "text": "挙げられていない",
+            "reading": "あげられていない"
           },
           {
-            "text": "。"
+            "text": "もの」ではありません。"
           }
         ]
       },
       "b": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「氷の塊」です。",
-        "easyJa": "これは正解ではありません。正解は「氷」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “balok es”. Buku menyebut mash, pellet, crumble, dan pakan cair; balok es bukan bentuk pakan.",
+        "ja": "ペレットは教材に挙げられている飼料の形状なので、「挙げられていないもの」ではありません。",
+        "easyJa": "ペレットは教材に出ている飼料の形です。",
+        "id": "Pellet adalah bentuk pakan yang disebut dalam materi, sehingga bukan jawaban yang “tidak disebut”.",
         "rubyJa": [
           {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "ペレット",
+            "reading": "ぺれっと"
           },
           {
             "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
           },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
-            "text": "の"
+            "text": "に"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "挙げられている",
+            "reading": "あげられている"
           },
           {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "氷",
-            "reading": "こおり"
+            "text": "飼料",
+            "reading": "しりょう"
           },
           {
             "text": "の"
           },
           {
-            "text": "塊",
-            "reading": "かたまり"
+            "text": "形状",
+            "reading": "けいじょう"
           },
           {
-            "text": "」"
+            "text": "なので、「"
           },
           {
-            "text": "です"
+            "text": "挙げられていない",
+            "reading": "あげられていない"
           },
           {
-            "text": "。"
+            "text": "もの」ではありません。"
           }
         ]
       },
       "c": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「氷の塊」です。",
-        "easyJa": "これは正解ではありません。正解は「氷」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “balok es”. Buku menyebut mash, pellet, crumble, dan pakan cair; balok es bukan bentuk pakan.",
+        "ja": "クランブルは教材に挙げられている飼料の形状なので、「挙げられていないもの」ではありません。",
+        "easyJa": "クランブルは教材に出ている飼料の形です。",
+        "id": "Crumble adalah bentuk pakan yang disebut dalam materi, sehingga bukan jawaban yang “tidak disebut”.",
         "rubyJa": [
           {
-            "text": "この"
-          },
-          {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "クランブル",
+            "reading": "くらんぶる"
           },
           {
             "text": "は"
-          },
-          {
-            "text": "出典",
-            "reading": "しゅってん"
           },
           {
             "text": "教材",
             "reading": "きょうざい"
           },
           {
-            "text": "の"
+            "text": "に"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "挙げられている",
+            "reading": "あげられている"
           },
           {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "氷",
-            "reading": "こおり"
+            "text": "飼料",
+            "reading": "しりょう"
           },
           {
             "text": "の"
           },
           {
-            "text": "塊",
-            "reading": "かたまり"
+            "text": "形状",
+            "reading": "けいじょう"
           },
           {
-            "text": "」"
+            "text": "なので、「"
           },
           {
-            "text": "です"
+            "text": "挙げられていない",
+            "reading": "あげられていない"
           },
           {
-            "text": "。"
+            "text": "もの」ではありません。"
           }
         ]
       },
@@ -64437,12 +62916,9 @@
       }
     },
     "learningSupport": {
-      "questionPattern": "which",
+      "questionPattern": "incorrect",
       "keyTermIds": [
-        "g050",
-        "g048",
-        "g049",
-        "g014"
+        "g063"
       ],
       "lessonObjective": {
         "ja": "豚の「飼料形状」を、日本語の問題で理解する。",
@@ -64568,12 +63044,15 @@
             "text": "。"
           }
         ]
-      }
+      },
+      "languagePointKeys": [
+        "not_listed"
+      ]
     }
   },
   {
     "id": "q079",
-    "schemaVersion": "0.3.0",
+    "schemaVersion": "0.4.0",
     "status": "source_checked",
     "prototypeOnly": true,
     "category": "軽種馬",
@@ -64586,7 +63065,7 @@
     "question": {
       "ja": "競馬に使用できるサラブレッドの生産方法はどれですか。",
       "easyJa": "競走馬のサラブレッドは、どの方法で生まれた馬ですか。",
-      "id": "Cara reproduksi Thoroughbred yang dapat digunakan untuk pacuan adalah yang mana?",
+      "id": "Manakah metode produksi（生産方法／せいさんほうほう）Thoroughbred yang boleh digunakan untuk pacuan kuda（競馬／けいば）?",
       "rubyJa": [
         {
           "text": "競馬",
@@ -64639,7 +63118,7 @@
         "text": {
           "ja": "自然交配",
           "easyJa": "自然交配",
-          "id": "perkawinan alami",
+          "id": "perkawinan alami（自然交配／しぜんこうはい）",
           "rubyJa": [
             {
               "text": "自然",
@@ -64657,7 +63136,7 @@
         "text": {
           "ja": "人工授精だけ",
           "easyJa": "人工授精",
-          "id": "inseminasi buatan saja",
+          "id": "inseminasi buatan saja（人工授精だけ／じんこうじゅせいだけ）",
           "rubyJa": [
             {
               "text": "人工",
@@ -64678,15 +63157,11 @@
         "text": {
           "ja": "体細胞クローンだけ",
           "easyJa": "クローン",
-          "id": "kloning saja",
+          "id": "kloning sel somatik saja（体細胞クローンだけ／たいさいぼうクローンだけ）",
           "rubyJa": [
             {
-              "text": "体",
-              "reading": "からだ"
-            },
-            {
-              "text": "細胞",
-              "reading": "さいぼう"
+              "text": "体細胞",
+              "reading": "たいさいぼう"
             },
             {
               "text": "クローン"
@@ -64702,7 +63177,7 @@
         "text": {
           "ja": "方法は問わない",
           "easyJa": "どの方法でもよい",
-          "id": "cara apa pun",
+          "id": "cara apa pun（方法は問わない／ほうほうはとわない）",
           "rubyJa": [
             {
               "text": "方法",
@@ -64823,7 +63298,10 @@
       "reviewerType": "ai_source_review",
       "reviewedAt": "2026-08-11",
       "approvalByUser": "pending",
-      "notes": "出典ページと正答を照合済み。インドネシア語はネイティブ確認前。"
+      "notes": "出典ページと正答を照合済み。インドネシア語はネイティブ確認前。",
+      "furigana": "pending",
+      "japaneseLearning": "pending",
+      "answerLeak": "pending"
     },
     "errorReasonOptions": [
       "knowledge",
@@ -64929,77 +63407,62 @@
         ]
       },
       "b": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「自然交配」です。",
-        "easyJa": "これは正解ではありません。正解は「自然交配」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “perkawinan alami”. Thoroughbred untuk pacuan harus dihasilkan melalui perkawinan alami.",
+        "ja": "競馬に使うサラブレッドは自然交配で生産されたものに限られ、人工授精による馬は使えません。",
+        "easyJa": "競馬のサラブレッドは自然交配で生まれた馬だけです。人工授精の馬は使えません。",
+        "id": "Thoroughbred untuk pacuan terbatas pada kuda hasil perkawinan alami; kuda hasil inseminasi buatan tidak dapat digunakan.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "競馬",
+            "reading": "けいば"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "に"
+          },
+          {
+            "text": "使う",
+            "reading": "つかう"
+          },
+          {
+            "text": "サラブレッドは"
+          },
+          {
+            "text": "自然交配",
+            "reading": "しぜんこうはい"
+          },
+          {
+            "text": "で"
+          },
+          {
+            "text": "生産",
+            "reading": "せいさん"
+          },
+          {
+            "text": "されたものに"
+          },
+          {
+            "text": "限られ",
+            "reading": "かぎられ"
+          },
+          {
+            "text": "、"
+          },
+          {
+            "text": "人工授精",
+            "reading": "じんこうじゅせい"
+          },
+          {
+            "text": "による"
+          },
+          {
+            "text": "馬",
+            "reading": "うま"
           },
           {
             "text": "は"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
-          },
-          {
-            "text": "教材",
-            "reading": "きょうざい"
-          },
-          {
-            "text": "の"
-          },
-          {
-            "text": "記述",
-            "reading": "きじゅつ"
-          },
-          {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "自然",
-            "reading": "しぜん"
-          },
-          {
-            "text": "交配",
-            "reading": "こうはい"
-          },
-          {
-            "text": "」"
-          },
-          {
-            "text": "です"
+            "text": "使えません",
+            "reading": "つかえません"
           },
           {
             "text": "。"
@@ -65007,158 +63470,93 @@
         ]
       },
       "c": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「自然交配」です。",
-        "easyJa": "これは正解ではありません。正解は「自然交配」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “perkawinan alami”. Thoroughbred untuk pacuan harus dihasilkan melalui perkawinan alami.",
+        "ja": "競馬に使うサラブレッドは自然交配で生産されたものに限られるため、「体細胞クローンだけ」ではありません。",
+        "easyJa": "競馬のサラブレッドは自然交配で生まれた馬だけです。クローンだけではありません。",
+        "id": "Thoroughbred untuk pacuan terbatas pada kuda hasil perkawinan alami, bukan “hanya klon sel somatik”.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "競馬",
+            "reading": "けいば"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "に"
           },
           {
-            "text": "は"
+            "text": "使う",
+            "reading": "つかう"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
+            "text": "サラブレッドは"
           },
           {
-            "text": "教材",
-            "reading": "きょうざい"
+            "text": "自然交配",
+            "reading": "しぜんこうはい"
           },
           {
-            "text": "の"
+            "text": "で"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "生産",
+            "reading": "せいさん"
           },
           {
-            "text": "と"
+            "text": "されたものに"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
+            "text": "限られ",
+            "reading": "かぎられ"
           },
           {
-            "text": "し"
+            "text": "るため、「"
           },
           {
-            "text": "ませ"
+            "text": "体細胞",
+            "reading": "たいさいぼう"
           },
           {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "自然",
-            "reading": "しぜん"
-          },
-          {
-            "text": "交配",
-            "reading": "こうはい"
-          },
-          {
-            "text": "」"
-          },
-          {
-            "text": "です"
-          },
-          {
-            "text": "。"
+            "text": "クローンだけ」ではありません。"
           }
         ]
       },
       "d": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「自然交配」です。",
-        "easyJa": "これは正解ではありません。正解は「自然交配」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “perkawinan alami”. Thoroughbred untuk pacuan harus dihasilkan melalui perkawinan alami.",
+        "ja": "自然交配で生産されたものに限られるため、方法を問わないわけではありません。",
+        "easyJa": "自然交配で生まれた馬だけなので、どの方法でもよいのではありません。",
+        "id": "Karena terbatas pada kuda hasil perkawinan alami, bukan berarti cara produksinya boleh apa saja.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "自然交配",
+            "reading": "しぜんこうはい"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "で"
           },
           {
-            "text": "は"
+            "text": "生産",
+            "reading": "せいさん"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
+            "text": "されたものに"
           },
           {
-            "text": "教材",
-            "reading": "きょうざい"
+            "text": "限られ",
+            "reading": "かぎられ"
           },
           {
-            "text": "の"
+            "text": "るため、"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "方法",
+            "reading": "ほうほう"
           },
           {
-            "text": "と"
+            "text": "を"
           },
           {
-            "text": "一致",
-            "reading": "いっち"
+            "text": "問わない",
+            "reading": "とわない"
           },
           {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "自然",
-            "reading": "しぜん"
-          },
-          {
-            "text": "交配",
-            "reading": "こうはい"
-          },
-          {
-            "text": "」"
-          },
-          {
-            "text": "です"
-          },
-          {
-            "text": "。"
+            "text": "わけではありません。"
           }
         ]
       }
@@ -65166,23 +63564,16 @@
     "learningSupport": {
       "questionPattern": "which",
       "keyTermIds": [
-        "g007",
-        "g051",
-        "g052",
-        "g004"
-      ],
+        "g052"
+        ],
       "lessonObjective": {
         "ja": "軽種馬の「繁殖」を、日本語の問題で理解する。",
         "easyJa": "軽種馬の繁殖について、日本語で答えられるようにします。",
         "id": "Memahami topik “繁殖” pada bidang kuda ringan melalui soal bahasa Jepang.",
         "rubyJa": [
           {
-            "text": "軽",
-            "reading": "けい"
-          },
-          {
-            "text": "種馬",
-            "reading": "たねうま"
+            "text": "軽種馬",
+            "reading": "けいしゅば"
           },
           {
             "text": "の"
@@ -65295,12 +63686,15 @@
             "text": "。"
           }
         ]
-      }
+      },
+      "languagePointKeys": [
+        "only"
+      ]
     }
   },
   {
     "id": "q080",
-    "schemaVersion": "0.3.0",
+    "schemaVersion": "0.4.0",
     "status": "source_checked",
     "prototypeOnly": true,
     "category": "養蜂",
@@ -65313,7 +63707,7 @@
     "question": {
       "ja": "日本で家畜として飼われているミツバチの大部分はどれですか。",
       "easyJa": "日本で一番多く飼われるミツバチはどれですか。",
-      "id": "Lebah yang paling banyak dipelihara sebagai ternak di Jepang adalah yang mana?",
+      "id": "Manakah jenis yang merupakan sebagian besar（大部分／だいぶぶん）lebah yang dipelihara sebagai ternak（家畜／かちく）di Jepang?",
       "rubyJa": [
         {
           "text": "日本",
@@ -65379,7 +63773,7 @@
         "text": {
           "ja": "セイヨウミツバチ",
           "easyJa": "セイヨウミツバチ",
-          "id": "lebah madu Barat",
+          "id": "lebah madu Barat（セイヨウミツバチ）",
           "rubyJa": [
             {
               "text": "セイヨウミツバチ"
@@ -65392,7 +63786,7 @@
         "text": {
           "ja": "スズメバチ",
           "easyJa": "スズメバチ",
-          "id": "tawon besar",
+          "id": "tawon besar（スズメバチ）",
           "rubyJa": [
             {
               "text": "スズメバチ"
@@ -65405,7 +63799,7 @@
         "text": {
           "ja": "アシナガバチ",
           "easyJa": "アシナガバチ",
-          "id": "tawon kertas",
+          "id": "tawon kertas（アシナガバチ）",
           "rubyJa": [
             {
               "text": "アシナガバチ"
@@ -65418,7 +63812,7 @@
         "text": {
           "ja": "ハナアブ",
           "easyJa": "ハナアブ",
-          "id": "lalat bunga",
+          "id": "lalat bunga（ハナアブ）",
           "rubyJa": [
             {
               "text": "ハナ"
@@ -65513,7 +63907,10 @@
       "reviewerType": "ai_source_review",
       "reviewedAt": "2026-08-11",
       "approvalByUser": "pending",
-      "notes": "出典ページと正答を照合済み。インドネシア語はネイティブ確認前。"
+      "notes": "出典ページと正答を照合済み。インドネシア語はネイティブ確認前。",
+      "furigana": "pending",
+      "japaneseLearning": "pending",
+      "answerLeak": "pending"
     },
     "errorReasonOptions": [
       "knowledge",
@@ -65596,221 +63993,107 @@
         ]
       },
       "b": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「セイヨウミツバチ」です。",
-        "easyJa": "これは正解ではありません。正解は「セイヨウミツバチ」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “lebah madu Barat”. Sebagian besar lebah yang dipelihara di Jepang adalah lebah madu Barat.",
+        "ja": "日本で家畜として飼われるミツバチのほとんどはセイヨウミツバチなので、スズメバチではありません。",
+        "easyJa": "日本で多く飼われるのはセイヨウミツバチです。スズメバチではありません。",
+        "id": "Sebagian besar lebah yang dipelihara sebagai ternak di Jepang adalah lebah madu Barat, bukan tawon besar.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "日本",
+            "reading": "にほん"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "で"
           },
           {
-            "text": "は"
+            "text": "家畜",
+            "reading": "かちく"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
+            "text": "として"
           },
           {
-            "text": "教材",
-            "reading": "きょうざい"
+            "text": "飼われる",
+            "reading": "かわれる"
           },
           {
-            "text": "の"
+            "text": "ミツバチのほとんどは"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "セイヨウミツバチ",
+            "reading": "せいようみつばち"
           },
           {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "セイヨウミツバチ"
-          },
-          {
-            "text": "」"
-          },
-          {
-            "text": "です"
-          },
-          {
-            "text": "。"
+            "text": "なので、スズメバチではありません。"
           }
         ]
       },
       "c": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「セイヨウミツバチ」です。",
-        "easyJa": "これは正解ではありません。正解は「セイヨウミツバチ」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “lebah madu Barat”. Sebagian besar lebah yang dipelihara di Jepang adalah lebah madu Barat.",
+        "ja": "日本で家畜として飼われるミツバチのほとんどはセイヨウミツバチなので、アシナガバチではありません。",
+        "easyJa": "日本で多く飼われるのはセイヨウミツバチです。アシナガバチではありません。",
+        "id": "Sebagian besar lebah yang dipelihara sebagai ternak di Jepang adalah lebah madu Barat, bukan tawon kertas.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "日本",
+            "reading": "にほん"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "で"
           },
           {
-            "text": "は"
+            "text": "家畜",
+            "reading": "かちく"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
+            "text": "として"
           },
           {
-            "text": "教材",
-            "reading": "きょうざい"
+            "text": "飼われる",
+            "reading": "かわれる"
           },
           {
-            "text": "の"
+            "text": "ミツバチのほとんどは"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "セイヨウミツバチ",
+            "reading": "せいようみつばち"
           },
           {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "セイヨウミツバチ"
-          },
-          {
-            "text": "」"
-          },
-          {
-            "text": "です"
-          },
-          {
-            "text": "。"
+            "text": "なので、アシナガバチではありません。"
           }
         ]
       },
       "d": {
-        "ja": "この選択肢は出典教材の記述と一致しません。正解は「セイヨウミツバチ」です。",
-        "easyJa": "これは正解ではありません。正解は「セイヨウミツバチ」です。",
-        "id": "Pilihan ini tidak sesuai dengan isi sumber. Jawaban yang benar adalah “lebah madu Barat”. Sebagian besar lebah yang dipelihara di Jepang adalah lebah madu Barat.",
+        "ja": "日本で家畜として飼われるミツバチのほとんどはセイヨウミツバチなので、ハナアブではありません。",
+        "easyJa": "日本で多く飼われるのはセイヨウミツバチです。ハナアブではありません。",
+        "id": "Sebagian besar lebah yang dipelihara sebagai ternak di Jepang adalah lebah madu Barat, bukan lalat bunga.",
         "rubyJa": [
           {
-            "text": "この"
+            "text": "日本",
+            "reading": "にほん"
           },
           {
-            "text": "選択肢",
-            "reading": "せんたくし"
+            "text": "で"
           },
           {
-            "text": "は"
+            "text": "家畜",
+            "reading": "かちく"
           },
           {
-            "text": "出典",
-            "reading": "しゅってん"
+            "text": "として"
           },
           {
-            "text": "教材",
-            "reading": "きょうざい"
+            "text": "飼われる",
+            "reading": "かわれる"
           },
           {
-            "text": "の"
+            "text": "ミツバチのほとんどは"
           },
           {
-            "text": "記述",
-            "reading": "きじゅつ"
+            "text": "セイヨウミツバチ",
+            "reading": "せいようみつばち"
           },
           {
-            "text": "と"
-          },
-          {
-            "text": "一致",
-            "reading": "いっち"
-          },
-          {
-            "text": "し"
-          },
-          {
-            "text": "ませ"
-          },
-          {
-            "text": "ん"
-          },
-          {
-            "text": "。"
-          },
-          {
-            "text": "正解",
-            "reading": "せいかい"
-          },
-          {
-            "text": "は"
-          },
-          {
-            "text": "「"
-          },
-          {
-            "text": "セイヨウミツバチ"
-          },
-          {
-            "text": "」"
-          },
-          {
-            "text": "です"
-          },
-          {
-            "text": "。"
+            "text": "なので、ハナアブではありません。"
           }
         ]
       }
@@ -65818,7 +64101,6 @@
     "learningSupport": {
       "questionPattern": "which",
       "keyTermIds": [
-        "g053",
         "g002"
       ],
       "lessonObjective": {
@@ -65923,7 +64205,10 @@
             "text": "。"
           }
         ]
-      }
+      },
+      "languagePointKeys": [
+        "most_of"
+      ]
     }
   }
 ]

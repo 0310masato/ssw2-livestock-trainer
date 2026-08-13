@@ -418,5 +418,26 @@
     "reading": "しょうめんきゅうおん",
     "easyJa": "床からひなを温める方法。",
     "idn": "pemanasan dari lantai"
+  },
+  {
+    "id": "g061",
+    "termJa": "賃金支払いの5原則",
+    "reading": "ちんぎんしはらいのごげんそく",
+    "easyJa": "賃金を支払うときに守る5つの基本的な決まり。",
+    "idn": "lima prinsip pembayaran upah"
+  },
+  {
+    "id": "g062",
+    "termJa": "測定部位",
+    "reading": "そくていぶい",
+    "easyJa": "体の大きさや発育を確かめるために測る場所。",
+    "idn": "bagian pengukuran"
+  },
+  {
+    "id": "g063",
+    "termJa": "飼料形状",
+    "reading": "しりょうけいじょう",
+    "easyJa": "飼料の形や、加工された状態。",
+    "idn": "bentuk fisik pakan"
   }
 ]

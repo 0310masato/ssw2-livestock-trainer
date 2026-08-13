@@ -104,11 +104,34 @@ namespace LivestockApp {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
+  function emptySupportUsage(): SupportUsage {
+    return {
+      furiganaUsed: false,
+      easyJapaneseUsed: false,
+      keywordsOpened: false,
+      questionTranslationOpened: false,
+      choiceTranslationsOpened: false,
+      answerIndonesianOpened: false,
+    };
+  }
+
   function questionSupport(session: SessionState, question: Question): void {
-    const support = supportSettingsForStudy(runtime.state, question, session.kind);
-    session.furiganaVisible = support.showFurigana;
-    session.easyJapaneseVisible = support.showEasyJapanese;
-    session.indonesianVisible = support.showIndonesian;
+    const policy = resolveSupportPolicy(runtime.state, question, session.kind, session.isRetryWithoutSupport);
+    session.supportLevel = policy.level;
+    session.furiganaVisible = policy.showFuriganaInitially;
+    session.easyJapaneseVisible = policy.showEasyJapaneseInitially;
+    session.indonesianVisible = policy.showQuestionTranslationInitially;
+    session.keywordsVisible = policy.showKeywordsInitially && runtime.state.settings.showVocabulary;
+    session.choiceTranslationsVisible = policy.showChoiceTranslationsInitially;
+    session.answerIndonesianVisible = false;
+    session.supportUsage = {
+      furiganaUsed: session.furiganaVisible,
+      easyJapaneseUsed: session.easyJapaneseVisible,
+      keywordsOpened: session.keywordsVisible,
+      questionTranslationOpened: session.indonesianVisible,
+      choiceTranslationsOpened: session.choiceTranslationsVisible,
+      answerIndonesianOpened: false,
+    };
   }
 
   function createSession(kind: SessionKind, questionIds: string[]): SessionState {
@@ -123,6 +146,13 @@ namespace LivestockApp {
       easyJapaneseVisible: runtime.state.settings.showEasyJapanese,
       indonesianVisible: runtime.state.settings.showIndonesian,
       furiganaVisible: runtime.state.settings.showFurigana,
+      supportLevel: 0,
+      keywordsVisible: false,
+      choiceTranslationsVisible: false,
+      answerIndonesianVisible: false,
+      supportUsage: emptySupportUsage(),
+      retryOfHistoryId: null,
+      isRetryWithoutSupport: false,
       confidence: null,
       pendingReason: null,
       completed: false,
@@ -203,18 +233,28 @@ namespace LivestockApp {
     if (!session || session.answered || !session.selectedChoiceId) return;
     const question = questionById(session.questionIds[session.index]);
     if (!question) return;
-    const supportLevel = effectiveSupportLevel(runtime.state, question);
+    const policy = supportPolicyForLevel(session.supportLevel);
+    session.answerIndonesianVisible = policy.showAnswerIndonesianInitially;
+    if (session.answerIndonesianVisible) session.supportUsage.answerIndonesianOpened = true;
     const entry = recordAnswer(runtime.state, question, {
       sessionId: session.id,
       sessionKind: session.kind,
       selectedChoiceId: session.selectedChoiceId,
       elapsedMs: performance.now() - session.startedQuestionAt,
-      usedEasyJapanese: session.easyJapaneseVisible,
-      usedIndonesian: session.indonesianVisible,
-      usedFurigana: session.furiganaVisible,
-      supportLevel,
+      usedEasyJapanese: session.supportUsage.easyJapaneseUsed,
+      usedIndonesian: session.supportUsage.questionTranslationOpened
+        || session.supportUsage.choiceTranslationsOpened
+        || session.supportUsage.answerIndonesianOpened,
+      usedFurigana: session.supportUsage.furiganaUsed,
+      openedKeywords: session.supportUsage.keywordsOpened,
+      openedQuestionTranslation: session.supportUsage.questionTranslationOpened,
+      openedChoiceTranslations: session.supportUsage.choiceTranslationsOpened,
+      openedAnswerIndonesian: session.supportUsage.answerIndonesianOpened,
+      supportLevel: session.supportLevel,
       reason: null,
       confidence: session.confidence,
+      retryOfHistoryId: session.retryOfHistoryId,
+      isRetryWithoutSupport: session.isRetryWithoutSupport,
     });
     session.answered = true;
     session.pendingReason = entry.correct ? null : null;
@@ -223,13 +263,37 @@ namespace LivestockApp {
     announce(entry.correct ? '正解です。' : '不正解です。正解と解説を確認してください。');
   }
 
+  function currentHistoryEntry(session: SessionState): HistoryEntry | undefined {
+    const questionId = session.questionIds[session.index];
+    return runtime.state.history.findLast((item) => item.sessionId === session.id && item.questionId === questionId);
+  }
+
+  function syncAnsweredSupportUsage(session: SessionState): boolean {
+    if (!session.answered) return false;
+    const entry = currentHistoryEntry(session);
+    if (!entry) return false;
+    entry.usedFurigana = session.supportUsage.furiganaUsed;
+    entry.usedEasyJapanese = session.supportUsage.easyJapaneseUsed;
+    entry.openedKeywords = session.supportUsage.keywordsOpened;
+    entry.openedQuestionTranslation = session.supportUsage.questionTranslationOpened;
+    entry.openedChoiceTranslations = session.supportUsage.choiceTranslationsOpened;
+    entry.openedAnswerIndonesian = session.supportUsage.answerIndonesianOpened;
+    entry.usedIndonesian = entry.openedQuestionTranslation
+      || entry.openedChoiceTranslations
+      || entry.openedAnswerIndonesian;
+    return true;
+  }
+
   function chooseReason(reason: ErrorReason): void {
     const session = runtime.session;
     if (!session || !session.answered) return;
     session.pendingReason = reason;
-    const questionId = session.questionIds[session.index];
-    const entry = runtime.state.history.findLast((item) => item.sessionId === session.id && item.questionId === questionId);
-    if (entry) entry.reason = reason;
+    const entry = currentHistoryEntry(session);
+    if (entry) {
+      entry.reason = reason;
+      entry.knowledgeGap = reason === 'knowledge';
+      entry.japaneseGap = reason === 'japanese';
+    }
     void persist();
     render();
   }
@@ -237,8 +301,7 @@ namespace LivestockApp {
   function nextStudy(): void {
     const session = runtime.session;
     if (!session || !session.answered) return;
-    const questionId = session.questionIds[session.index];
-    const entry = runtime.state.history.findLast((item) => item.sessionId === session.id && item.questionId === questionId);
+    const entry = currentHistoryEntry(session);
     if (entry && !entry.correct && !session.pendingReason) return;
     if (session.index >= session.questionIds.length - 1) {
       session.completed = true;
@@ -250,6 +313,8 @@ namespace LivestockApp {
     session.answered = false;
     session.pendingReason = null;
     session.confidence = null;
+    session.retryOfHistoryId = null;
+    session.isRetryWithoutSupport = false;
     session.startedQuestionAt = performance.now();
     const question = questionById(session.questionIds[session.index]);
     if (question) questionSupport(session, question);
@@ -257,13 +322,57 @@ namespace LivestockApp {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
-  function toggleSessionSupport(kind: 'furigana' | 'easy' | 'id'): void {
+  type SessionSupportToggle = 'furigana' | 'easy' | 'id' | 'question-id' | 'choices-id' | 'keywords' | 'answer-id';
+
+  function toggleSessionSupport(kind: SessionSupportToggle): void {
     const session = runtime.session;
     if (!session || session.kind === 'mock') return;
-    if (kind === 'furigana') session.furiganaVisible = !session.furiganaVisible;
-    if (kind === 'easy') session.easyJapaneseVisible = !session.easyJapaneseVisible;
-    if (kind === 'id') session.indonesianVisible = !session.indonesianVisible;
+    const policy = supportPolicyForLevel(session.supportLevel);
+    if (kind === 'furigana' && session.supportLevel > 0) {
+      session.furiganaVisible = !session.furiganaVisible;
+      if (session.furiganaVisible) session.supportUsage.furiganaUsed = true;
+    }
+    if (kind === 'easy' && session.supportLevel === 3) {
+      session.easyJapaneseVisible = !session.easyJapaneseVisible;
+      if (session.easyJapaneseVisible) session.supportUsage.easyJapaneseUsed = true;
+    }
+    if (kind === 'keywords' && session.supportLevel > 0) {
+      session.keywordsVisible = !session.keywordsVisible;
+      if (session.keywordsVisible) session.supportUsage.keywordsOpened = true;
+    }
+    if ((kind === 'id' || kind === 'question-id') && policy.allowQuestionTranslation) {
+      session.indonesianVisible = !session.indonesianVisible;
+      if (session.indonesianVisible) session.supportUsage.questionTranslationOpened = true;
+    }
+    if (kind === 'choices-id' && policy.allowChoiceTranslations) {
+      session.choiceTranslationsVisible = !session.choiceTranslationsVisible;
+      if (session.choiceTranslationsVisible) session.supportUsage.choiceTranslationsOpened = true;
+    }
+    if (kind === 'answer-id' && session.answered && policy.allowAnswerIndonesian) {
+      session.answerIndonesianVisible = !session.answerIndonesianVisible;
+      if (session.answerIndonesianVisible) session.supportUsage.answerIndonesianOpened = true;
+    }
+    if (syncAnsweredSupportUsage(session)) void persist();
     render();
+  }
+
+  function retryWithoutSupport(): void {
+    const session = runtime.session;
+    if (!session || session.kind === 'mock' || !session.answered || session.isRetryWithoutSupport) return;
+    const entry = currentHistoryEntry(session);
+    if (!entry || (!entry.correct && !session.pendingReason)) return;
+    session.retryOfHistoryId = entry.id;
+    session.isRetryWithoutSupport = true;
+    session.selectedChoiceId = null;
+    session.answered = false;
+    session.pendingReason = null;
+    session.confidence = null;
+    session.startedQuestionAt = performance.now();
+    const question = questionById(session.questionIds[session.index]);
+    if (question) questionSupport(session, question);
+    render();
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    announce('学習支援を外しました。日本語だけでもう一度解いてください。');
   }
 
   function resumeMock(): void {
@@ -322,15 +431,16 @@ namespace LivestockApp {
 
   function askConfirm(title: string, text: string, callback: () => void): void {
     confirmCallback = callback;
+    const language: UiLanguage = runtime.session?.kind === 'mock' ? 'ja' : currentUiLanguage();
     const dialog = document.querySelector<HTMLDialogElement>('[data-confirm-dialog]');
     const titleNode = document.querySelector<HTMLElement>('[data-confirm-title]');
     const textNode = document.querySelector<HTMLElement>('[data-confirm-text]');
     if (!dialog || !titleNode || !textNode) {
-      if (window.confirm(translateUiText(text))) callback();
+      if (window.confirm(translateUiText(text, language))) callback();
       return;
     }
-    titleNode.textContent = translateUiText(title);
-    textNode.textContent = translateUiText(text);
+    titleNode.textContent = translateUiText(title, language);
+    textNode.textContent = translateUiText(text, language);
     dialog.showModal();
   }
 
@@ -352,8 +462,30 @@ namespace LivestockApp {
   }
 
   function exportProgressCsv(): void {
-    const header = ['日時', '問題ID', '分野', 'トピック', '正誤', '回答時間秒', '誤答原因', '支援レベル', 'やさしい日本語', 'インドネシア語', 'ふりがな'];
-    const rows = runtime.state.history.map((entry) => [entry.at, entry.questionId, entry.category, entry.topic, entry.correct ? '正解' : '不正解', Math.round(entry.elapsedMs / 1000), entry.reason ? ERROR_REASON_LABELS[entry.reason] : '', entry.supportLevel, entry.usedEasyJapanese, entry.usedIndonesian, entry.usedFurigana]);
+    const header = [
+      '日時', '問題ID', '分野', 'トピック', '正誤', '回答時間秒', '誤答原因', '支援レベル',
+      'ふりがな', 'やさしい日本語', '重要語', '全文インドネシア語', '選択肢訳', '回答後インドネシア語',
+      '知識不足', '日本語不足', '日本語のみ再挑戦',
+    ];
+    const rows = runtime.state.history.map((entry) => [
+      entry.at,
+      entry.questionId,
+      entry.category,
+      entry.topic,
+      entry.correct ? '正解' : '不正解',
+      Math.round(entry.elapsedMs / 1000),
+      entry.reason ? ERROR_REASON_LABELS[entry.reason] : '',
+      entry.supportLevel,
+      entry.usedFurigana,
+      entry.usedEasyJapanese,
+      entry.openedKeywords,
+      entry.openedQuestionTranslation,
+      entry.openedChoiceTranslations,
+      entry.openedAnswerIndonesian,
+      entry.knowledgeGap,
+      entry.japaneseGap,
+      entry.isRetryWithoutSupport,
+    ]);
     downloadText('畜産2号トレーナー_学習履歴_v0.4.csv', '\uFEFF' + [header, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n'), 'text/csv');
   }
 
@@ -375,7 +507,9 @@ namespace LivestockApp {
     try {
       const parsed = JSON.parse(await file.text());
       const raw = parsed.state ?? parsed;
-      runtime.state = validateImportedState(raw);
+      const imported = validateImportedState(raw);
+      imported.revision = Math.max(imported.revision, runtime.state.revision);
+      runtime.state = imported;
       await persist();
       showNotice('学習データを読み込みました。');
     } catch (error) {
@@ -388,7 +522,7 @@ namespace LivestockApp {
     document.querySelectorAll<HTMLElement>('[data-view]').forEach((element) => {
       element.addEventListener('click', () => setView(element.dataset.view as ViewName));
     });
-    document.querySelectorAll<HTMLElement>('[data-ui-language]').forEach((element) => {
+    document.querySelectorAll<HTMLButtonElement>('button[data-ui-language]').forEach((element) => {
       element.addEventListener('click', () => {
         runtime.state.settings.uiLanguage = element.dataset.uiLanguage === 'ja' ? 'ja' : 'id';
         void persist();
@@ -410,8 +544,9 @@ namespace LivestockApp {
       element.addEventListener('click', () => chooseReason(element.dataset.reason as ErrorReason));
     });
     document.querySelectorAll<HTMLElement>('[data-session-toggle]').forEach((element) => {
-      element.addEventListener('click', () => toggleSessionSupport(element.dataset.sessionToggle as 'furigana' | 'easy' | 'id'));
+      element.addEventListener('click', () => toggleSessionSupport(element.dataset.sessionToggle as SessionSupportToggle));
     });
+    document.querySelector<HTMLElement>('[data-retry-without-support]')?.addEventListener('click', retryWithoutSupport);
     document.querySelectorAll<HTMLElement>('[data-confidence]').forEach((element) => {
       element.addEventListener('click', () => setConfidence(element.dataset.confidence as 'sure' | 'unsure'));
     });
@@ -505,7 +640,7 @@ namespace LivestockApp {
       render();
     });
     document.querySelector<HTMLSelectElement>('[data-setting-level]')?.addEventListener('change', (event) => {
-      runtime.state.settings.preferredSupportLevel = Number((event.currentTarget as HTMLSelectElement).value) as 0 | 1 | 2 | 3;
+      runtime.state.settings.preferredSupportLevel = Number((event.currentTarget as HTMLSelectElement).value) as SupportLevel;
       void persist();
       render();
     });

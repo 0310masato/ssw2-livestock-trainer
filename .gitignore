@@ -2,5 +2,8 @@ node_modules/
 build/
 dist/
 reports/screenshots/*.png
+reports/screenshots/**/*.png
+__pycache__/
+*.pyc
 *.log
 .DS_Store

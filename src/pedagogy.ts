@@ -1,5 +1,5 @@
 namespace LivestockApp {
-  const QUESTION_PATTERN_HELP: Record<QuestionPatternKey, LocalizedText> = {
+  const QUESTION_PATTERN_HELP: Record<QuestionPatternKey, Omit<LocalizedText, 'rubyJa'>> = {
     most_appropriate: {
       ja: '「最も適切なもの」は、4つの中から一番よく当てはまる答えを1つ選ぶ問題です。',
       easyJa: '4つの中から、一番よい答えを1つ選びます。',
@@ -37,62 +37,42 @@ namespace LivestockApp {
     question: Question,
     kind: SessionKind,
   ): Pick<UserSettings, 'showFurigana' | 'showEasyJapanese' | 'showIndonesian'> {
-    if (kind === 'mock' || state.settings.studySupportMode === 'japanese_only') {
-      return { showFurigana: false, showEasyJapanese: false, showIndonesian: false };
-    }
-    if (state.settings.studySupportMode === 'guided') {
-      return { showFurigana: true, showEasyJapanese: true, showIndonesian: true };
-    }
-    if (state.settings.automaticSupport) {
-      return supportSettingsForLevel(effectiveSupportLevel(state, question));
-    }
-    return {
-      showFurigana: state.settings.showFurigana,
-      showEasyJapanese: state.settings.showEasyJapanese,
-      showIndonesian: state.settings.showIndonesian,
-    };
+    return supportSettingsForLevel(resolvedSupportLevel(state, question, kind));
   }
 
-  function patternHelp(question: Question): LocalizedText {
-    return QUESTION_PATTERN_HELP[question.learningSupport.questionPattern] ?? QUESTION_PATTERN_HELP.which;
-  }
-
-  function keyTerms(question: Question): GlossaryItem[] {
-    return question.learningSupport.keyTermIds
-      .map((id) => GLOSSARY.find((item) => item.id === id))
-      .filter((item): item is GlossaryItem => Boolean(item));
+  function patternHelp(question: Question): Pick<LocalizedText, 'ja' | 'easyJa' | 'id'> {
+    return question.learningSupport.intentOverride
+      ?? QUESTION_PATTERN_HELP[question.learningSupport.questionPattern]
+      ?? QUESTION_PATTERN_HELP.which;
   }
 
   function bilingualHeading(ja: string, id: string): string {
-    return `<span lang="ja">${escapeHtml(ja)}</span><span aria-hidden="true"> / </span><span lang="id">${escapeHtml(id)}</span>`;
+    return renderBilingualHeading(ja, id, true);
   }
 
-  function renderVocabulary(question: Question, enabled: boolean): string {
-    if (!enabled) return '';
-    const terms = keyTerms(question);
-    if (!terms.length) return '';
-    return `
-      <section class="lesson-vocabulary" data-no-ui-translation="true">
-        <div class="lesson-subheading">
-          <span class="lesson-step">3</span>
-          <div><strong>${bilingualHeading('重要な日本語', 'Kosakata penting')}</strong><small lang="id">Baca kanji, arti sederhana, dan arti bahasa Indonesia.</small></div>
-        </div>
-        <div class="vocabulary-grid">
-          ${terms.map((term) => `
-            <article class="vocabulary-card">
-              <ruby lang="ja">${escapeHtml(term.termJa)}<rt>${escapeHtml(term.reading)}</rt></ruby>
-              <p lang="ja">${escapeHtml(term.easyJa)}</p>
-              <strong lang="id">${escapeHtml(term.idn)}</strong>
-            </article>`).join('')}
-        </div>
-      </section>`;
+  function renderUiControlLabel(ja: string, id: string, language: UiLanguage): string {
+    return escapeHtml(ui(ja, id, language));
+  }
+
+  function renderSupportToggle(
+    active: boolean,
+    labelJa: string,
+    labelId: string,
+    sessionToggle: string,
+    supportUsage: string,
+    language: UiLanguage,
+  ): string {
+    const stateLabel = active
+      ? renderUiControlLabel('ON', 'AKTIF', language)
+      : renderUiControlLabel('OFF', 'NONAKTIF', language);
+    return `<button class="support-toggle ${active ? 'active' : ''}" data-session-toggle="${sessionToggle}" data-support-usage="${supportUsage}" data-ui-control="true" data-ui-control-language="${language}" aria-pressed="${active}">${renderUiControlLabel(labelJa, labelId, language)} ${stateLabel}</button>`;
   }
 
   function renderChoice(
     choice: Choice,
     question: Question,
     session: SessionState,
-    settings: UserSettings,
+    options: LearningRenderOptions,
   ): string {
     const selected = session.selectedChoiceId === choice.id;
     const answerClass = session.answered
@@ -101,52 +81,17 @@ namespace LivestockApp {
     return `<button class="choice-button guided-choice ${answerClass}" data-choice="${choice.id}" ${session.answered ? 'disabled' : ''} data-no-ui-translation="true">
       <span class="choice-letter">${choice.id.toUpperCase()}</span>
       <span class="choice-copy">
-        <span class="choice-ja" lang="ja">${renderJapaneseText(choice.text, settings.showFurigana)}</span>
-        ${settings.showEasyJapanese && choice.text.easyJa !== choice.text.ja ? `<span class="choice-support" lang="ja">${escapeHtml(choice.text.easyJa)}</span>` : ''}
-        ${settings.showIndonesian ? `<span class="choice-support id" lang="id">${escapeHtml(choice.text.id)}</span>` : ''}
+        ${renderChoiceTranslation(choice.text, options)}
       </span>
     </button>`;
   }
 
-  function renderChoiceReview(question: Question, settings: UserSettings): string {
-    return `
-      <section class="choice-review" data-no-ui-translation="true">
-        <h3>${bilingualHeading('選択肢を確認', 'Pembahasan setiap pilihan')}</h3>
-        <div class="choice-review-list">
-          ${question.choices.map((choice) => {
-            const rationale = question.choiceRationales[choice.id];
-            const correct = choice.id === question.correctChoiceId;
-            return `<article class="choice-review-item ${correct ? 'correct' : 'wrong'}">
-              <div class="choice-review-title"><span>${choice.id.toUpperCase()}</span><strong lang="ja">${renderJapaneseText(choice.text, settings.showFurigana)}</strong><em lang="id">${escapeHtml(choice.text.id)}</em></div>
-              <p lang="ja">${rationale ? renderJapaneseText(rationale, settings.showFurigana) : ''}</p>
-              <p lang="id">${escapeHtml(rationale?.id ?? '')}</p>
-            </article>`;
-          }).join('')}
-        </div>
-      </section>`;
-  }
-
-  function renderBilingualReasonPanel(selected: ErrorReason | null): string {
+  function renderReasonPanel(selected: ErrorReason | null, language: UiLanguage): string {
     return `<section class="reason-panel" data-no-ui-translation="true">
-      <h2>${bilingualHeading('なぜ間違えましたか？', 'Mengapa jawaban Anda salah?')}</h2>
-      <p lang="id">Pilih satu alasan. Aplikasi akan menyesuaikan soal dan bantuan berikutnya.</p>
+      <h2 data-ui-control="true" data-ui-control-language="${language}">${renderUiControlLabel('なぜ間違えましたか？', 'Mengapa jawaban Anda salah?', language)}</h2>
+      <p data-ui-control="true" data-ui-control-language="${language}">${renderUiControlLabel('次の出題を調整するために1つ選んでください。', 'Pilih satu alasan agar soal dan bantuan berikutnya dapat disesuaikan.', language)}</p>
       <div class="reason-grid">${(Object.keys(ERROR_REASON_LABELS) as ErrorReason[]).map((reason) => `
-        <button class="reason-button ${selected === reason ? 'active' : ''}" data-reason="${reason}">
-          <span lang="ja">${escapeHtml(ERROR_REASON_LABELS[reason])}</span>
-          <small lang="id">${escapeHtml(errorReasonUiLabel(reason, 'id'))}</small>
-        </button>`).join('')}
-      </div>
-    </section>`;
-  }
-
-  function renderJapaneseOnlyReasonPanel(selected: ErrorReason | null): string {
-    return `<section class="reason-panel" data-no-ui-translation="true">
-      <h2>なぜ間違えましたか？</h2>
-      <p>次の出題を調整するために1つ選んでください。</p>
-      <div class="reason-grid">${(Object.keys(ERROR_REASON_LABELS) as ErrorReason[]).map((reason) => `
-        <button class="reason-button ${selected === reason ? 'active' : ''}" data-reason="${reason}">
-          <span lang="ja">${escapeHtml(ERROR_REASON_LABELS[reason])}</span>
-        </button>`).join('')}
+        <button class="reason-button ${selected === reason ? 'active' : ''}" data-reason="${reason}" data-ui-control="true" data-ui-control-language="${language}">${escapeHtml(errorReasonUiLabel(reason, language))}</button>`).join('')}
       </div>
     </section>`;
   }
@@ -160,30 +105,64 @@ namespace LivestockApp {
     total: number,
   ): string {
     const correctChoice = question.choices.find((choice) => choice.id === question.correctChoiceId);
+    const language = settings.uiLanguage;
+    const options: LearningRenderOptions = {
+      showFurigana: false,
+      showEasyJapanese: false,
+      showIndonesian: false,
+      phase: session.answered ? 'after-answer' : 'before-answer',
+    };
     return `
       <article class="question-card japanese-only-card" data-no-ui-translation="true">
         <div class="question-number">問題 ${session.index + 1} / ${total} ・ 支援レベル ${supportLevel} ・ ${escapeHtml(question.status)}</div>
         <h1 class="question-text" lang="ja">${escapeHtml(question.question.ja)}</h1>
         ${question.visual ? `<figure class="question-visual"><img src="${assetPath(question.visual.assetId)}" alt="${escapeHtml(question.visual.altJa)}"><figcaption>独自作成の学習用模式図</figcaption></figure>` : ''}
-        <div class="confidence-row" aria-label="回答前の自信">
-          <span>自信：</span>
-          <button class="confidence-button ${session.confidence === 'sure' ? 'active' : ''}" data-confidence="sure">分かる</button>
-          <button class="confidence-button ${session.confidence === 'unsure' ? 'active' : ''}" data-confidence="unsure">迷っている</button>
+        <div class="confidence-row" aria-label="${renderUiControlLabel('回答前の自信', 'Keyakinan sebelum menjawab', language)}" data-ui-control="true" data-ui-control-language="${language}">
+          <span>${renderUiControlLabel('自信：', 'Keyakinan:', language)}</span>
+          <button class="confidence-button ${session.confidence === 'sure' ? 'active' : ''}" data-confidence="sure" data-ui-control="true" data-ui-control-language="${language}">${renderUiControlLabel('分かる', 'Yakin', language)}</button>
+          <button class="confidence-button ${session.confidence === 'unsure' ? 'active' : ''}" data-confidence="unsure" data-ui-control="true" data-ui-control-language="${language}">${renderUiControlLabel('迷っている', 'Masih ragu', language)}</button>
         </div>
         <div class="choice-list">
-          ${question.choices.map((choice) => renderChoice(choice, question, session, settings)).join('')}
+          ${question.choices.map((choice) => renderChoice(choice, question, session, options)).join('')}
         </div>
-        ${!session.answered ? `<button class="btn primary full" data-answer ${session.selectedChoiceId ? '' : 'disabled'}>回答する</button>` : `
-          <section class="answer-panel ${correct ? 'correct' : 'wrong'}">
-            <h2>${correct ? '正解です' : '不正解です'}</h2>
-            <p><strong>正解：</strong>${escapeHtml(correctChoice?.text.ja ?? '')}</p>
-            <p>${escapeHtml(question.explanation.ja)}</p>
-            <div class="source-citation"><strong>参照：</strong>${escapeHtml(question.source.documentTitle)}／${escapeHtml(question.source.edition)}／PDF ${question.source.pdfPage}／冊子 ${escapeHtml(question.source.printedPageLabel || '-')}／${escapeHtml(question.source.section)}</div>
-          </section>
-          ${!correct ? renderJapaneseOnlyReasonPanel(session.pendingReason) : ''}
-          <button class="btn primary full" data-next ${!correct && !session.pendingReason ? 'disabled' : ''}>${session.index + 1 >= total ? '結果を見る' : '次の問題'}</button>
+        ${!session.answered ? `<button class="btn primary full" data-answer data-ui-control="true" data-ui-control-language="${language}" ${session.selectedChoiceId ? '' : 'disabled'}>${renderUiControlLabel('回答する', 'Jawab', language)}</button>` : `
+          ${renderAnswerExplanation(question, correctChoice, correct, options)}
+          ${renderWrongChoiceExplanation(question, options)}
+          ${renderKeywordGlossary(question, GLOSSARY, true, { ...options, showKeywords: true, showKeywordMeanings: false })}
+          ${renderJapaneseLanguagePoint(question, options)}
+          ${!correct ? renderReasonPanel(session.pendingReason, language) : ''}
+          <button class="btn primary full" data-next data-ui-control="true" data-ui-control-language="${language}" ${!correct && !session.pendingReason ? 'disabled' : ''}>${session.index + 1 >= total ? renderUiControlLabel('結果を見る', 'Lihat hasil', language) : renderUiControlLabel('次の問題', 'Soal berikutnya', language)}</button>
         `}
       </article>`;
+  }
+
+  function renderSessionSupportControls(
+    session: SessionState,
+    settings: UserSettings,
+    supportLevel: number,
+    options: LearningRenderOptions,
+  ): string {
+    const controls: string[] = [];
+    const language = settings.uiLanguage;
+    if (supportLevel > 0) {
+      controls.push(renderSupportToggle(session.furiganaVisible, 'ふりがな', 'Furigana', 'furigana', 'furigana', language));
+    }
+    if (supportLevel === 3) {
+      controls.push(renderSupportToggle(session.easyJapaneseVisible, 'やさしい日本語', 'Bahasa Jepang sederhana', 'easy', 'easy-japanese', language));
+    }
+    if (supportLevel > 0 && settings.showVocabulary) {
+      controls.push(renderSupportToggle(session.keywordsVisible, '重要語', 'Kosakata penting', 'keywords', 'keywords', language));
+    }
+    if (options.allowQuestionTranslation) {
+      controls.push(renderSupportToggle(session.indonesianVisible, '問題の全文訳', 'Terjemahan lengkap soal', 'question-id', 'question-translation', language));
+    }
+    if (options.allowChoiceTranslations) {
+      controls.push(renderSupportToggle(session.choiceTranslationsVisible, '選択肢の翻訳', 'Terjemahan pilihan jawaban', 'choices-id', 'choice-translation', language));
+    }
+    if (session.answered && options.allowAnswerIndonesian) {
+      controls.push(renderSupportToggle(session.answerIndonesianVisible, '回答後のインドネシア語', 'Penjelasan bahasa Indonesia', 'answer-id', 'answer-indonesian', language));
+    }
+    return controls.length ? `<div class="support-controls" aria-label="${renderUiControlLabel('学習支援の表示切替', 'Tampilkan atau sembunyikan bantuan belajar', language)}" data-ui-control="true" data-ui-control-language="${language}">${controls.join('')}</div>` : '';
   }
 
   export function renderGuidedQuestionCard(
@@ -193,81 +172,69 @@ namespace LivestockApp {
     correct: boolean,
     supportLevel: number,
     total: number,
+    componentOverrides: Partial<LearningRenderOptions> = {},
   ): string {
-    if (!settings.showFurigana && !settings.showEasyJapanese && !settings.showIndonesian) {
+    const sharedOptions = {
+      showFurigana: settings.showFurigana,
+      showEasyJapanese: settings.showEasyJapanese,
+      showIndonesian: settings.showIndonesian,
+      ...componentOverrides,
+    };
+    const beforeOptions: LearningRenderOptions = { ...sharedOptions, phase: 'before-answer' };
+    const afterOptions: LearningRenderOptions = { ...sharedOptions, phase: 'after-answer' };
+    const activeOptions = session.answered ? afterOptions : beforeOptions;
+    const showIndonesianBeforeAnswer = learningIndonesianVisible(beforeOptions);
+    const showIndonesianAfterAnswer = afterOptions.showAnswerIndonesian ?? learningIndonesianVisible(afterOptions);
+    const language = settings.uiLanguage;
+    if (supportLevel === 0 || componentOverrides.isRetryWithoutSupport === true) {
       return renderJapaneseOnlyQuestionCard(question, session, settings, correct, supportLevel, total);
     }
     const pattern = patternHelp(question);
     const correctChoice = question.choices.find((choice) => choice.id === question.correctChoiceId);
+    const meaningSupport = `${settings.showEasyJapanese ? `<div class="support-box"><strong lang="ja">やさしい日本語</strong><p lang="ja">${escapeHtml(question.question.easyJa)}</p></div>` : ''}${renderIndonesianTranslation(question.question, beforeOptions)}`;
     return `
-      <article class="question-card guided-lesson-card">
-        <section class="lesson-goal" data-no-ui-translation="true">
-          <span class="lesson-label" lang="id">Tujuan belajar</span>
-          <p lang="ja">${renderJapaneseText(question.learningSupport.lessonObjective, settings.showFurigana)}</p>
-          <p lang="id">${escapeHtml(question.learningSupport.lessonObjective.id)}</p>
-        </section>
-
-        <div class="support-controls">
-          <button class="support-toggle ${session.furiganaVisible ? 'active' : ''}" data-session-toggle="furigana">ふりがな ${session.furiganaVisible ? 'ON' : 'OFF'}</button>
-          <button class="support-toggle ${session.easyJapaneseVisible ? 'active' : ''}" data-session-toggle="easy">やさしい日本語 ${session.easyJapaneseVisible ? 'ON' : 'OFF'}</button>
-          <button class="support-toggle wide ${session.indonesianVisible ? 'active' : ''}" data-session-toggle="id">Bahasa Indonesia ${session.indonesianVisible ? 'ON' : 'OFF'}</button>
-        </div>
+      <article class="question-card guided-lesson-card" data-no-ui-translation="true">
         <div class="question-number">問題 ${session.index + 1} / ${total} ・ 支援レベル ${supportLevel} ・ ${escapeHtml(question.status)}</div>
+        ${renderSessionSupportControls(session, settings, supportLevel, activeOptions)}
 
         <section class="lesson-stage" data-no-ui-translation="true">
-          <div class="lesson-subheading"><span class="lesson-step">1</span><div><strong>${bilingualHeading('日本語の問題を読む', 'Baca soal bahasa Jepang')}</strong><small lang="id">Mulai dari kalimat asli yang akan muncul dalam ujian.</small></div></div>
-          <h1 class="question-text" lang="ja">${renderJapaneseText(question.question, settings.showFurigana)}</h1>
+          <div class="lesson-subheading"><span class="lesson-step">1</span><div><strong>${renderBilingualHeading('日本語の問題を読む', 'Baca soal bahasa Jepang', showIndonesianBeforeAnswer)}</strong>${showIndonesianBeforeAnswer ? '<small lang="id">Mulai dari kalimat asli yang akan muncul dalam ujian.</small>' : '<small lang="ja">試験に出る日本語を先に読みます。</small>'}</div></div>
+          <h1 class="question-text" lang="ja" data-learning-component="ruby-text">${renderRubyText(question.question, settings.showFurigana, true)}</h1>
         </section>
 
-        ${runtime.state.settings.showQuestionPattern ? `
-          <section class="question-pattern-guide" data-no-ui-translation="true">
-            <strong>${bilingualHeading('問題文の読み方', 'Cara membaca pola soal')}</strong>
-            <p lang="ja">${renderJapaneseText(pattern, settings.showFurigana)}</p>
-            <p lang="id">${escapeHtml(pattern.id)}</p>
-          </section>` : ''}
-
-        <section class="lesson-stage meaning-stage" data-no-ui-translation="true">
-          <div class="lesson-subheading"><span class="lesson-step">2</span><div><strong>${bilingualHeading('意味を確認する', 'Pahami arti soal')}</strong><small lang="id">Gunakan bantuan untuk memahami, bukan untuk sekadar menebak.</small></div></div>
-          ${settings.showEasyJapanese ? `<div class="support-box"><strong lang="ja">やさしい日本語</strong><p lang="ja">${escapeHtml(question.question.easyJa)}</p></div>` : ''}
-          ${settings.showIndonesian ? `<div class="support-box id"><strong lang="id">Arti dalam Bahasa Indonesia</strong><p lang="id">${escapeHtml(question.question.id)}</p></div>` : ''}
+        <section class="lesson-goal" data-no-ui-translation="true">
+          <span class="lesson-label" lang="ja">学習目標${showIndonesianBeforeAnswer ? ' / <span lang="id">Tujuan belajar</span>' : ''}</span>
+          <p lang="ja">${renderRubyText(question.learningSupport.lessonObjective, settings.showFurigana)}</p>
+          ${showIndonesianBeforeAnswer ? `<p lang="id">${escapeHtml(question.learningSupport.lessonObjective.id)}</p>` : ''}
         </section>
 
-        ${renderVocabulary(question, runtime.state.settings.showVocabulary)}
-        ${question.visual ? `<figure class="question-visual"><img src="${assetPath(question.visual.assetId)}" alt="${escapeHtml(question.visual.altJa)}"><figcaption>独自作成の学習用模式図 / Diagram belajar asli</figcaption></figure>` : ''}
+        ${settings.showQuestionPattern ? renderQuestionIntent(pattern, question.learningSupport.questionPattern, question.question.ja, beforeOptions) : ''}
 
-        <div class="confidence-row" aria-label="回答前の自信">
-          <span>自信 / Keyakinan:</span>
-          <button class="confidence-button ${session.confidence === 'sure' ? 'active' : ''}" data-confidence="sure">分かる / Yakin</button>
-          <button class="confidence-button ${session.confidence === 'unsure' ? 'active' : ''}" data-confidence="unsure">迷っている / Ragu</button>
+        ${meaningSupport ? `<section class="lesson-stage meaning-stage" data-no-ui-translation="true">
+          <div class="lesson-subheading"><span class="lesson-step">2</span><div><strong>${renderBilingualHeading('意味を確認する', 'Pahami arti soal', showIndonesianBeforeAnswer)}</strong>${showIndonesianBeforeAnswer ? '<small lang="id">Gunakan bantuan untuk memahami, bukan untuk sekadar menebak.</small>' : '<small lang="ja">必要な補助を使って意味を確認します。</small>'}</div></div>
+          ${meaningSupport}
+        </section>` : ''}
+
+        ${!session.answered ? renderKeywordGlossary(question, GLOSSARY, settings.showVocabulary, { ...beforeOptions, showKeywordMeanings: beforeOptions.compactKeywordHints || beforeOptions.showEasyJapanese }) : ''}
+        ${question.visual ? `<figure class="question-visual"><img src="${assetPath(question.visual.assetId)}" alt="${escapeHtml(question.visual.altJa)}"><figcaption>${showIndonesianBeforeAnswer ? '独自作成の学習用模式図 / Diagram belajar asli' : '独自作成の学習用模式図'}</figcaption></figure>` : ''}
+
+        <div class="confidence-row" aria-label="${renderUiControlLabel('回答前の自信', 'Keyakinan sebelum menjawab', language)}" data-ui-control="true" data-ui-control-language="${language}">
+          <span>${renderUiControlLabel('自信：', 'Keyakinan:', language)}</span>
+          <button class="confidence-button ${session.confidence === 'sure' ? 'active' : ''}" data-confidence="sure" data-ui-control="true" data-ui-control-language="${language}">${renderUiControlLabel('分かる', 'Yakin', language)}</button>
+          <button class="confidence-button ${session.confidence === 'unsure' ? 'active' : ''}" data-confidence="unsure" data-ui-control="true" data-ui-control-language="${language}">${renderUiControlLabel('迷っている', 'Masih ragu', language)}</button>
         </div>
         <div class="choice-list">
-          ${question.choices.map((choice) => renderChoice(choice, question, session, settings)).join('')}
+          ${question.choices.map((choice) => renderChoice(choice, question, session, activeOptions)).join('')}
         </div>
 
-        ${!session.answered ? `<button class="btn primary full" data-answer ${session.selectedChoiceId ? '' : 'disabled'}>回答する / Jawab</button>` : `
-          <section class="answer-panel ${correct ? 'correct' : 'wrong'}" data-no-ui-translation="true">
-            <h2>${correct ? '正解です / Jawaban benar' : '不正解です / Jawaban belum benar'}</h2>
-            <div class="correct-answer-block">
-              <strong>${bilingualHeading('正解', 'Jawaban benar')}</strong>
-              <p lang="ja">${correctChoice ? renderJapaneseText(correctChoice.text, settings.showFurigana) : ''}</p>
-              ${settings.showIndonesian ? `<p lang="id">${escapeHtml(correctChoice?.text.id ?? '')}</p>` : ''}
-            </div>
-            <div class="explanation-block">
-              <h3>${bilingualHeading('なぜこの答え？', 'Mengapa jawaban ini benar?')}</h3>
-              <p lang="ja">${renderJapaneseText(question.explanation, settings.showFurigana)}</p>
-              ${settings.showEasyJapanese ? `<p class="easy-explanation" lang="ja"><strong>やさしい日本語：</strong>${escapeHtml(question.explanation.easyJa)}</p>` : ''}
-              ${settings.showIndonesian ? `<p class="id-explanation" lang="id"><strong>Penjelasan：</strong>${escapeHtml(question.explanation.id)}</p>` : ''}
-            </div>
-            <div class="memory-point">
-              <strong>${bilingualHeading('覚えるポイント', 'Poin yang perlu diingat')}</strong>
-              <p lang="ja">${renderJapaneseText(question.learningSupport.memoryPoint, settings.showFurigana)}</p>
-              <p lang="id">${escapeHtml(question.learningSupport.memoryPoint.id)}</p>
-            </div>
-            <div class="source-citation"><strong>参照 / Sumber：</strong>${escapeHtml(question.source.documentTitle)}／${escapeHtml(question.source.edition)}／PDF ${question.source.pdfPage}／冊子 ${escapeHtml(question.source.printedPageLabel || '-')}／${escapeHtml(question.source.section)}</div>
-          </section>
-          ${renderChoiceReview(question, settings)}
-          ${!correct ? renderBilingualReasonPanel(session.pendingReason) : ''}
-          <button class="btn primary full" data-next ${!correct && !session.pendingReason ? 'disabled' : ''}>${session.index + 1 >= total ? '結果を見る / Lihat hasil' : '次の問題 / Soal berikutnya'}</button>
+        ${!session.answered ? `<button class="btn primary full" data-answer data-ui-control="true" data-ui-control-language="${language}" ${session.selectedChoiceId ? '' : 'disabled'}>${renderUiControlLabel('回答する', 'Jawab', language)}</button>` : `
+          ${renderAnswerExplanation(question, correctChoice, correct, afterOptions)}
+          ${renderWrongChoiceExplanation(question, afterOptions)}
+          ${renderKeywordGlossary(question, GLOSSARY, true, { ...afterOptions, showKeywords: true, showKeywordMeanings: afterOptions.compactKeywordHints || afterOptions.showEasyJapanese })}
+          ${renderJapaneseLanguagePoint(question, afterOptions)}
+          ${supportLevel > 0 && !afterOptions.isRetryWithoutSupport ? renderRetryWithoutSupport(question.id, showIndonesianAfterAnswer, language) : ''}
+          ${!correct ? renderReasonPanel(session.pendingReason, language) : ''}
+          <button class="btn primary full" data-next data-ui-control="true" data-ui-control-language="${language}" ${!correct && !session.pendingReason ? 'disabled' : ''}>${session.index + 1 >= total ? renderUiControlLabel('結果を見る', 'Lihat hasil', language) : renderUiControlLabel('次の問題', 'Soal berikutnya', language)}</button>
         `}
       </article>`;
   }
