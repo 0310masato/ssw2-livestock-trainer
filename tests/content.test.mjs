@@ -36,3 +36,20 @@ test('questions preserve approval gate and source traceability', () => {
     }
   }
 });
+
+test('pedagogical question pack contains ruby, vocabulary, and bilingual choice explanations', () => {
+  for (const question of questions) {
+    assert.equal(question.schemaVersion, '0.3.0');
+    assert.ok(Array.isArray(question.question.rubyJa) && question.question.rubyJa.length > 0, question.id + ': question ruby missing');
+    assert.ok(Array.isArray(question.explanation.rubyJa) && question.explanation.rubyJa.length > 0, question.id + ': explanation ruby missing');
+    assert.ok(question.learningSupport && question.learningSupport.questionPattern, question.id + ': question pattern missing');
+    assert.ok(question.learningSupport.keyTermIds.length >= 1, question.id + ': vocabulary missing');
+    assert.equal(Object.keys(question.choiceRationales).length, question.choices.length, question.id + ': choice explanations missing');
+    for (const choice of question.choices) {
+      assert.ok(choice.text.rubyJa.length > 0, question.id + '/' + choice.id + ': choice ruby missing');
+      const rationale = question.choiceRationales[choice.id];
+      assert.ok(rationale && rationale.ja && rationale.easyJa && rationale.id, question.id + '/' + choice.id + ': rationale incomplete');
+      assert.ok(rationale.rubyJa.length > 0, question.id + '/' + choice.id + ': rationale ruby missing');
+    }
+  }
+});

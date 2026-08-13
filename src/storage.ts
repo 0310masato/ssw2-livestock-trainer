@@ -7,7 +7,7 @@ namespace LivestockApp {
 
   export function defaultState(): AppState {
     return {
-      schemaVersion: '0.4.2',
+      schemaVersion: '0.5.0',
       history: [],
       mastery: {},
       mockDraft: null,
@@ -15,6 +15,9 @@ namespace LivestockApp {
       reviews: {},
       settings: {
         uiLanguage: 'id',
+        studySupportMode: 'guided',
+        showVocabulary: true,
+        showQuestionPattern: true,
         preferredSupportLevel: 3,
         automaticSupport: true,
         showFurigana: true,
@@ -37,6 +40,11 @@ namespace LivestockApp {
       ...base.settings,
       ...candidateSettings,
       uiLanguage: candidateSettings.uiLanguage === 'ja' ? 'ja' : 'id',
+      studySupportMode: ['guided', 'adaptive', 'japanese_only'].includes(String(candidateSettings.studySupportMode))
+        ? candidateSettings.studySupportMode as StudySupportMode
+        : 'guided',
+      showVocabulary: candidateSettings.showVocabulary !== false,
+      showQuestionPattern: candidateSettings.showQuestionPattern !== false,
     };
     return {
       ...base,
@@ -49,7 +57,7 @@ namespace LivestockApp {
       settings,
       lastSessionQuestionIds: Array.isArray(candidate.lastSessionQuestionIds) ? candidate.lastSessionQuestionIds : [],
       lastOpenedAt: nowIso(),
-      schemaVersion: '0.4.2',
+      schemaVersion: '0.5.0',
     };
   }
 

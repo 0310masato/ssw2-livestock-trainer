@@ -113,6 +113,14 @@ namespace LivestockApp {
     return escaped;
   }
 
+  export function renderJapaneseText(text: LocalizedText, enabled: boolean): string {
+    if (!enabled) return escapeHtml(text.ja);
+    if (!text.rubyJa?.length) return textWithFurigana(text.ja, true);
+    return text.rubyJa.map((segment) => segment.reading
+      ? `<ruby>${escapeHtml(segment.text)}<rt>${escapeHtml(segment.reading)}</rt></ruby>`
+      : escapeHtml(segment.text)).join('');
+  }
+
   export function questionById(id: string): Question | undefined {
     return QUESTIONS.find((question) => question.id === id);
   }
@@ -125,7 +133,7 @@ namespace LivestockApp {
   }
 
   export function renderLocalizedText(text: LocalizedText, settings: UserSettings, mode: 'question' | 'choice' | 'explanation'): string {
-    const primary = textWithFurigana(text.ja, settings.showFurigana);
+    const primary = renderJapaneseText(text, settings.showFurigana);
     if (mode === 'choice') {
       const supplements: string[] = [];
       if (settings.showEasyJapanese && text.easyJa && text.easyJa !== text.ja) {

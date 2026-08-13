@@ -9,7 +9,11 @@ import unicodedata
 from collections import Counter
 from difflib import SequenceMatcher
 
-import fitz
+try:
+    import fitz
+except ModuleNotFoundError:
+    fitz = None
+
 from jsonschema import Draft202012Validator
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -27,6 +31,8 @@ PDFS = {
     'livestock-textbook-2023-09': pathlib.Path('/mnt/data/技能測定試験（畜産農業）.pdf'),
     'safety-textbook-2023-09': pathlib.Path('/mnt/data/衛生管理（畜産農業）.pdf'),
 }
+LEDGER_BY_ID = {doc['sourceId']: doc for doc in LEDGER.get('officialDocuments', [])}
+SOURCE_PDFS_AVAILABLE = fitz is not None and all(path.exists() for path in PDFS.values())
 ASSET_DIR = ROOT / 'public' / 'assets'
 
 
@@ -93,6 +99,7 @@ bad_rights = []
 bad_status = []
 bad_language = []
 missing_assets = []
+bad_pedagogy = []
 for q in QUESTIONS:
     for fid in q.get('sourceFactIds', []):
         if fid not in fact_ids:
@@ -102,9 +109,14 @@ for q in QUESTIONS:
         bad_correct.append(q['id'])
     src = q.get('source', {})
     sid = src.get('sourceId')
-    if sid not in PDFS or not isinstance(src.get('pdfPage'), int):
-        bad_sources.append(q['id'])
-    elif not (1 <= src['pdfPage'] <= fitz.open(PDFS[sid]).page_count):
+    page = src.get('pdfPage')
+    page_limit = LEDGER_BY_ID.get(sid, {}).get('pageCount')
+    if (
+        sid not in PDFS
+        or not isinstance(page, int)
+        or not isinstance(page_limit, int)
+        or not (1 <= page <= page_limit)
+    ):
         bad_sources.append(q['id'])
     rights = q.get('rights', {})
     if not rights.get('originalWording') or rights.get('usesOfficialImage') or rights.get('usesCompetitorContent'):
@@ -118,6 +130,18 @@ for q in QUESTIONS:
     for c in q.get('choices', []):
         if not all(str(c.get('text', {}).get(k, '')).strip() for k in ('ja', 'easyJa', 'id')):
             bad_language.append((q['id'], f"choice:{c.get('id')}"))
+    support = q.get('learningSupport', {})
+    rationales = q.get('choiceRationales', {})
+    ruby_fields = [q.get('question', {}), q.get('explanation', {}), *[c.get('text', {}) for c in q.get('choices', [])], *rationales.values()]
+    if (
+        q.get('schemaVersion') != '0.3.0'
+        or not support.get('questionPattern')
+        or not support.get('keyTermIds')
+        or len(rationales) != len(q.get('choices', []))
+        or any(not item.get('rubyJa') for item in ruby_fields)
+        or any(not all(str(item.get(k, '')).strip() for k in ('ja', 'easyJa', 'id')) for item in rationales.values())
+    ):
+        bad_pedagogy.append(q['id'])
     if q.get('visual'):
         aid = q['visual'].get('assetId')
         if not aid or not (ASSET_DIR / f'{aid}.svg').exists():
@@ -130,51 +154,74 @@ checks += [
     check(not bad_rights, 'Rights flags prohibit official/competitor reuse', str(bad_rights[:10])),
     check(not bad_status, 'All questions remain source_checked (not auto-approved)', str(bad_status[:10])),
     check(not bad_language, 'All multilingual fields are populated', str(bad_language[:10])),
+    check(not bad_pedagogy, 'All questions include ruby and pedagogical support', str(bad_pedagogy[:10])),
     check(not missing_assets, 'All declared original visual assets exist', str(missing_assets[:10])),
 ]
-for name, items in [('missing_fact_reference', missing_refs), ('bad_correct_choice', bad_correct), ('bad_source', bad_sources), ('bad_rights', bad_rights), ('bad_status', bad_status), ('bad_language', bad_language), ('missing_asset', missing_assets)]:
+for name, items in [('missing_fact_reference', missing_refs), ('bad_correct_choice', bad_correct), ('bad_source', bad_sources), ('bad_rights', bad_rights), ('bad_status', bad_status), ('bad_language', bad_language), ('bad_pedagogy', bad_pedagogy), ('missing_asset', missing_assets)]:
     issues.extend({'type': name, 'item': item} for item in items)
 
-# Source ledger hash and page-count verification.
+# Source ledger and PDF verification.
+# GitHub Actions does not receive the copyrighted source PDFs. In that
+# environment we validate source IDs and page ranges against source-ledger.json,
+# and clearly record the binary/hash and text-anchor checks as skipped.
 ledger_issues = []
-for doc in LEDGER.get('officialDocuments', []):
-    sid = doc['sourceId']
-    path = PDFS.get(sid)
-    if not path or not path.exists():
-        ledger_issues.append((sid, 'missing file'))
-        continue
-    if sha256(path) != doc.get('sha256'):
-        ledger_issues.append((sid, 'sha256 mismatch'))
-    with fitz.open(path) as pdf:
-        if pdf.page_count != doc.get('pageCount'):
-            ledger_issues.append((sid, f"page count {pdf.page_count} != {doc.get('pageCount')}"))
-checks.append(check(not ledger_issues, 'Official-source hashes and page counts match ledger', str(ledger_issues)))
-issues.extend({'type': 'source_ledger', 'item': x} for x in ledger_issues)
-
-# Automated anchor checks for the 50 newly added fact cards.
-opened = {sid: fitz.open(path) for sid, path in PDFS.items()}
-anchor_total = 0
+anchor_total = sum(bool(fact.get('source', {}).get('verificationAnchors')) for fact in FACTS)
+manual_page_refs = len(FACTS) - anchor_total
 anchor_pass = 0
 anchor_failures = []
-manual_page_refs = 0
-for fact in FACTS:
-    anchors = fact.get('source', {}).get('verificationAnchors') or []
-    if not anchors:
-        manual_page_refs += 1
-        continue
-    anchor_total += 1
-    src = fact['source']
-    page = opened[src['sourceId']].load_page(src['pdfPage'] - 1)
-    page_text = norm(main_pdf_text(page))
-    results = [(a, norm(a) in page_text) for a in anchors]
-    if all(ok for _, ok in results):
-        anchor_pass += 1
-    else:
-        anchor_failures.append({'factId': fact['factId'], 'pdfPage': src['pdfPage'], 'results': results})
-for pdf in opened.values():
-    pdf.close()
-checks.append(check(not anchor_failures, 'Automated PDF anchor verification', f'{anchor_pass}/{anchor_total} anchored facts passed; {manual_page_refs} legacy facts retain manual page references'))
-issues.extend({'type': 'anchor', **x} for x in anchor_failures)
+anchor_skipped = not SOURCE_PDFS_AVAILABLE
+
+if SOURCE_PDFS_AVAILABLE:
+    for doc in LEDGER.get('officialDocuments', []):
+        sid = doc['sourceId']
+        pdf_path = PDFS.get(sid)
+        if not pdf_path or not pdf_path.exists():
+            ledger_issues.append((sid, 'missing file'))
+            continue
+        if sha256(pdf_path) != doc.get('sha256'):
+            ledger_issues.append((sid, 'sha256 mismatch'))
+        with fitz.open(pdf_path) as pdf:
+            if pdf.page_count != doc.get('pageCount'):
+                ledger_issues.append((sid, f"page count {pdf.page_count} != {doc.get('pageCount')}"))
+    checks.append(check(not ledger_issues, 'Official-source hashes and page counts match ledger', str(ledger_issues)))
+    issues.extend({'type': 'source_ledger', 'item': item} for item in ledger_issues)
+
+    opened = {sid: fitz.open(pdf_path) for sid, pdf_path in PDFS.items()}
+    for fact in FACTS:
+        anchors = fact.get('source', {}).get('verificationAnchors') or []
+        if not anchors:
+            continue
+        src = fact['source']
+        page = opened[src['sourceId']].load_page(src['pdfPage'] - 1)
+        page_text = norm(main_pdf_text(page))
+        results = [(anchor, norm(anchor) in page_text) for anchor in anchors]
+        if all(ok for _, ok in results):
+            anchor_pass += 1
+        else:
+            anchor_failures.append({'factId': fact['factId'], 'pdfPage': src['pdfPage'], 'results': results})
+    for pdf in opened.values():
+        pdf.close()
+    checks.append(check(
+        not anchor_failures,
+        'Automated PDF anchor verification',
+        f'{anchor_pass}/{anchor_total} anchored facts passed; {manual_page_refs} legacy facts retain manual page references',
+    ))
+    issues.extend({'type': 'anchor', **item} for item in anchor_failures)
+else:
+    checks.append({
+        'name': 'Official-source binary verification',
+        'pass': True,
+        'detail': 'SKIPPED: official PDFs are not mounted in this CI environment; source IDs and page ranges were checked against source-ledger.json.',
+        'warning': True,
+        'skipped': True,
+    })
+    checks.append({
+        'name': 'Automated PDF anchor verification',
+        'pass': True,
+        'detail': f'SKIPPED: {anchor_total} anchored facts require the mounted official PDFs. Run npm run validate:content in the controlled source-review environment for full verification.',
+        'warning': True,
+        'skipped': True,
+    })
 
 # Exact and near-duplicate question wording checks.
 normalized_questions = [(q['id'], norm(q['question']['ja'])) for q in QUESTIONS]
@@ -201,15 +248,15 @@ review_counts = Counter(q.get('review', {}).get('languageId', 'missing') for q i
 all_pass = all(c['pass'] for c in checks if c['name'] != 'Near-duplicate review queue')
 
 report = {
-    'generatedAt': '2026-08-12',
+    'generatedAt': '2026-08-13',
     'overall': 'PASS' if all_pass else 'FAIL',
-    'releaseMeaning': 'PASS means the Alpha v0.4 review build is structurally and source-reference valid. It does not mean questions are approved for public use.',
+    'releaseMeaning': 'PASS means the Alpha v0.5 pack passed structural, pedagogical, rights, and available source checks. A skipped PDF check is reported explicitly and PASS never means public-use approval.',
     'counts': {'facts': len(FACTS), 'questions': len(QUESTIONS), 'glossary': len(GLOSSARY), 'visualAssets': len(list(ASSET_DIR.glob('*.svg')))},
     'statusCounts': dict(status_counts),
     'questionCountsByCategory': dict(category_counts),
     'factCountsBySubject': dict(fact_subject_counts),
     'indonesianReviewCounts': dict(review_counts),
-    'anchorVerification': {'anchoredFacts': anchor_total, 'passed': anchor_pass, 'failed': len(anchor_failures), 'legacyManualPageReferences': manual_page_refs},
+    'anchorVerification': {'available': SOURCE_PDFS_AVAILABLE, 'skipped': anchor_skipped, 'anchoredFacts': anchor_total, 'passed': anchor_pass, 'failed': len(anchor_failures), 'legacyManualPageReferences': manual_page_refs},
     'checks': checks,
     'nearDuplicates': near_dupes,
     'issues': issues,
@@ -223,7 +270,7 @@ report = {
 (REPORTS / 'VALIDATION_REPORT.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
 
 lines = [
-    '# Alpha v0.4 Content Validation Report', '',
+    '# Alpha v0.5 Content Validation Report', '',
     f"**Overall: {report['overall']}**", '',
     '> PASSは構造・参照・権利フラグ・自動検査が通ったことを示します。公開用approvedを意味しません。', '',
     '## Counts', '',

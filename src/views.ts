@@ -89,6 +89,8 @@ namespace LivestockApp {
         </div>
       </section>
 
+      ${renderLearningFlowPanel()}
+
       <section class="metric-grid" aria-label="学習状況">
         <article class="metric-card"><strong>${learned}/80</strong><span>学習した問題</span></article>
         <article class="metric-card"><strong>${accuracy}%</strong><span>累計正答率</span></article>
@@ -183,48 +185,7 @@ namespace LivestockApp {
         </div>
         <div class="question-progress" aria-label="${session.index + 1}問目 / ${total}問"><i style="width:${progress}%"></i></div>
 
-        <article class="question-card">
-          <div class="support-controls">
-            <button class="support-toggle ${session.furiganaVisible ? 'active' : ''}" data-session-toggle="furigana">ふりがな ${session.furiganaVisible ? 'ON' : 'OFF'}</button>
-            <button class="support-toggle ${session.easyJapaneseVisible ? 'active' : ''}" data-session-toggle="easy">やさしい日本語 ${session.easyJapaneseVisible ? 'ON' : 'OFF'}</button>
-            <button class="support-toggle wide ${session.indonesianVisible ? 'active' : ''}" data-session-toggle="id">Bahasa ${session.indonesianVisible ? 'ON' : 'OFF'}</button>
-          </div>
-          <div class="question-number">問題 ${session.index + 1} / ${total} ・ 支援レベル ${supportLevel} ・ ${escapeHtml(question.status)}</div>
-          <h1 class="question-text">${textWithFurigana(question.question.ja, settings.showFurigana)}</h1>
-          ${settings.showEasyJapanese ? `<div class="support-box"><strong>やさしい日本語</strong><p>${escapeHtml(question.question.easyJa)}</p></div>` : ''}
-          ${settings.showIndonesian ? `<div class="support-box id"><strong>Bahasa Indonesia</strong><p>${escapeHtml(question.question.id)}</p></div>` : ''}
-          ${question.visual ? `<figure class="question-visual"><img src="${assetPath(question.visual.assetId)}" alt="${escapeHtml(question.visual.altJa)}"><figcaption>独自作成の学習用模式図</figcaption></figure>` : ''}
-          <div class="confidence-row" aria-label="回答前の自信">
-            <span>自信：</span>
-            <button class="confidence-button ${session.confidence === 'sure' ? 'active' : ''}" data-confidence="sure">分かる</button>
-            <button class="confidence-button ${session.confidence === 'unsure' ? 'active' : ''}" data-confidence="unsure">迷っている</button>
-          </div>
-          <div class="choice-list">
-            ${question.choices.map((choice) => {
-              const selected = session.selectedChoiceId === choice.id;
-              const answerClass = session.answered
-                ? choice.id === question.correctChoiceId ? 'correct' : selected ? 'wrong' : ''
-                : selected ? 'selected' : '';
-              return `<button class="choice-button ${answerClass}" data-choice="${choice.id}" ${session.answered ? 'disabled' : ''}>
-                <span class="choice-letter">${choice.id.toUpperCase()}</span>
-                <span class="choice-copy">${renderLocalizedText(choice.text, settings, 'choice')}</span>
-              </button>`;
-            }).join('')}
-          </div>
-
-          ${!session.answered ? `<button class="btn primary full" data-answer ${session.selectedChoiceId ? '' : 'disabled'}>回答する</button>` : `
-            <section class="answer-panel ${correct ? 'correct' : 'wrong'}">
-              <h2>${correct ? '正解です' : '不正解です'}</h2>
-              <p><strong>正解：</strong>${escapeHtml(question.choices.find((choice) => choice.id === question.correctChoiceId)?.text.ja ?? '')}</p>
-              <p>${textWithFurigana(question.explanation.ja, settings.showFurigana)}</p>
-              ${settings.showEasyJapanese ? `<p class="easy-explanation"><strong>やさしい日本語：</strong>${escapeHtml(question.explanation.easyJa)}</p>` : ''}
-              ${settings.showIndonesian ? `<p class="id-explanation"><strong>Bahasa：</strong>${escapeHtml(question.explanation.id)}</p>` : ''}
-              <div class="source-citation"><strong>参照：</strong>${escapeHtml(question.source.documentTitle)}／${escapeHtml(question.source.edition)}／PDF ${question.source.pdfPage}／冊子 ${escapeHtml(question.source.printedPageLabel || '-')}／${escapeHtml(question.source.section)}</div>
-            </section>
-            ${!correct ? errorReasonPanel(session.pendingReason) : ''}
-            <button class="btn primary full" data-next ${!correct && !session.pendingReason ? 'disabled' : ''}>${session.index + 1 >= total ? '結果を見る' : '次の問題'}</button>
-          `}
-        </article>
+        ${renderGuidedQuestionCard(question, session, settings, correct, supportLevel, total)}
       </section>
     `;
   }
@@ -390,6 +351,7 @@ namespace LivestockApp {
     const settings = runtime.state.settings;
     return `
       <div class="section-heading"><h1>設定</h1><p>母語補助、復習データ、端末へのインストールを管理します。</p></div>
+      ${renderPedagogySettingsPanel(settings)}
       <section class="settings-panel"><h2>言語支援</h2><label class="setting-row select-row"><span><strong>アプリの表示言語</strong><small>画面全体の案内・ボタン・設定を切り替えます。問題の日本語は練習のため残ります。</small></span><select data-setting-ui-language><option value="id" ${settings.uiLanguage === 'id' ? 'selected' : ''}>Bahasa Indonesia</option><option value="ja" ${settings.uiLanguage === 'ja' ? 'selected' : ''}>日本語</option></select></label><label class="setting-row"><span><strong>自動支援レベル</strong><small>習得度に応じて母語・やさしい日本語を減らします。</small></span><input type="checkbox" data-setting-checkbox="automaticSupport" ${settings.automaticSupport ? 'checked' : ''}></label><label class="setting-row"><span><strong>ふりがな</strong><small>用語集に登録した専門語へ表示します。</small></span><input type="checkbox" data-setting-checkbox="showFurigana" ${settings.showFurigana ? 'checked' : ''}></label><label class="setting-row"><span><strong>やさしい日本語</strong><small>学習モードだけで表示します。</small></span><input type="checkbox" data-setting-checkbox="showEasyJapanese" ${settings.showEasyJapanese ? 'checked' : ''}></label><label class="setting-row"><span><strong>インドネシア語</strong><small>ネイティブ確認前の機械下書きです。</small></span><input type="checkbox" data-setting-checkbox="showIndonesian" ${settings.showIndonesian ? 'checked' : ''}></label><label class="setting-row select-row"><span><strong>固定支援レベル</strong><small>自動支援OFFのときに使います。</small></span><select data-setting-level ${settings.automaticSupport ? 'disabled' : ''}>${[3,2,1,0].map((level) => `<option value="${level}" ${settings.preferredSupportLevel === level ? 'selected' : ''}>Level ${level}：${escapeHtml(SUPPORT_LEVEL_LABELS[level])}</option>`).join('')}</select></label></section>
       <section class="settings-panel"><h2>学習</h2><label class="setting-row select-row"><span><strong>今日の問題数</strong><small>5～20問から選びます。</small></span><select data-setting-count>${[5,10,15,20].map((count) => `<option value="${count}" ${settings.dailyQuestionCount === count ? 'selected' : ''}>${count}問</option>`).join('')}</select></label><label class="setting-row"><span><strong>source_checked問題を表示</strong><small>内部レビュー用。一般公開版ではOFF固定にします。</small></span><input type="checkbox" data-setting-checkbox="reviewContentEnabled" ${settings.reviewContentEnabled ? 'checked' : ''}></label></section>
       <section class="settings-panel"><h2>端末とデータ</h2><div class="button-stack">${runtime.installPrompt ? '<button class="btn primary" data-install>ホーム画面へインストール</button>' : '<p class="muted">インストールボタンは対応ブラウザで条件を満たすと表示されます。iPhoneは共有メニューの「ホーム画面に追加」を使います。</p>'}<button class="btn ghost" data-export-progress>学習データを書き出す</button><label class="btn ghost file-button">学習データを読み込む<input type="file" accept="application/json" data-import-progress></label><button class="btn danger" data-reset-progress>学習履歴をリセット</button></div></section>

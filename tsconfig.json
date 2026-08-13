@@ -20,6 +20,7 @@
     "src/storage.ts",
     "src/engine.ts",
     "src/mock.ts",
+    "src/pedagogy.ts",
     "src/views.ts",
     "src/app.ts"
   ]

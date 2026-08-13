@@ -29,6 +29,12 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Install content-validator dependencies
+        run: python3 -m pip install --disable-pip-version-check jsonschema
+
+      - name: Validate source facts and pedagogical question data
+        run: npm run validate:content
+
       - name: Type check
         run: npm run typecheck
 
