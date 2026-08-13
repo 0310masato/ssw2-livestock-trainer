@@ -1,8 +1,8 @@
 {
   "name": "ssw2-livestock-trainer",
-  "version": "0.4.1-alpha-pages-ready",
+  "version": "0.4.2-alpha-i18n",
   "private": true,
-  "description": "特定技能2号・畜産農業向けの非公式PWA学習アプリ（社内レビュー用Alpha）",
+  "description": "特定技能2号・畜産農業向けの日本語／インドネシア語切替対応PWA学習アプリ（社内レビュー用Alpha）",
   "type": "module",
   "scripts": {
     "clean": "node scripts/clean.mjs",

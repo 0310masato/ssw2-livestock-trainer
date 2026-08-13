@@ -146,6 +146,6 @@ namespace LivestockApp {
 
   export function announce(message: string): void {
     const live = document.querySelector<HTMLElement>('[data-live-region]');
-    if (live) live.textContent = message;
+    if (live) live.textContent = translateUiText(message);
   }
 }

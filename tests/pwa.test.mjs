@@ -10,6 +10,8 @@ test('web app manifest is installable and icons exist', async () => {
   const manifest = JSON.parse(await readFile(resolve(dist, 'manifest.webmanifest'), 'utf8'));
   assert.equal(manifest.display, 'standalone');
   assert.equal(manifest.start_url, './');
+  assert.equal(manifest.lang, 'id');
+  assert.match(manifest.name, /Pelatih Peternakan Tingkat 2/);
   assert.equal(manifest.icons.length, 2);
   for (const icon of manifest.icons) {
     await access(resolve(dist, icon.src));
@@ -40,4 +42,12 @@ test('review deployment discourages indexing and bypasses Jekyll', async () => {
   await access(resolve(dist, '.nojekyll'));
   const robots = await readFile(resolve(dist, 'robots.txt'), 'utf8');
   assert.match(robots, /Disallow: \/$/m);
+});
+
+test('compiled application contains persistent bilingual UI support', async () => {
+  const app = await readFile(resolve(dist, 'app.js'), 'utf8');
+  assert.match(app, /data-ui-language/);
+  assert.match(app, /Pelatih Peternakan Tingkat 2/);
+  assert.match(app, /Bahasa tampilan aplikasi/);
+  assert.match(app, /uiLanguage/);
 });

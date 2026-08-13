@@ -7,13 +7,14 @@ namespace LivestockApp {
 
   export function defaultState(): AppState {
     return {
-      schemaVersion: '0.4.0',
+      schemaVersion: '0.4.2',
       history: [],
       mastery: {},
       mockDraft: null,
       mockHistory: [],
       reviews: {},
       settings: {
+        uiLanguage: 'id',
         preferredSupportLevel: 3,
         automaticSupport: true,
         showFurigana: true,
@@ -31,6 +32,12 @@ namespace LivestockApp {
     const base = defaultState();
     if (!raw || typeof raw !== 'object') return base;
     const candidate = raw as Partial<AppState>;
+    const candidateSettings: Partial<UserSettings> = candidate.settings ?? {};
+    const settings: UserSettings = {
+      ...base.settings,
+      ...candidateSettings,
+      uiLanguage: candidateSettings.uiLanguage === 'ja' ? 'ja' : 'id',
+    };
     return {
       ...base,
       ...candidate,
@@ -39,10 +46,10 @@ namespace LivestockApp {
       mockDraft: candidate.mockDraft ?? null,
       mockHistory: Array.isArray(candidate.mockHistory) ? candidate.mockHistory : [],
       reviews: candidate.reviews && typeof candidate.reviews === 'object' ? candidate.reviews : {},
-      settings: { ...base.settings, ...(candidate.settings ?? {}) },
+      settings,
       lastSessionQuestionIds: Array.isArray(candidate.lastSessionQuestionIds) ? candidate.lastSessionQuestionIds : [],
       lastOpenedAt: nowIso(),
-      schemaVersion: '0.4.0',
+      schemaVersion: '0.4.2',
     };
   }
 
@@ -105,12 +112,12 @@ namespace LivestockApp {
 
   export async function saveState(state: AppState): Promise<void> {
     state.lastOpenedAt = nowIso();
+    const serialized = JSON.stringify(state);
+    localStorage.setItem(FALLBACK_KEY, serialized);
     try {
       await writeIndexedDb(state);
-      localStorage.setItem(FALLBACK_KEY, JSON.stringify(state));
     } catch (error) {
-      console.warn('IndexedDB save failed. Using localStorage.', error);
-      localStorage.setItem(FALLBACK_KEY, JSON.stringify(state));
+      console.warn('IndexedDB save failed. State is preserved in localStorage.', error);
     }
   }
 

@@ -1,5 +1,6 @@
 namespace LivestockApp {
   export type LanguageKey = 'ja' | 'easyJa' | 'id';
+  export type UiLanguage = 'ja' | 'id';
   export type QuestionStatus = 'draft' | 'candidate' | 'source_checked' | 'language_checked' | 'approved' | 'suspended' | 'retired';
   export type ErrorReason = 'knowledge' | 'japanese' | 'misread' | 'calculation' | 'time' | 'unsure';
   export type ReviewMark = '未確認' | '承認候補' | '要修正' | '保留';
@@ -139,6 +140,7 @@ namespace LivestockApp {
   }
 
   export interface UserSettings {
+    uiLanguage: UiLanguage;
     preferredSupportLevel: 0 | 1 | 2 | 3;
     automaticSupport: boolean;
     showFurigana: boolean;

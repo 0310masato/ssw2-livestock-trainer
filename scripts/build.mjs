@@ -29,24 +29,24 @@ await writeFile(resolve(distDir, 'app.js'), js);
 await cp(resolve(buildDir, 'app.js.map'), resolve(distDir, 'app.js.map'));
 
 const indexHtml = `<!doctype html>
-<html lang="ja">
+<html lang="id">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f766e">
-  <meta name="description" content="特定技能2号・畜産農業の非公式学習支援PWA。社内レビュー用Alphaです。">
+  <meta name="description" content="PWA pembelajaran tidak resmi / 非公式学習支援PWA untuk ujian peternakan tingkat 2。">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="畜産2号">
+  <meta name="apple-mobile-web-app-title" content="Ternak 2">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" href="icon-192.png">
   <link rel="stylesheet" href="styles.css">
-  <title>畜産2号トレーナー</title>
+  <title>Pelatih Peternakan Tingkat 2 / 畜産2号トレーナー</title>
 </head>
 <body>
-  <noscript>このアプリを使うにはJavaScriptを有効にしてください。</noscript>
+  <noscript>Aktifkan JavaScript untuk menggunakan aplikasi ini。／このアプリを使うにはJavaScriptを有効にしてください。</noscript>
   <div id="app" aria-busy="true"></div>
   <div class="sr-only" aria-live="polite" data-live-region></div>
   <script src="app.js" defer></script>
@@ -55,28 +55,28 @@ const indexHtml = `<!doctype html>
 await writeFile(resolve(distDir, 'index.html'), indexHtml);
 
 const manifest = {
-  name: '畜産2号トレーナー',
-  short_name: '畜産2号',
-  description: '特定技能2号・畜産農業の非公式学習支援PWA（社内レビュー用Alpha）',
+  name: 'Pelatih Peternakan Tingkat 2 / 畜産2号トレーナー',
+  short_name: 'Ternak 2',
+  description: 'PWA pembelajaran tidak resmi untuk ujian peternakan tingkat 2 / 特定技能2号・畜産農業の非公式学習支援PWA',
   start_url: './',
   scope: './',
   display: 'standalone',
   background_color: '#f7faf9',
   theme_color: '#0f766e',
-  lang: 'ja',
+  lang: 'id',
   orientation: 'portrait-primary',
   icons: [
     { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
     { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
   ],
   shortcuts: [
-    { name: '今日の10問', short_name: '10問', url: './?mode=daily' },
-    { name: '模擬試験', short_name: '模試', url: './?mode=mock' },
+    { name: '10 soal hari ini / 今日の10問', short_name: '10 soal', url: './?mode=daily' },
+    { name: 'Simulasi ujian / 模擬試験', short_name: 'Simulasi', url: './?mode=mock' },
   ],
 };
 await writeFile(resolve(distDir, 'manifest.webmanifest'), JSON.stringify(manifest, null, 2));
 
-const cacheVersion = 'livestock2-v0.4.1-alpha-pages-ready';
+const cacheVersion = 'livestock2-v0.4.2-persistent-ui-language';
 const cacheFiles = [
   './', './index.html', './styles.css', './app.js', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './apple-touch-icon.png',
@@ -118,7 +118,7 @@ for (const asset of ['barn-ppe', 'chick-guard', 'cow-measurements', 'dilution-20
   assetEntries.push(`${JSON.stringify(asset)}:${JSON.stringify(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`)}`);
 }
 const standaloneHtml = `<!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0f766e"><title>畜産2号トレーナー（単体レビュー版）</title><style>${css}</style></head>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0f766e"><title>Pelatih Peternakan Tingkat 2 / 畜産2号トレーナー</title><style>${css}</style></head>
 <body><div id="app" aria-busy="true"></div><div class="sr-only" aria-live="polite" data-live-region></div><script>window.__ASSET_DATA__={${assetEntries.join(',')}};</script><script>${js}\n//# sourceURL=livestock2-app.js</script></body></html>`;
 await writeFile(resolve(distDir, 'standalone-review.html'), standaloneHtml);
 
