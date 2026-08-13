@@ -4,11 +4,13 @@
   "checks": {
     "indonesian_ui_default": true,
     "learning_flow_visible": true,
-    "pilot_16_by_level_0_to_3_preanswer_dom_has_no_answer_leak": true,
-    "q045_level3_choice_support_topology_is_uniform": true,
-    "q055_level3_choice_support_topology_is_uniform": true,
-    "q078_level3_choice_support_topology_is_uniform": true,
-    "q079_level3_choice_support_topology_is_uniform": true,
+    "review_search_q045_shows_choice_ja_easy_ja_comparison": true,
+    "pilot_16_by_level_0_to_3_preanswer_and_answered_choice_easy_ja_absent": true,
+    "choice_easy_ja_source_correlation_reported": true,
+    "q045_choice_easy_ja_absent_before_and_after": true,
+    "q055_choice_easy_ja_absent_before_and_after": true,
+    "q078_choice_easy_ja_absent_before_and_after": true,
+    "q079_choice_easy_ja_absent_before_and_after": true,
     "support_mode_contract_guided_adaptive_japanese_only": true,
     "settings_ui_exposes_mode_and_guided_level_without_legacy_toggles": true,
     "level0_ja_operation_labels": true,
@@ -57,6 +59,114 @@
   },
   "failed": [],
   "pageErrors": [],
+  "choiceEasyJapaneseCorrelation": {
+    "preCases": 64,
+    "answeredCases": 64,
+    "samePattern": {
+      "q001": {
+        "a": true,
+        "b": true,
+        "c": true,
+        "d": true
+      },
+      "q004": {
+        "a": false,
+        "b": false,
+        "c": false,
+        "d": false
+      },
+      "q008": {
+        "a": false,
+        "b": false,
+        "c": false,
+        "d": false
+      },
+      "q013": {
+        "a": false,
+        "b": false,
+        "c": false,
+        "d": false
+      },
+      "q016": {
+        "a": false,
+        "b": false,
+        "c": false,
+        "d": false
+      },
+      "q029": {
+        "a": false,
+        "b": false,
+        "c": false,
+        "d": false
+      },
+      "q033": {
+        "a": false,
+        "b": false,
+        "c": false,
+        "d": false
+      },
+      "q035": {
+        "a": true,
+        "b": true,
+        "c": true,
+        "d": true
+      },
+      "q044": {
+        "a": true,
+        "b": true,
+        "c": true,
+        "d": true
+      },
+      "q045": {
+        "a": false,
+        "b": false,
+        "c": false,
+        "d": true
+      },
+      "q049": {
+        "a": true,
+        "b": true,
+        "c": true,
+        "d": true
+      },
+      "q055": {
+        "a": true,
+        "b": false,
+        "c": false,
+        "d": false
+      },
+      "q057": {
+        "a": false,
+        "b": false,
+        "c": false,
+        "d": false
+      },
+      "q078": {
+        "a": true,
+        "b": true,
+        "c": true,
+        "d": false
+      },
+      "q079": {
+        "a": true,
+        "b": false,
+        "c": false,
+        "d": false
+      },
+      "q080": {
+        "a": true,
+        "b": true,
+        "c": true,
+        "d": true
+      }
+    },
+    "correlatedQuestionIds": [
+      "q045",
+      "q055",
+      "q078",
+      "q079"
+    ]
+  },
   "screenshots": [
     "01-level2-closed.png",
     "02-level2-translations-open.png",

@@ -79,6 +79,41 @@ with sync_playwright() as p:
     record(checks, 'indonesian_ui_default', 'Mulai 10 soal hari ini' in body)
     record(checks, 'learning_flow_visible', 'Pahami bahasa Jepang' in body and 'Cara belajar' in body)
 
+    page.evaluate("LivestockApp.runtime.reviewSearch = 'q045'")
+    page.locator('[data-view="review"]').first.click()
+    page.locator('[data-review-search]').fill('q045')
+    review_choice_comparison = page.evaluate("""() => {
+      const question = LivestockApp.questionById('q045');
+      const comparison = document.querySelector('[data-review-choice-comparison="q045"]');
+      const rows = [...(comparison?.querySelectorAll('.review-choice-comparison-row') ?? [])];
+      return {
+        cardCount: document.querySelectorAll('.review-card').length,
+        rowCount: rows.length,
+        actual: rows.map((row) => ({
+          id: row.dataset.reviewChoiceId,
+          ja: row.querySelector('[data-review-choice-ja]')?.textContent,
+          easyJa: row.querySelector('[data-review-choice-easy-ja]')?.textContent,
+        })),
+        expected: question.choices.map((choice) => ({
+          id: choice.id,
+          ja: choice.text.ja,
+          easyJa: choice.text.easyJa,
+        })),
+      };
+    }""")
+    record(
+        checks,
+        'review_search_q045_shows_choice_ja_easy_ja_comparison',
+        review_choice_comparison['cardCount'] == 1
+        and review_choice_comparison['rowCount'] == 4
+        and review_choice_comparison['actual'] == review_choice_comparison['expected'],
+    )
+    page.evaluate("""() => {
+      LivestockApp.runtime.reviewSearch = '';
+      LivestockApp.runtime.view = 'home';
+      LivestockApp.render();
+    }""")
+
     # Render every pilot question at every support level before answering. The
     # rendered subtree must not contain answer-only material, and support-slot
     # topology must be independent from which choice is correct.
@@ -86,12 +121,27 @@ with sync_playwright() as p:
       const pilot = LivestockApp.QUESTIONS.filter((question) => question.schemaVersion === '0.4.0');
       const explicitRegressionIds = new Set(['q045', 'q055', 'q078', 'q079']);
       const failures = [];
-      const explicit = {};
-      let cases = 0;
+      const explicit = Object.fromEntries([...explicitRegressionIds].map((id) => [id, true]));
+      let preCases = 0;
+      let answeredCases = 0;
+      const samePattern = Object.fromEntries(pilot.map((question) => [
+        question.id,
+        Object.fromEntries(question.choices.map((choice) => [
+          choice.id,
+          choice.text.ja === choice.text.easyJa,
+        ])),
+      ]));
+      const correlatedQuestionIds = pilot.filter((question) => {
+        const entries = Object.entries(samePattern[question.id]);
+        const same = entries.filter(([, value]) => value);
+        const different = entries.filter(([, value]) => !value);
+        const singleton = same.length === 1 ? same[0][0] : different.length === 1 ? different[0][0] : null;
+        return singleton === question.correctChoiceId;
+      }).map((question) => question.id);
 
       for (const question of pilot) {
         for (const level of [0, 1, 2, 3]) {
-          cases += 1;
+          preCases += 1;
           const policy = LivestockApp.supportPolicyForLevel(level);
           const session = {
             id: `leak-${question.id}-${level}`,
@@ -191,12 +241,10 @@ with sync_playwright() as p:
             const sourceChoice = question.choices[index];
             const choiceSpecificTexts = [
               sourceChoice.text.ja,
-              sourceChoice.text.easyJa,
               sourceChoice.text.id,
             ].filter(Boolean).sort((left, right) => right.length - left.length);
             copy.querySelector('.choice-letter')?.replaceChildren('#');
             copy.querySelector('.choice-ja')?.replaceChildren('<japanese-choice>');
-            copy.querySelector('[data-learning-component="choice-easy-japanese"]')?.replaceChildren('<easy-japanese-choice>');
             copy.querySelector('[data-learning-component="choice-translation"]')?.replaceChildren('<indonesian-choice>');
             for (const element of [copy, ...copy.querySelectorAll('*')]) {
               const attributes = [...element.attributes]
@@ -219,18 +267,61 @@ with sync_playwright() as p:
           const topology = choices.map((choice, index) => {
             const easySlots = [...choice.querySelectorAll('[data-learning-component="choice-easy-japanese"]')];
             const translationSlots = choice.querySelectorAll('[data-learning-component="choice-translation"]');
-            if (easySlots.length !== (level === 3 ? 1 : 0)) failures.push(`${question.id}/L${level}: easy slot ${index}`);
+            if (easySlots.length !== 0) failures.push(`${question.id}/L${level}: learner choice easy slot ${index}`);
             if (translationSlots.length !== (level === 3 ? 1 : 0)) failures.push(`${question.id}/L${level}: translation slot ${index}`);
-            if (level === 3 && (
-              easySlots[0]?.textContent !== question.choices[index].text.easyJa
-              || easySlots[0]?.getAttribute('aria-label') !== `やさしい日本語：${question.choices[index].text.easyJa}`
-              || !easySlots[0]?.classList.contains('choice-easy-japanese')
-            )) failures.push(`${question.id}/L${level}: easy slot value/class/aria ${index}`);
+            const choiceEasyMarkers = [choice, ...choice.querySelectorAll('*')].flatMap((element) =>
+              [...element.attributes]
+                .filter((attribute) => /choice[-_ ]?easy|easy[-_ ]?japanese|やさしい日本語/iu.test(`${attribute.name}=${attribute.value}`))
+                .map((attribute) => `${attribute.name}=${attribute.value}`));
+            if (choiceEasyMarkers.length) failures.push(`${question.id}/L${level}: learner choice easy marker ${index}`);
+            const copyChildren = [...(choice.querySelector('.choice-copy')?.children ?? [])];
+            const expectedChildCount = level === 3 ? 2 : 1;
+            if (copyChildren.length !== expectedChildCount
+                || copyChildren.some((child) => !child.matches('.choice-ja, [data-learning-component="choice-translation"]'))) {
+              failures.push(`${question.id}/L${level}: unexpected learner choice child ${index}`);
+            }
+            const residualCopy = choice.querySelector('.choice-copy')?.cloneNode(true);
+            residualCopy?.querySelectorAll('.choice-ja, [data-learning-component="choice-translation"]')
+              .forEach((element) => element.remove());
+            if (!residualCopy || residualCopy.textContent.trim() !== '' || residualCopy.children.length !== 0) {
+              failures.push(`${question.id}/L${level}: unexpected learner choice copy residue ${index}`);
+            }
+            const japanese = choice.querySelector('.choice-ja');
+            const japaneseCopy = japanese?.cloneNode(true);
+            japaneseCopy?.querySelectorAll('rt, rp').forEach((reading) => reading.remove());
+            if ((japaneseCopy?.textContent ?? '') !== question.choices[index].text.ja) {
+              failures.push(`${question.id}/L${level}: choice JA ${index}`);
+            }
+            const sourceEasyJa = question.choices[index].text.easyJa;
+            if (sourceEasyJa !== question.choices[index].text.ja) {
+              const easyJaAttributes = [choice, ...choice.querySelectorAll('*')].flatMap((element) =>
+                [...element.attributes].filter((attribute) => attribute.value.includes(sourceEasyJa)));
+              const unsupportedContent = choice.cloneNode(true);
+              unsupportedContent.querySelectorAll('.choice-letter, .choice-ja, [data-learning-component="choice-translation"]')
+                .forEach((element) => element.remove());
+              if (unsupportedContent.textContent.includes(sourceEasyJa) || easyJaAttributes.length) {
+                failures.push(`${question.id}/L${level}: choice easyJa residual-content/attribute ${index}`);
+              }
+            }
+            const expectedReadings = level > 0
+              ? (question.choices[index].text.rubyJa ?? []).filter((segment) => segment.reading).length
+              : 0;
+            if ((japanese?.querySelectorAll('rt').length ?? 0) !== expectedReadings) {
+              failures.push(`${question.id}/L${level}: choice ruby ${index}`);
+            }
+            if (level === 3 && translationSlots[0]?.textContent !== question.choices[index].text.id) {
+              failures.push(`${question.id}/L${level}: choice ID ${index}`);
+            }
             return `${easySlots.length}:${translationSlots.length}`;
           });
           if (new Set(topology).size !== 1) failures.push(`${question.id}/L${level}: non-uniform support topology`);
           const domSignatures = choices.map(canonicalChoiceSignature);
           if (new Set(domSignatures).size !== 1) failures.push(`${question.id}/L${level}: non-uniform DOM/class/ARIA signature`);
+          const questionEasy = host.querySelector('.meaning-stage .support-box:not(.id) p[lang="ja"]');
+          if ((level === 3 && questionEasy?.textContent !== question.question.easyJa)
+              || (level !== 3 && questionEasy)) {
+            failures.push(`${question.id}/L${level}: question easyJa support`);
+          }
 
           const answerMarkers = /(?:^|[-_:\\s])(correct|incorrect|right|wrong|answer|rationale|explanation|memory|benar|salah)(?:$|[-_:\\s])|正解|不正解|誤り/iu;
           for (const element of [host, ...host.querySelectorAll('*')]) {
@@ -261,17 +352,103 @@ with sync_playwright() as p:
           if (level === 3 && explicitRegressionIds.has(question.id)) {
             explicit[question.id] = topology.length === 4
               && new Set(topology).size === 1
-              && topology[0] === '1:1';
+              && topology[0] === '0:1';
+          }
+          answeredCases += 1;
+          const answeredSession = {
+              ...session,
+              answered: true,
+              selectedChoiceId: question.correctChoiceId,
+              confidence: 'sure',
+              answerIndonesianVisible: policy.showAnswerIndonesianInitially,
+            };
+          const answeredHost = document.createElement('div');
+          answeredHost.innerHTML = LivestockApp.renderGuidedQuestionCard(
+              question,
+              answeredSession,
+              settings,
+              true,
+              level,
+              1,
+              {
+                showFurigana: policy.showFuriganaInitially,
+                showEasyJapanese: policy.showEasyJapaneseInitially,
+                showIndonesian: policy.showQuestionTranslationInitially,
+                showQuestionTranslation: policy.showQuestionTranslationInitially,
+                showChoiceTranslations: policy.showChoiceTranslationsInitially,
+                showAnswerIndonesian: policy.showAnswerIndonesianInitially,
+                showKeywords: policy.showKeywordsInitially,
+                showKeywordIndonesian: true,
+                showIntent: policy.showIntent,
+                showIntentIndonesian: true,
+                compactKeywordHints: policy.compactKeywordHints,
+                allowQuestionTranslation: policy.allowQuestionTranslation,
+                allowChoiceTranslations: policy.allowChoiceTranslations,
+                allowAnswerIndonesian: policy.allowAnswerIndonesian,
+              },
+            );
+          const answeredChoices = [...answeredHost.querySelectorAll('.choice-button')];
+          for (const [index, choice] of answeredChoices.entries()) {
+              const markers = [choice, ...choice.querySelectorAll('*')].flatMap((element) =>
+                [...element.attributes]
+                  .filter((attribute) => /choice[-_ ]?easy|easy[-_ ]?japanese|やさしい日本語/iu.test(`${attribute.name}=${attribute.value}`))
+                  .map((attribute) => `${attribute.name}=${attribute.value}`));
+              const children = [...(choice.querySelector('.choice-copy')?.children ?? [])];
+              const expectedChildren = level === 3 ? 2 : 1;
+              if (choice.querySelector('[data-learning-component="choice-easy-japanese"], .choice-easy-japanese')
+                  || markers.length
+                  || children.length !== expectedChildren
+                  || children.some((child) => !child.matches('.choice-ja, [data-learning-component="choice-translation"]'))) {
+                failures.push(`${question.id}/L${level}/answered: learner choice easyJa ${index}`);
+                if (explicitRegressionIds.has(question.id)) explicit[question.id] = false;
+              }
+              const residualCopy = choice.querySelector('.choice-copy')?.cloneNode(true);
+              residualCopy?.querySelectorAll('.choice-ja, [data-learning-component="choice-translation"]')
+                .forEach((element) => element.remove());
+              if (!residualCopy || residualCopy.textContent.trim() !== '' || residualCopy.children.length !== 0) {
+                failures.push(`${question.id}/L${level}/answered: unexpected learner choice copy residue ${index}`);
+                if (explicitRegressionIds.has(question.id)) explicit[question.id] = false;
+              }
+              const sourceChoice = question.choices[index];
+              if (sourceChoice.text.easyJa !== sourceChoice.text.ja) {
+                const easyJaAttributes = [choice, ...choice.querySelectorAll('*')].flatMap((element) =>
+                  [...element.attributes].filter((attribute) => attribute.value.includes(sourceChoice.text.easyJa)));
+                const unsupportedContent = choice.cloneNode(true);
+                unsupportedContent.querySelectorAll('.choice-letter, .choice-ja, [data-learning-component="choice-translation"]')
+                  .forEach((element) => element.remove());
+                if (unsupportedContent.textContent.includes(sourceChoice.text.easyJa) || easyJaAttributes.length) {
+                  failures.push(`${question.id}/L${level}/answered: choice easyJa residual-content/attribute ${index}`);
+                  if (explicitRegressionIds.has(question.id)) explicit[question.id] = false;
+                }
+              }
+          }
+          const explanationEasy = answeredHost.querySelector('.easy-explanation');
+          if ((level === 3 && !explanationEasy?.textContent.includes(question.explanation.easyJa))
+              || (level !== 3 && explanationEasy)) {
+            failures.push(`${question.id}/L${level}/answered: explanation easyJa support`);
           }
         }
       }
-      return { pilotCount: pilot.length, cases, failures, explicit };
+      return { pilotCount: pilot.length, preCases, answeredCases, failures, explicit, samePattern, correlatedQuestionIds };
     }""")
     if leak_matrix['failures']:
         print(json.dumps(leak_matrix['failures'], ensure_ascii=False, indent=2), flush=True)
-    record(checks, 'pilot_16_by_level_0_to_3_preanswer_dom_has_no_answer_leak', leak_matrix['pilotCount'] == 16 and leak_matrix['cases'] == 64 and not leak_matrix['failures'])
+    record(
+        checks,
+        'pilot_16_by_level_0_to_3_preanswer_and_answered_choice_easy_ja_absent',
+        leak_matrix['pilotCount'] == 16
+        and leak_matrix['preCases'] == 64
+        and leak_matrix['answeredCases'] == 64
+        and not leak_matrix['failures'],
+    )
+    record(
+        checks,
+        'choice_easy_ja_source_correlation_reported',
+        len(leak_matrix['samePattern']) == 16
+        and leak_matrix['correlatedQuestionIds'] == ['q045', 'q055', 'q078', 'q079'],
+    )
     for regression_id in ('q045', 'q055', 'q078', 'q079'):
-        record(checks, f'{regression_id}_level3_choice_support_topology_is_uniform', leak_matrix['explicit'].get(regression_id) is True)
+        record(checks, f'{regression_id}_choice_easy_ja_absent_before_and_after', leak_matrix['explicit'].get(regression_id) is True)
 
     mode_contract = page.evaluate("""() => {
       const state = LivestockApp.defaultState();
@@ -713,6 +890,12 @@ report = {
     'checks': checks,
     'failed': failed,
     'pageErrors': page_errors,
+    'choiceEasyJapaneseCorrelation': {
+        'preCases': leak_matrix['preCases'],
+        'answeredCases': leak_matrix['answeredCases'],
+        'samePattern': leak_matrix['samePattern'],
+        'correlatedQuestionIds': leak_matrix['correlatedQuestionIds'],
+    },
     'screenshots': sorted(path.name for path in SHOTS.glob('*.png')),
 }
 REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')

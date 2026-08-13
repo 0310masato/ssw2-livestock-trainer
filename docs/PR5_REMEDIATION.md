@@ -13,8 +13,8 @@
 
 | ID | 状態 | 主な変更場所 | 是正内容 | 回帰証拠 |
 |---|---|---|---|---|
-| REV-001 | 対応・自動検証済み | `src/learning-components.ts` | Level 3の全選択肢へ実値入りの同一easyJa支援領域を生成する | 代表16問×Level 0〜3、明示4問のDOM検査 |
-| REV-002 | 対応・自動検証済み | `e2e/pedagogy_smoke.py` | 全代表問題を走査し、DOM階層・class・ARIA・data属性、hidden回答情報、正答IDを検査する | 16問×4 Level＝64ケース |
+| REV-001 | P0再是正・自動検証済み | `src/learning-components.ts` | 選択肢のeasyJaはレビュー用データとして保持し、学習者向け画面では回答前後とも生成しない | 代表16問×Level 0〜3の回答前64件・回答後64件でchoice easyJaがDOMにないことを検査 |
+| REV-002 | P0再是正・自動検証済み | `e2e/pedagogy_smoke.py` | placeholder正規化だけに依存せず、選択肢の内容差と正答位置の相関、および回答前後のDOM非搭載を検査する | 代表16問×4 Levelの回答前後、明示4問、レビュー画面の回帰検査 |
 | REV-003 | 対応・自動検証済み | `src/engine.ts`, `src/views.ts`, `src/pedagogy.ts` | guided/adaptive/japanese_onlyのLevel決定規則を単一化した | mode・mastery・Levelの単体/E2E |
 | REV-004 | Issueへ延期 | [Issue #6](https://github.com/0310masato/ssw2-livestock-trainer/issues/6) | 複数タブのlost updateはPR #5で実装せず、Alphaを単一タブ利用に限定 | Issueの2ページE2E受入条件 |
 | REV-005 | 対応・自動検証済み | `src/app.ts`, `e2e/smoke.py` | 模試timerを表示中のmock sessionだけで動かす | 模試中断→通常学習→期限→模試再開 |
@@ -29,6 +29,21 @@
 | REV-014 | 対応・自動検証済み | CI, README, review docs | public repositoryの期限付き一時artifactとして表記を統一した | artifact名・保持期間・非正式配布表示 |
 | REV-015 | 対応・自動検証済み | `src/storage.ts`, settings UI | 旧表示checkboxをmigration入力だけにし、mode/Levelを正本化した | 設定UI→IDB→reload→新session E2E |
 | REV-016 | 対応・自動検証済み | `.github/workflows/pages.yml`, `.github/workflows/publish-gh-pages-branch.yml` | すべてのPages公開経路を手動実行だけに限定した | workflow trigger静的検査 |
+
+## P0再是正: 選択肢easyJaによる正答推測
+
+Phase 0の独立監査で、Level 3に表示していた選択肢の `easyJa` と `ja` の一致・相違パターンが、次の4問で正答位置だけを識別し得ることを確認した。
+
+- `q045`: 正答dだけ `easyJa === ja`
+- `q055`: 正答aだけ `easyJa === ja`
+- `q078`: 正答dだけ `easyJa !== ja`
+- `q079`: 正答aだけ `easyJa === ja`
+
+DOMのclassや支援領域を均一化しても、表示文字列の言い換え有無、長さ、具体性、自然さと正答が相関すれば内容漏えいは残る。従来の回帰検査はchoice固有文字列をplaceholderへ置換してからDOM署名を比較していたため、この相関を検出できなかった。
+
+PR #5の技術的な境界修正は、選択肢の `easyJa` を学習者向け画面で回答前後とも無効にすることである。フィールドは削除せず、人による原文比較と将来の修正文案検討にだけ使用する。4問の文案変更や他12問の意味品質判定は、この技術修正で完了扱いにしない。answer leakと日本語教材性の人手ゲートを維持し、人が修正文案を確認した後の別PRで問題JSONと生成物を同期し、代表16問全体の回帰を実行する。
+
+回帰検査では、代表16問×Level 0〜3について回答前64件・回答後64件を走査し、選択肢のeasyJa専用要素・class・ARIA・data属性・許可要素以外の残余DOMがないことを確認する。問題文と正答解説のeasyJa、選択肢の日本語・ruby・Level 3のインドネシア語訳は維持する。`ja === easyJa` の配列と正答位置の相関はレポートへ残し、`q045`、`q055`、`q078`、`q079` を既知の人手レビュー対象として列挙する。
 
 ## 人が再確認する事項
 

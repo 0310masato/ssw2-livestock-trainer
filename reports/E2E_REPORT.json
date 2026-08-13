@@ -23,6 +23,7 @@
     "manager_no_horizontal_overflow": true,
     "review_screen": true,
     "review_filter": true,
+    "review_choice_ja_easy_ja_comparison": true,
     "review_state": true,
     "review_no_horizontal_overflow": true,
     "glossary_search": true,

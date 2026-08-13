@@ -193,6 +193,17 @@ with sync_playwright() as p:
         checks,
     )
     check(page.locator('.review-card').count() == 1, 'review_filter', checks)
+    review_choice_comparison = page.evaluate("""() => {
+      const question = LivestockApp.questionById('q001');
+      const rows = [...document.querySelectorAll('[data-review-choice-comparison="q001"] .review-choice-comparison-row')];
+      return rows.length === question.choices.length && rows.every((row, index) => {
+        const choice = question.choices[index];
+        return row.dataset.reviewChoiceId === choice.id
+          && row.querySelector('[data-review-choice-ja]')?.textContent === choice.text.ja
+          && row.querySelector('[data-review-choice-easy-ja]')?.textContent === choice.text.easyJa;
+      });
+    }""")
+    check(review_choice_comparison, 'review_choice_ja_easy_ja_comparison', checks)
     page.evaluate("document.querySelector('[data-review-set$=\"|承認候補\"]')?.click()")
     page.wait_for_timeout(100)
     check('承認候補 1' in page.locator('body').inner_text(), 'review_state', checks)

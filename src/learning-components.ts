@@ -222,7 +222,6 @@ namespace LivestockApp {
     const showIndonesian = choiceTranslationsVisible(options);
     return `
       <span class="choice-ja" lang="ja">${renderRubyText(text, options.showFurigana)}</span>
-      ${options.showEasyJapanese ? `<span class="choice-support choice-easy-japanese" lang="ja" aria-label="${escapeHtml(`やさしい日本語：${text.easyJa}`)}" data-learning-component="choice-easy-japanese">${escapeHtml(text.easyJa)}</span>` : ''}
       ${showIndonesian ? `<span class="choice-support id" lang="id" data-learning-component="choice-translation" data-support-usage="choice-translation">${escapeHtml(text.id)}</span>` : ''}`;
   }
 
