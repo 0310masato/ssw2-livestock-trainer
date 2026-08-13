@@ -1,5 +1,6 @@
 name: Apply pedagogical Indonesian learning redesign
 
+# One-time feature-branch migration. This workflow is removed before merge.
 on:
   push:
     branches:
