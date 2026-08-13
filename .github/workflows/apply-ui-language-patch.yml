@@ -1,0 +1,45 @@
+name: Apply persistent UI language feature
+
+on:
+  push:
+    branches:
+      - feat/persistent-ui-language
+    paths:
+      - scripts/apply_ui_language_patch.mjs
+      - .github/workflows/apply-ui-language-patch.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/persistent-ui-language
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Apply source migration
+        run: node scripts/apply_ui_language_patch.mjs
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Type check and test
+        run: npm test
+
+      - name: Commit migrated feature
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: add persistent Japanese and Indonesian UI"
+          git push origin HEAD:feat/persistent-ui-language
