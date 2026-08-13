@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Validate source facts and pedagogical question data
+        run: npm run validate:content
+
       - name: Type check
         run: npm run typecheck
 
