@@ -49,11 +49,9 @@ with sync_playwright() as p:
     launch_options = {
         'headless': True,
         'args': ['--no-sandbox', '--disable-dev-shm-usage'],
+        'timeout': 30_000,
     }
-    system_chromium = pathlib.Path('/usr/bin/chromium')
-    if system_chromium.exists():
-        launch_options['executable_path'] = str(system_chromium)
-    else:
+    if sys.platform == 'win32':
         # On Windows, explicitly prefer Playwright's headless shell. Launching
         # the full Chromium bundle can wait indefinitely when another desktop
         # Chrome instance is being managed by the host application.
@@ -64,7 +62,6 @@ with sync_playwright() as p:
         )
         if windows_headless_shells:
             launch_options['executable_path'] = str(windows_headless_shells[0])
-    launch_options['timeout'] = 15_000
     browser = p.chromium.launch(**launch_options)
     page = browser.new_page(viewport={'width': 360, 'height': 800}, device_scale_factor=1)
     page.set_default_timeout(3000)

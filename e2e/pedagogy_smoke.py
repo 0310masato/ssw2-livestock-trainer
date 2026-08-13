@@ -42,12 +42,9 @@ with sync_playwright() as p:
     launch_options = {
         'headless': True,
         'args': ['--no-sandbox', '--disable-dev-shm-usage'],
-        'timeout': 15_000,
+        'timeout': 30_000,
     }
-    system_chromium = pathlib.Path('/usr/bin/chromium')
-    if system_chromium.exists():
-        launch_options['executable_path'] = str(system_chromium)
-    else:
+    if sys.platform == 'win32':
         local_app_data = pathlib.Path(os.environ.get('LOCALAPPDATA', ''))
         windows_headless_shells = sorted(
             local_app_data.glob('ms-playwright/chromium_headless_shell-*/chrome-win/headless_shell.exe'),
