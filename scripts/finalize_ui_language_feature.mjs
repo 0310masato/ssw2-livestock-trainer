@@ -52,8 +52,11 @@ await update('e2e/smoke.py', (source) => source.replace(
 ));
 
 await update('e2e/smoke.py', (source) => source.replace(
-  "    page.locator('[data-mock-next]').click()",
-  "    page.locator('[data-mock-next]').dispatch_event('click')",
+  `    page.locator('[data-mock-choice]').first.click()
+    page.locator('[data-mock-next]').click()`,
+  `    page.evaluate("document.querySelector('[data-mock-choice]')?.click()")
+    page.wait_for_timeout(100)
+    page.evaluate("document.querySelector('[data-mock-next]')?.click()")`,
 ));
 
 await rm('scripts/finalize_ui_language_feature.mjs', { force: true });
