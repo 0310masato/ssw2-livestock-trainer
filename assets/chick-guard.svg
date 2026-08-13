@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 420" role="img" aria-labelledby="title desc">
+  <title id="title">チックガードの模式図</title>
+  <desc id="desc">円形のチックガード、熱源、ひな、高さ約30センチと取り外し時期を示した独自作成の模式図</desc>
+  <rect width="760" height="420" rx="28" fill="#fffaf0"/>
+  <text x="380" y="48" font-family="system-ui,sans-serif" font-size="29" font-weight="850" text-anchor="middle" fill="#5c431d">チックガード</text>
+  <g transform="translate(50 78)">
+    <ellipse cx="240" cy="150" rx="195" ry="115" fill="#fff5d6" stroke="#d49a25" stroke-width="9" stroke-dasharray="18 10"/>
+    <circle cx="240" cy="145" r="55" fill="#f7c457" opacity=".36"/>
+    <path d="M240 30 L240 105" stroke="#574632" stroke-width="6"/>
+    <path d="M207 109 Q240 80 273 109 L261 133 L219 133 Z" fill="#e06f2f" stroke="#8e451e" stroke-width="4"/>
+    <g fill="#f5c04a" stroke="#7c5924" stroke-width="3">
+      <g transform="translate(145 120)"><ellipse cx="0" cy="0" rx="22" ry="16"/><circle cx="18" cy="-9" r="10"/><path d="M27 -9 l12 4 -12 4Z" fill="#e78327"/></g>
+      <g transform="translate(185 195)"><ellipse cx="0" cy="0" rx="22" ry="16"/><circle cx="18" cy="-9" r="10"/><path d="M27 -9 l12 4 -12 4Z" fill="#e78327"/></g>
+      <g transform="translate(295 184)"><ellipse cx="0" cy="0" rx="22" ry="16"/><circle cx="18" cy="-9" r="10"/><path d="M27 -9 l12 4 -12 4Z" fill="#e78327"/></g>
+      <g transform="translate(330 112)"><ellipse cx="0" cy="0" rx="22" ry="16"/><circle cx="18" cy="-9" r="10"/><path d="M27 -9 l12 4 -12 4Z" fill="#e78327"/></g>
+      <g transform="translate(252 232)"><ellipse cx="0" cy="0" rx="22" ry="16"/><circle cx="18" cy="-9" r="10"/><path d="M27 -9 l12 4 -12 4Z" fill="#e78327"/></g>
+    </g>
+    <text x="240" y="298" font-family="system-ui,sans-serif" font-size="18" text-anchor="middle" fill="#78623a">上から見た模式図</text>
+  </g>
+  <g transform="translate(515 92)" font-family="system-ui,sans-serif">
+    <rect x="22" y="64" width="120" height="168" rx="10" fill="#fff3c3" stroke="#d49a25" stroke-width="7"/>
+    <path d="M0 232 L168 232" stroke="#725e36" stroke-width="6"/>
+    <path d="M175 64 L175 232" stroke="#e06f2f" stroke-width="5"/>
+    <path d="M175 64 l-10 16 M175 64 l10 16 M175 232 l-10 -16 M175 232 l10 -16" stroke="#e06f2f" stroke-width="5" fill="none"/>
+    <text x="158" y="154" font-size="24" font-weight="900" fill="#d65b1f">約30cm</text>
+    <rect x="0" y="275" width="210" height="90" rx="18" fill="#eaf6f1" stroke="#3f8c74" stroke-width="3"/>
+    <text x="105" y="310" text-anchor="middle" font-size="20" font-weight="800" fill="#275f4d">取り外し目安</text>
+    <text x="105" y="341" text-anchor="middle" font-size="19" fill="#275f4d">夏10日齢・冬13日齢</text>
+  </g>
+  <text x="380" y="398" font-family="system-ui,sans-serif" font-size="18" text-anchor="middle" fill="#8a7449">独自作成の学習用模式図</text>
+</svg>

@@ -1,0 +1,394 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/livestock2-question-v0.3.schema.json",
+  "title": "Livestock Level 2 Pedagogical Question v0.3",
+  "type": "object",
+  "required": [
+    "id",
+    "schemaVersion",
+    "status",
+    "category",
+    "topic",
+    "type",
+    "sourceFactIds",
+    "question",
+    "choices",
+    "correctChoiceId",
+    "explanation",
+    "source",
+    "rights",
+    "review",
+    "choiceRationales",
+    "learningSupport"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^q[0-9]{3,}$"
+    },
+    "schemaVersion": {
+      "const": "0.3.0"
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "candidate",
+        "source_checked",
+        "language_checked",
+        "approved",
+        "suspended",
+        "retired"
+      ]
+    },
+    "prototypeOnly": {
+      "type": "boolean"
+    },
+    "category": {
+      "type": "string",
+      "minLength": 1
+    },
+    "topic": {
+      "type": "string",
+      "minLength": 1
+    },
+    "difficulty": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "type": {
+      "enum": [
+        "single_choice",
+        "true_false",
+        "multi_select",
+        "ordering",
+        "calculation",
+        "visual_judgement"
+      ]
+    },
+    "sourceFactIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "question": {
+      "$ref": "#/$defs/multilingualText"
+    },
+    "choices": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "text"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "$ref": "#/$defs/multilingualText"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "correctChoiceId": {
+      "type": "string"
+    },
+    "explanation": {
+      "$ref": "#/$defs/multilingualText"
+    },
+    "choiceRationalesJa": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "sourceId",
+        "documentTitle",
+        "edition",
+        "pdfPage",
+        "section"
+      ],
+      "properties": {
+        "sourceId": {
+          "type": "string"
+        },
+        "documentId": {
+          "type": "string"
+        },
+        "documentTitle": {
+          "type": "string"
+        },
+        "edition": {
+          "type": "string"
+        },
+        "pdfPage": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "printedPage": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "printedPageLabel": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "section": {
+          "type": "string"
+        },
+        "locatorNote": {
+          "type": "string"
+        },
+        "verificationAnchors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "timeSensitive": {
+      "type": "boolean"
+    },
+    "rights": {
+      "type": "object",
+      "required": [
+        "originalWording",
+        "usesOfficialImage",
+        "usesCompetitorContent",
+        "requiresHumanApproval"
+      ],
+      "properties": {
+        "originalWording": {
+          "type": "boolean"
+        },
+        "usesOfficialImage": {
+          "type": "boolean"
+        },
+        "usesCompetitorContent": {
+          "type": "boolean"
+        },
+        "requiresHumanApproval": {
+          "type": "boolean"
+        },
+        "assetLicense": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "review": {
+      "type": "object",
+      "required": [
+        "content",
+        "languageJa",
+        "languageId",
+        "legalRights",
+        "reviewerType",
+        "reviewedAt",
+        "approvalByUser"
+      ],
+      "properties": {
+        "content": {
+          "enum": [
+            "pending",
+            "pass",
+            "fail"
+          ]
+        },
+        "languageJa": {
+          "enum": [
+            "pending",
+            "pass",
+            "fail"
+          ]
+        },
+        "languageId": {
+          "enum": [
+            "pending",
+            "pass",
+            "fail",
+            "pending_native_review"
+          ]
+        },
+        "legalRights": {
+          "enum": [
+            "pending",
+            "pass",
+            "fail"
+          ]
+        },
+        "reviewerType": {
+          "type": "string"
+        },
+        "reviewedAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "approvalByUser": {
+          "enum": [
+            "pending",
+            "approved",
+            "rejected"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "errorReasonOptions": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "knowledge",
+          "japanese",
+          "misread",
+          "calculation",
+          "time",
+          "unsure"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "visual": {
+      "type": "object",
+      "properties": {
+        "assetId": {
+          "type": "string"
+        },
+        "altJa": {
+          "type": "string"
+        },
+        "rights": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "assetId",
+        "altJa",
+        "rights"
+      ],
+      "additionalProperties": false
+    },
+    "choiceRationales": {
+      "type": "object",
+      "minProperties": 2,
+      "additionalProperties": {
+        "$ref": "#/$defs/multilingualText"
+      }
+    },
+    "learningSupport": {
+      "type": "object",
+      "required": [
+        "questionPattern",
+        "keyTermIds",
+        "lessonObjective",
+        "memoryPoint"
+      ],
+      "properties": {
+        "questionPattern": {
+          "enum": [
+            "most_appropriate",
+            "incorrect",
+            "correct",
+            "calculation",
+            "procedure",
+            "which"
+          ]
+        },
+        "keyTermIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "minItems": 1,
+          "maxItems": 5
+        },
+        "lessonObjective": {
+          "$ref": "#/$defs/multilingualText"
+        },
+        "memoryPoint": {
+          "$ref": "#/$defs/multilingualText"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "multilingualText": {
+      "type": "object",
+      "required": [
+        "ja",
+        "easyJa",
+        "id",
+        "rubyJa"
+      ],
+      "properties": {
+        "ja": {
+          "type": "string",
+          "minLength": 1
+        },
+        "easyJa": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rubyJa": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "text"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reading": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

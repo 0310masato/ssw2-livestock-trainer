@@ -1,0 +1,38 @@
+{
+  "name": "Pelatih Peternakan Tingkat 2 / 畜産2号トレーナー",
+  "short_name": "Nihongo Ternak",
+  "description": "PWA pembelajaran tidak resmi untuk ujian peternakan tingkat 2 / 特定技能2号・畜産農業の非公式学習支援PWA",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7faf9",
+  "theme_color": "#0f766e",
+  "lang": "id",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "10 soal hari ini / 今日の10問",
+      "short_name": "10 soal",
+      "url": "./?mode=daily"
+    },
+    {
+      "name": "Simulasi ujian / 模擬試験",
+      "short_name": "Simulasi",
+      "url": "./?mode=mock"
+    }
+  ]
+}

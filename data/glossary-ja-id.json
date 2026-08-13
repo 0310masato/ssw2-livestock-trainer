@@ -1,0 +1,422 @@
+[
+  {
+    "id": "g001",
+    "termJa": "畜産",
+    "reading": "ちくさん",
+    "easyJa": "牛・豚・鶏などを育て、畜産物を生産すること。",
+    "idn": "peternakan"
+  },
+  {
+    "id": "g002",
+    "termJa": "家畜",
+    "reading": "かちく",
+    "easyJa": "人が飼育して利用する動物。",
+    "idn": "ternak"
+  },
+  {
+    "id": "g003",
+    "termJa": "飼養",
+    "reading": "しよう",
+    "easyJa": "動物を飼い、餌や環境を管理すること。",
+    "idn": "pemeliharaan ternak"
+  },
+  {
+    "id": "g004",
+    "termJa": "繁殖",
+    "reading": "はんしょく",
+    "easyJa": "子を産ませて増やすこと。",
+    "idn": "pembiakan"
+  },
+  {
+    "id": "g005",
+    "termJa": "肥育",
+    "reading": "ひいく",
+    "easyJa": "肉用として大きく育てること。",
+    "idn": "penggemukan"
+  },
+  {
+    "id": "g006",
+    "termJa": "一貫経営",
+    "reading": "いっかんけいえい",
+    "easyJa": "繁殖から肥育まで同じ経営体で行う形。",
+    "idn": "usaha terintegrasi"
+  },
+  {
+    "id": "g007",
+    "termJa": "人工授精",
+    "reading": "じんこうじゅせい",
+    "easyJa": "人の手で精液を雌へ注入する繁殖方法。",
+    "idn": "inseminasi buatan"
+  },
+  {
+    "id": "g008",
+    "termJa": "妊娠期間",
+    "reading": "にんしんきかん",
+    "easyJa": "妊娠してから出産までの期間。",
+    "idn": "masa kebuntingan"
+  },
+  {
+    "id": "g009",
+    "termJa": "分娩",
+    "reading": "ぶんべん",
+    "easyJa": "子を産むこと。",
+    "idn": "melahirkan"
+  },
+  {
+    "id": "g010",
+    "termJa": "乾乳",
+    "reading": "かんにゅう",
+    "easyJa": "次の分娩前に搾乳を止めること。",
+    "idn": "masa kering"
+  },
+  {
+    "id": "g011",
+    "termJa": "初乳",
+    "reading": "しょにゅう",
+    "easyJa": "出産直後に出る、子に重要な乳。",
+    "idn": "kolostrum"
+  },
+  {
+    "id": "g012",
+    "termJa": "耳標",
+    "reading": "じひょう",
+    "easyJa": "牛などを個体識別するため耳に付ける標識。",
+    "idn": "tag telinga"
+  },
+  {
+    "id": "g013",
+    "termJa": "交雑種",
+    "reading": "こうざつしゅ",
+    "easyJa": "異なる品種を交配して生まれた動物。",
+    "idn": "hewan silang"
+  },
+  {
+    "id": "g014",
+    "termJa": "三元交配",
+    "reading": "さんげんこうはい",
+    "easyJa": "3品種を組み合わせる交配。",
+    "idn": "persilangan tiga bangsa"
+  },
+  {
+    "id": "g015",
+    "termJa": "不断給餌",
+    "reading": "ふだんきゅうじ",
+    "easyJa": "いつでも自由に飼料を食べられる方法。",
+    "idn": "pemberian pakan ad libitum"
+  },
+  {
+    "id": "g016",
+    "termJa": "制限給餌",
+    "reading": "せいげんきゅうじ",
+    "easyJa": "決めた量の飼料を与える方法。",
+    "idn": "pemberian pakan terbatas"
+  },
+  {
+    "id": "g017",
+    "termJa": "採卵鶏",
+    "reading": "さいらんけい",
+    "easyJa": "卵を生産するための鶏。",
+    "idn": "ayam petelur"
+  },
+  {
+    "id": "g018",
+    "termJa": "肉用鶏",
+    "reading": "にくようけい",
+    "easyJa": "肉を生産するための鶏。",
+    "idn": "ayam pedaging"
+  },
+  {
+    "id": "g019",
+    "termJa": "ブロイラー",
+    "reading": "ぶろいらー",
+    "easyJa": "短期間で成長する肉用若鶏。",
+    "idn": "broiler"
+  },
+  {
+    "id": "g020",
+    "termJa": "地鶏",
+    "reading": "じどり",
+    "easyJa": "在来種等を利用した高品質肉用鶏。",
+    "idn": "jidori/ayam lokal berkualitas"
+  },
+  {
+    "id": "g021",
+    "termJa": "ふ化",
+    "reading": "ふか",
+    "easyJa": "卵からひなが生まれること。",
+    "idn": "menetas"
+  },
+  {
+    "id": "g022",
+    "termJa": "産卵",
+    "reading": "さんらん",
+    "easyJa": "卵を産むこと。",
+    "idn": "bertelur"
+  },
+  {
+    "id": "g023",
+    "termJa": "防疫",
+    "reading": "ぼうえき",
+    "easyJa": "病原体の侵入や拡大を防ぐこと。",
+    "idn": "biosekuriti/pencegahan penyakit"
+  },
+  {
+    "id": "g024",
+    "termJa": "衛生管理区域",
+    "reading": "えいせいかんりくいき",
+    "easyJa": "病原体の持込みを防ぐため管理する区域。",
+    "idn": "zona manajemen higienis"
+  },
+  {
+    "id": "g025",
+    "termJa": "熱中症",
+    "reading": "ねっちゅうしょう",
+    "easyJa": "暑さで体温調節ができなくなり体調を崩す状態。",
+    "idn": "serangan panas"
+  },
+  {
+    "id": "g026",
+    "termJa": "深夜割増",
+    "reading": "しんやわりまし",
+    "easyJa": "深夜労働に上乗せする賃金。",
+    "idn": "tambahan upah malam"
+  },
+  {
+    "id": "g027",
+    "termJa": "有給休暇",
+    "reading": "ゆうきゅうきゅうか",
+    "easyJa": "賃金を受けながら休める休暇。",
+    "idn": "cuti berbayar"
+  },
+  {
+    "id": "g028",
+    "termJa": "刈払機",
+    "reading": "かりはらいき",
+    "easyJa": "回転刃で草を刈る機械。",
+    "idn": "mesin potong rumput"
+  },
+  {
+    "id": "g029",
+    "termJa": "踏み込み消毒槽",
+    "reading": "ふみこみしょうどくそう",
+    "easyJa": "長靴等を消毒するため通過する槽。",
+    "idn": "bak disinfeksi alas kaki"
+  },
+  {
+    "id": "g030",
+    "termJa": "希釈",
+    "reading": "きしゃく",
+    "easyJa": "原液を水などで薄めること。",
+    "idn": "pengenceran"
+  },
+  {
+    "id": "g031",
+    "termJa": "ボディコンディションスコア",
+    "reading": "ぼでぃこんでぃしょんすこあ",
+    "easyJa": "体のやせ・太り具合を段階で評価する指標。",
+    "idn": "skor kondisi tubuh"
+  },
+  {
+    "id": "g032",
+    "termJa": "平飼い",
+    "reading": "ひらがい",
+    "easyJa": "鶏をケージではなく床の上で飼う方法。",
+    "idn": "pemeliharaan di lantai/litter"
+  },
+  {
+    "id": "g033",
+    "termJa": "敷料",
+    "reading": "しきりょう",
+    "easyJa": "床に敷くオガクズや切りワラなど。",
+    "idn": "bahan litter"
+  },
+  {
+    "id": "g034",
+    "termJa": "ウインドウレス鶏舎",
+    "reading": "ういんどうれすけいしゃ",
+    "easyJa": "窓がなく、照明と換気を機械で管理する鶏舎。",
+    "idn": "kandang tanpa jendela"
+  },
+  {
+    "id": "g035",
+    "termJa": "給温",
+    "reading": "きゅうおん",
+    "easyJa": "ひなを温めること。",
+    "idn": "pemanasan anak ayam"
+  },
+  {
+    "id": "g036",
+    "termJa": "育すう",
+    "reading": "いくすう",
+    "easyJa": "ひなを成長させる管理。",
+    "idn": "pemeliharaan anak ayam"
+  },
+  {
+    "id": "g037",
+    "termJa": "チックガード",
+    "reading": "ちっくがーど",
+    "easyJa": "初生びなを温源の周りに囲う道具。",
+    "idn": "chick guard"
+  },
+  {
+    "id": "g038",
+    "termJa": "チックプレート",
+    "reading": "ちっくぷれーと",
+    "easyJa": "餌付けに使う浅い給餌皿。",
+    "idn": "chick plate"
+  },
+  {
+    "id": "g039",
+    "termJa": "ニップルドリンカー",
+    "reading": "にっぷるどりんかー",
+    "easyJa": "鶏が先端をつついて水を飲む給水器。",
+    "idn": "nipple drinker"
+  },
+  {
+    "id": "g040",
+    "termJa": "休薬飼料",
+    "reading": "きゅうやくしりょう",
+    "easyJa": "抗生物質などの薬物を含まない出荷前の飼料。",
+    "idn": "pakan tanpa obat/withdrawal feed"
+  },
+  {
+    "id": "g041",
+    "termJa": "乳質",
+    "reading": "にゅうしつ",
+    "easyJa": "牛乳の成分や衛生状態の品質。",
+    "idn": "mutu susu"
+  },
+  {
+    "id": "g042",
+    "termJa": "体細胞数",
+    "reading": "たいさいぼうすう",
+    "easyJa": "乳質の衛生状態を判断する指標の一つ。",
+    "idn": "jumlah sel somatik"
+  },
+  {
+    "id": "g043",
+    "termJa": "除角",
+    "reading": "じょかく",
+    "easyJa": "牛の角を取り除く処置。",
+    "idn": "pemotongan tanduk"
+  },
+  {
+    "id": "g044",
+    "termJa": "ランドレース",
+    "reading": "らんどれーす",
+    "easyJa": "白色で胴が長く、耳が垂れる代表的な豚の品種。",
+    "idn": "Landrace"
+  },
+  {
+    "id": "g045",
+    "termJa": "大ヨークシャー",
+    "reading": "だいよーくしゃー",
+    "easyJa": "白色で耳が立ち、繁殖能力に優れる豚の品種。",
+    "idn": "Large Yorkshire"
+  },
+  {
+    "id": "g046",
+    "termJa": "デュロック",
+    "reading": "でゅろっく",
+    "easyJa": "茶色から黒色で発育と肉質に優れる豚の品種。",
+    "idn": "Duroc"
+  },
+  {
+    "id": "g047",
+    "termJa": "雑種強勢",
+    "reading": "ざっしゅきょうせい",
+    "easyJa": "交雑により子の生産性が高くなること。ヘテローシス。",
+    "idn": "heterosis"
+  },
+  {
+    "id": "g048",
+    "termJa": "マッシュ",
+    "reading": "まっしゅ",
+    "easyJa": "細かく粉砕した飼料。",
+    "idn": "pakan mash"
+  },
+  {
+    "id": "g049",
+    "termJa": "ペレット",
+    "reading": "ぺれっと",
+    "easyJa": "粉状飼料を圧縮成型した飼料。",
+    "idn": "pakan pellet"
+  },
+  {
+    "id": "g050",
+    "termJa": "クランブル",
+    "reading": "くらんぶる",
+    "easyJa": "ペレットを砕いた飼料。",
+    "idn": "pakan crumble"
+  },
+  {
+    "id": "g051",
+    "termJa": "自然交配",
+    "reading": "しぜんこうはい",
+    "easyJa": "雄と雌を直接交配させる方法。",
+    "idn": "perkawinan alami"
+  },
+  {
+    "id": "g052",
+    "termJa": "軽種馬",
+    "reading": "けいしゅば",
+    "easyJa": "サラブレッドなど競走用を中心とする馬。",
+    "idn": "kuda ringan/Thoroughbred"
+  },
+  {
+    "id": "g053",
+    "termJa": "セイヨウミツバチ",
+    "reading": "せいようみつばち",
+    "easyJa": "日本で養蜂に多く使われるミツバチ。",
+    "idn": "lebah madu Barat"
+  },
+  {
+    "id": "g054",
+    "termJa": "女王バチ",
+    "reading": "じょおうばち",
+    "easyJa": "群の中で主に産卵をする雌バチ。",
+    "idn": "ratu lebah"
+  },
+  {
+    "id": "g055",
+    "termJa": "働きバチ",
+    "reading": "はたらきばち",
+    "easyJa": "掃除、育児、餌採りなどを行う雌バチ。",
+    "idn": "lebah pekerja"
+  },
+  {
+    "id": "g056",
+    "termJa": "換気管理",
+    "reading": "かんきかんり",
+    "easyJa": "畜舎や鶏舎の空気を適切に入れ替える管理。",
+    "idn": "pengelolaan ventilasi"
+  },
+  {
+    "id": "g057",
+    "termJa": "呼吸器系疾病",
+    "reading": "こきゅうきけいしっぺい",
+    "easyJa": "鼻、気管、肺など呼吸に関係する病気。",
+    "idn": "penyakit pernapasan"
+  },
+  {
+    "id": "g058",
+    "termJa": "機械化",
+    "reading": "きかいか",
+    "easyJa": "作業を機械で行えるようにすること。",
+    "idn": "mekanisasi"
+  },
+  {
+    "id": "g059",
+    "termJa": "開放型鶏舎",
+    "reading": "かいほうがたけいしゃ",
+    "easyJa": "自然の光や風を取り入れる開放された鶏舎。",
+    "idn": "kandang terbuka"
+  },
+  {
+    "id": "g060",
+    "termJa": "床面給温",
+    "reading": "しょうめんきゅうおん",
+    "easyJa": "床からひなを温める方法。",
+    "idn": "pemanasan dari lantai"
+  }
+]
