@@ -32,7 +32,7 @@ namespace LivestockApp {
     const base = defaultState();
     if (!raw || typeof raw !== 'object') return base;
     const candidate = raw as Partial<AppState>;
-    const candidateSettings = candidate.settings ?? {};
+    const candidateSettings: Partial<UserSettings> = candidate.settings ?? {};
     const settings: UserSettings = {
       ...base.settings,
       ...candidateSettings,
