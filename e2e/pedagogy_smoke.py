@@ -71,6 +71,24 @@ with sync_playwright() as p:
     record(checks, 'choice_by_choice_review', page.locator('.choice-review-item').count() == 4)
     record(checks, 'memory_point', 'Poin yang perlu diingat' in body)
     record(checks, 'source_citation', 'Sumber' in body and 'PDF' in body)
+    page.evaluate("""() => {
+      const session = LivestockApp.runtime.session;
+      LivestockApp.runtime.state.settings.studySupportMode = 'japanese_only';
+      session.selectedChoiceId = null;
+      session.answered = false;
+      session.pendingReason = null;
+      session.confidence = null;
+      session.furiganaVisible = false;
+      session.easyJapaneseVisible = false;
+      session.indonesianVisible = false;
+      LivestockApp.render();
+    }""")
+    page.wait_for_timeout(150)
+    japanese_card = page.locator('.japanese-only-card')
+    record(checks, 'japanese_only_card', japanese_card.count() == 1)
+    record(checks, 'japanese_only_has_no_indonesian_content', japanese_card.locator('[lang="id"]').count() == 0)
+    record(checks, 'japanese_only_has_no_learning_scaffold', page.locator('.lesson-vocabulary, .question-pattern-guide, .support-box').count() == 0)
+
     record(checks, 'no_runtime_errors', not page_errors)
 
     browser.close()

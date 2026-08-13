@@ -54,4 +54,6 @@ test('compiled application contains persistent bilingual UI support', async () =
   assert.match(app, /Arti dalam Bahasa Indonesia/);
   assert.match(app, /Pembahasan setiap pilihan/);
   assert.match(app, /studySupportMode/);
+  assert.match(app, /japanese-only-card/);
+  assert.match(app, /renderJapaneseOnlyQuestionCard/);
 });
