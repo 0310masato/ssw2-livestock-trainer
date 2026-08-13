@@ -31,7 +31,7 @@ jobs:
 
       - name: Install validation and browser-test dependencies
         run: |
-          python3 -m pip install --disable-pip-version-check jsonschema playwright==1.54.0
+          python3 -m pip install --disable-pip-version-check jsonschema playwright==1.54.0 PyMuPDF==1.27.2.2
           python3 -m playwright install --with-deps chromium
 
       - name: Verify generated data is synchronized
@@ -46,7 +46,7 @@ jobs:
       - name: Build and run unit tests
         run: npm test
 
-      - name: Run 360px learning-flow and mock-exam browser tests
+      - name: Run browser tests (learning flow, mock exam, and localhost PWA)
         run: npm run test:e2e
 
       - name: Verify deployable files
@@ -56,15 +56,17 @@ jobs:
           test -f dist/sw.js
           test -f dist/.nojekyll
           test -f dist/robots.txt
+          test -f dist/REVIEW_ARTIFACT_NOTICE.txt
           test -f dist/standalone-review.html
           test -z "$(find dist -type f -iname '*.pdf' -print -quit)"
 
-      # Internal review only: this expiring artifact is not deployed to Pages.
-      - name: Upload 7-day internal review build
+      # Temporary PR review only. On a public repository this artifact is not an
+      # access-control boundary, and this step does not deploy anything to Pages.
+      - name: Upload 7-day temporary PR review build
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: internal-review-build-7d-${{ github.event.pull_request.number || github.run_id }}-attempt-${{ github.run_attempt }}
+          name: temporary-pr-review-build-7d-pr-${{ github.event.pull_request.number }}-attempt-${{ github.run_attempt }}
           path: dist/
           if-no-files-found: error
           include-hidden-files: true

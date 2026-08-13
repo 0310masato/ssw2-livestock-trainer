@@ -77,20 +77,24 @@ const manifest = {
 };
 await writeFile(resolve(distDir, 'manifest.webmanifest'), JSON.stringify(manifest, null, 2));
 
-const cacheVersion = 'livestock2-v0.5.0-pedagogy-review-ready';
+const cachePrefix = 'livestock2-';
+const cacheVersion = 'livestock2-v0.5.0-pr5-remediation';
 const cacheFiles = [
   './', './index.html', './styles.css', './app.js', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './apple-touch-icon.png',
   './assets/barn-ppe.svg', './assets/chick-guard.svg', './assets/cow-measurements.svg',
   './assets/dilution-20l.svg', './assets/sow-body-condition.svg',
 ];
-const serviceWorker = `const CACHE_NAME = ${JSON.stringify(cacheVersion)};
+const serviceWorker = `const CACHE_PREFIX = ${JSON.stringify(cachePrefix)};
+const CACHE_NAME = ${JSON.stringify(cacheVersion)};
 const APP_SHELL = ${JSON.stringify(cacheFiles, null, 2)};
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', (event) => {
-  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))).then(() => self.clients.claim()));
+  event.waitUntil(caches.keys().then((keys) => Promise.all(keys
+    .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+    .map((key) => caches.delete(key)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
@@ -112,6 +116,13 @@ self.addEventListener('fetch', (event) => {
 await writeFile(resolve(distDir, 'sw.js'), serviceWorker);
 await writeFile(resolve(distDir, '.nojekyll'), '');
 await writeFile(resolve(distDir, 'robots.txt'), 'User-agent: *\nDisallow: /\n');
+await writeFile(resolve(distDir, 'REVIEW_ARTIFACT_NOTICE.txt'), [
+  'Temporary PR review build / Pull Request確認用の一時ビルド',
+  'This public repository artifact is not access-restricted. / public repository上のartifactであり、アクセス制限はありません。',
+  'Pull Request artifacts are configured for 7-day retention. / Pull Request artifactの保持期間は7日です。',
+  'Not an official distribution or approved learning material. / 正式配布物・承認済み教材ではありません。',
+  '',
+].join('\n'));
 
 const assetEntries = [];
 for (const asset of ['barn-ppe', 'chick-guard', 'cow-measurements', 'dilution-20l', 'sow-body-condition']) {
