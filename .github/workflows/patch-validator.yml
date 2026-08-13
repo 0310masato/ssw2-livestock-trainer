@@ -1,0 +1,53 @@
+name: Apply CI-safe content validator
+
+on:
+  push:
+    branches:
+      - feat/pedagogical-indonesian-learning
+    paths:
+      - .github/workflows/patch-validator.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-test-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/pedagogical-indonesian-learning
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: |
+          npm install --no-audit --no-fund
+          python3 -m pip install --disable-pip-version-check jsonschema
+
+      - name: Apply CI-safe validator patch
+        run: node scripts/patch_ci_validator.mjs
+
+      - name: Validate content without mounted source PDFs
+        run: npm run validate:content
+
+      - name: Type check and unit tests
+        run: |
+          npm run typecheck
+          npm test
+
+      - name: Commit verified validator
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git restore .github/workflows
+          rm -f scripts/patch_ci_validator.mjs
+          git add -A
+          git commit -m "fix: validate pedagogy in CI without copyrighted source PDFs"
+          git push origin HEAD:feat/pedagogical-indonesian-learning
