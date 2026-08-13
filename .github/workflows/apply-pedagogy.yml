@@ -1,6 +1,6 @@
 name: Apply pedagogical Indonesian learning redesign
 
-# One-time feature-branch migration. This workflow is removed before merge.
+# One-time feature-branch migration. Removed after verified generated files are committed.
 on:
   push:
     branches:
@@ -36,7 +36,7 @@ jobs:
       - name: Generate furigana and pedagogical question data
         run: node scripts/apply_pedagogy_rework.mjs
 
-      - name: Normalize cross-realm test assertions
+      - name: Normalize deterministic browser and unit assertions
         run: node scripts/fix_pedagogy_tests.mjs
 
       - name: Type check
