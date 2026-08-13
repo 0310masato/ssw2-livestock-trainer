@@ -1,5 +1,8 @@
 name: Prepare smartphone review branch
 
+# Fallback publisher for repositories where the Pages site cannot be created by
+# GITHUB_TOKEN. This produces a clean `gh-pages` branch that can be selected in
+# Settings → Pages → Deploy from a branch.
 on:
   workflow_dispatch:
   push:
