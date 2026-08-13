@@ -112,12 +112,12 @@ namespace LivestockApp {
 
   export async function saveState(state: AppState): Promise<void> {
     state.lastOpenedAt = nowIso();
+    const serialized = JSON.stringify(state);
+    localStorage.setItem(FALLBACK_KEY, serialized);
     try {
       await writeIndexedDb(state);
-      localStorage.setItem(FALLBACK_KEY, JSON.stringify(state));
     } catch (error) {
-      console.warn('IndexedDB save failed. Using localStorage.', error);
-      localStorage.setItem(FALLBACK_KEY, JSON.stringify(state));
+      console.warn('IndexedDB save failed. State is preserved in localStorage.', error);
     }
   }
 

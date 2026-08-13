@@ -325,7 +325,7 @@ namespace LivestockApp {
     if ((match = value.match(/^直近模試：(.*)$/))) return `Simulasi terakhir: ${match[1]}`;
     if ((match = value.match(/^正答率 (\d+)%／平均 (\d+)秒$/))) return `Akurasi ${match[1]}% / rata-rata ${match[2]} detik`;
     if ((match = value.match(/^(.+): 正答率(\d+)%、平均(\d+)秒$/))) return `${categoryUiLabel(match[1], 'id')}: akurasi ${match[2]}%, rata-rata ${match[3]} detik`;
-    if ((match = value.match(/^日本語原因の誤答が(\d+)%】【。用語学習を優先$/))) return `${match[1]}% kesalahan disebabkan bahasa Jepang. Prioritaskan belajar istilah.`;
+    if ((match = value.match(/^日本語原因の誤答が(\d+)%\u3002用語学習を優先$/))) return `${match[1]}% kesalahan disebabkan bahasa Jepang. Prioritaskan belajar istilah.`;
     if ((match = value.match(/^(.+)をもう一度学習すると効果的です。$/))) return `Akan efektif jika mengulang bidang ${categoryUiLabel(match[1], 'id')}.`;
     if ((match = value.match(/^「(.+)」に直接一致する問題はありません。$/))) return `Tidak ada soal yang langsung cocok dengan “${match[1]}”.`;
     if ((match = value.match(/^(.+) 要修正の理由$/))) return `${match[1]}: alasan perlu diperbaiki`;
