@@ -1,0 +1,56 @@
+name: Prepare smartphone review branch
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-gh-pages-branch.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages-branch
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify review build
+        run: |
+          test -f dist/index.html
+          test -f dist/manifest.webmanifest
+          test -f dist/sw.js
+          test -f dist/.nojekyll
+          test -f dist/robots.txt
+
+      - name: Publish dist to gh-pages branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd dist
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: publish Alpha smartphone review build"
+          git branch -M gh-pages
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --force origin gh-pages
