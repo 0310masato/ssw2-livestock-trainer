@@ -1,4 +1,4 @@
-name: Apply persistent UI language feature
+name: Finalize persistent UI language feature
 
 on:
   push:
@@ -11,9 +11,9 @@ permissions:
   contents: write
 
 jobs:
-  patch-and-test:
+  finalize-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout feature branch
         uses: actions/checkout@v4
@@ -26,20 +26,28 @@ jobs:
         with:
           node-version: 22
 
-      - name: Apply source migration
-        run: node scripts/apply_ui_language_patch.mjs
+      - name: Apply final persistence fixes
+        run: node scripts/finalize_ui_language_feature.mjs
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Type check and test
+      - name: Type check and unit tests
         run: npm test
 
-      - name: Commit migrated feature
+      - name: Install browser test runtime
+        run: |
+          python3 -m pip install --disable-pip-version-check playwright
+          python3 -m playwright install chromium
+
+      - name: Mobile and desktop browser checks
+        run: python3 e2e/smoke.py
+
+      - name: Commit verified feature
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git restore .github/workflows
           git add -A
-          git commit -m "feat: add persistent Japanese and Indonesian UI"
+          git commit -m "fix: finalize persistent bilingual UI and browser tests"
           git push origin HEAD:feat/persistent-ui-language
