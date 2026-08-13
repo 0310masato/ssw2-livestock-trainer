@@ -5,7 +5,6 @@ on:
     branches:
       - feat/persistent-ui-language
     paths:
-      - scripts/apply_ui_language_patch.mjs
       - .github/workflows/apply-ui-language-patch.yml
 
 permissions:
@@ -40,6 +39,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git restore .github/workflows
           git add -A
           git commit -m "feat: add persistent Japanese and Indonesian UI"
           git push origin HEAD:feat/persistent-ui-language
