@@ -1,0 +1,33 @@
+name: Export feature branch source snapshot
+
+on:
+  push:
+    branches:
+      - feat/learning-support-quality-gates
+    paths:
+      - .github/workflows/export-source-snapshot.yml
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/learning-support-quality-gates
+          fetch-depth: 0
+
+      - name: Create source archive
+        run: git archive --format=zip --output=source-snapshot.zip HEAD
+
+      - name: Upload source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-snapshot
+          path: source-snapshot.zip
+          if-no-files-found: error
+          retention-days: 1
