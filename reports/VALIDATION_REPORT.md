@@ -1,4 +1,4 @@
-# Alpha v0.4 Content Validation Report
+# Alpha v0.5 Content Validation Report
 
 **Overall: PASS**
 
@@ -26,9 +26,10 @@
 - **PASS** — Rights flags prohibit official/competitor reuse: []
 - **PASS** — All questions remain source_checked (not auto-approved): []
 - **PASS** — All multilingual fields are populated: []
+- **PASS** — All questions include ruby and pedagogical support: []
 - **PASS** — All declared original visual assets exist: []
-- **PASS** — Official-source hashes and page counts match ledger: []
-- **PASS** — Automated PDF anchor verification: 50/50 anchored facts passed; 50 legacy facts retain manual page references
+- **PASS (warning)** — Official-source binary verification: SKIPPED: official PDFs are not mounted in this CI environment; source IDs and page ranges were checked against source-ledger.json.
+- **PASS (warning)** — Automated PDF anchor verification: SKIPPED: 50 anchored facts require the mounted official PDFs. Run npm run validate:content in the controlled source-review environment for full verification.
 - **PASS** — No exact duplicate question wording: []
 - **PASS** — Near-duplicate review queue: 0 pair(s) at similarity >= 0.92
 

@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-12",
+  "generatedAt": "2026-08-13",
   "overall": "PASS",
-  "releaseMeaning": "PASS means the Alpha v0.4 review build is structurally and source-reference valid. It does not mean questions are approved for public use.",
+  "releaseMeaning": "PASS means the Alpha v0.5 pack passed structural, pedagogical, rights, and available source checks. A skipped PDF check is reported explicitly and PASS never means public-use approval.",
   "counts": {
     "facts": 100,
     "questions": 80,
@@ -37,8 +37,10 @@
     "pending_native_review": 80
   },
   "anchorVerification": {
+    "available": false,
+    "skipped": true,
     "anchoredFacts": 50,
-    "passed": 50,
+    "passed": 0,
     "failed": 0,
     "legacyManualPageReferences": 50
   },
@@ -109,19 +111,28 @@
       "detail": "[]"
     },
     {
+      "name": "All questions include ruby and pedagogical support",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
       "name": "All declared original visual assets exist",
       "pass": true,
       "detail": "[]"
     },
     {
-      "name": "Official-source hashes and page counts match ledger",
+      "name": "Official-source binary verification",
       "pass": true,
-      "detail": "[]"
+      "detail": "SKIPPED: official PDFs are not mounted in this CI environment; source IDs and page ranges were checked against source-ledger.json.",
+      "warning": true,
+      "skipped": true
     },
     {
       "name": "Automated PDF anchor verification",
       "pass": true,
-      "detail": "50/50 anchored facts passed; 50 legacy facts retain manual page references"
+      "detail": "SKIPPED: 50 anchored facts require the mounted official PDFs. Run npm run validate:content in the controlled source-review environment for full verification.",
+      "warning": true,
+      "skipped": true
     },
     {
       "name": "No exact duplicate question wording",
