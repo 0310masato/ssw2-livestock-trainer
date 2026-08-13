@@ -36,7 +36,7 @@ namespace LivestockApp {
     state: AppState,
     question: Question,
     kind: SessionKind,
-  ): Pick<UserSettings, 'showFurigana' | 'showEasyJapanese' | 'showIndonesian'> {
+  ): { showFurigana: boolean; showEasyJapanese: boolean; showIndonesian: boolean } {
     return supportSettingsForLevel(resolvedSupportLevel(state, question, kind));
   }
 
@@ -170,14 +170,15 @@ namespace LivestockApp {
     session: SessionState,
     settings: UserSettings,
     correct: boolean,
-    supportLevel: number,
+    supportLevel: SupportLevel,
     total: number,
     componentOverrides: Partial<LearningRenderOptions> = {},
   ): string {
+    const levelPolicy = supportPolicyForLevel(supportLevel);
     const sharedOptions = {
-      showFurigana: settings.showFurigana,
-      showEasyJapanese: settings.showEasyJapanese,
-      showIndonesian: settings.showIndonesian,
+      showFurigana: levelPolicy.showFuriganaInitially,
+      showEasyJapanese: levelPolicy.showEasyJapaneseInitially,
+      showIndonesian: levelPolicy.showQuestionTranslationInitially,
       ...componentOverrides,
     };
     const beforeOptions: LearningRenderOptions = { ...sharedOptions, phase: 'before-answer' };
@@ -191,7 +192,7 @@ namespace LivestockApp {
     }
     const pattern = patternHelp(question);
     const correctChoice = question.choices.find((choice) => choice.id === question.correctChoiceId);
-    const meaningSupport = `${settings.showEasyJapanese ? `<div class="support-box"><strong lang="ja">やさしい日本語</strong><p lang="ja">${escapeHtml(question.question.easyJa)}</p></div>` : ''}${renderIndonesianTranslation(question.question, beforeOptions)}`;
+    const meaningSupport = `${beforeOptions.showEasyJapanese ? `<div class="support-box"><strong lang="ja">やさしい日本語</strong><p lang="ja">${escapeHtml(question.question.easyJa)}</p></div>` : ''}${renderIndonesianTranslation(question.question, beforeOptions)}`;
     return `
       <article class="question-card guided-lesson-card" data-no-ui-translation="true">
         <div class="question-number">問題 ${session.index + 1} / ${total} ・ 支援レベル ${supportLevel} ・ ${escapeHtml(question.status)}</div>
@@ -199,12 +200,12 @@ namespace LivestockApp {
 
         <section class="lesson-stage" data-no-ui-translation="true">
           <div class="lesson-subheading"><span class="lesson-step">1</span><div><strong>${renderBilingualHeading('日本語の問題を読む', 'Baca soal bahasa Jepang', showIndonesianBeforeAnswer)}</strong>${showIndonesianBeforeAnswer ? '<small lang="id">Mulai dari kalimat asli yang akan muncul dalam ujian.</small>' : '<small lang="ja">試験に出る日本語を先に読みます。</small>'}</div></div>
-          <h1 class="question-text" lang="ja" data-learning-component="ruby-text">${renderRubyText(question.question, settings.showFurigana, true)}</h1>
+          <h1 class="question-text" lang="ja" data-learning-component="ruby-text">${renderRubyText(question.question, beforeOptions.showFurigana, true)}</h1>
         </section>
 
         <section class="lesson-goal" data-no-ui-translation="true">
           <span class="lesson-label" lang="ja">学習目標${showIndonesianBeforeAnswer ? ' / <span lang="id">Tujuan belajar</span>' : ''}</span>
-          <p lang="ja">${renderRubyText(question.learningSupport.lessonObjective, settings.showFurigana)}</p>
+          <p lang="ja">${renderRubyText(question.learningSupport.lessonObjective, beforeOptions.showFurigana)}</p>
           ${showIndonesianBeforeAnswer ? `<p lang="id">${escapeHtml(question.learningSupport.lessonObjective.id)}</p>` : ''}
         </section>
 
@@ -266,6 +267,7 @@ namespace LivestockApp {
           <option value="adaptive" ${settings.studySupportMode === 'adaptive' ? 'selected' : ''}>Bantuan berkurang otomatis / 段階的に減らす</option>
           <option value="japanese_only" ${settings.studySupportMode === 'japanese_only' ? 'selected' : ''}>Bahasa Jepang saja / 日本語のみ</option>
         </select></label>
+        <label class="setting-row select-row"><span><strong>${bilingualHeading('guided の支援レベル', 'Level bantuan mode guided')}</strong><small lang="id">Dipakai hanya pada mode guided. Mode adaptive menentukan level dari kemajuan belajar.</small></span><select data-setting-level ${settings.studySupportMode === 'guided' ? '' : 'disabled'}>${[3, 2, 1, 0].map((level) => `<option value="${level}" ${settings.preferredSupportLevel === level ? 'selected' : ''}>Level ${level}：${escapeHtml(SUPPORT_LEVEL_LABELS[level])}</option>`).join('')}</select></label>
         <label class="setting-row"><span><strong>${bilingualHeading('重要語を表示', 'Tampilkan kosakata penting')}</strong><small lang="id">Menampilkan kanji, furigana, bahasa Jepang sederhana, dan arti Indonesia.</small></span><input type="checkbox" data-setting-pedagogy-checkbox="showVocabulary" ${settings.showVocabulary ? 'checked' : ''}></label>
         <label class="setting-row"><span><strong>${bilingualHeading('問題文の読み方を表示', 'Tampilkan cara membaca pola soal')}</strong><small lang="id">Menjelaskan ungkapan seperti 「最も適切」 dan 「誤っている」.</small></span><input type="checkbox" data-setting-pedagogy-checkbox="showQuestionPattern" ${settings.showQuestionPattern ? 'checked' : ''}></label>
       </section>`;

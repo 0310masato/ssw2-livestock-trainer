@@ -428,6 +428,54 @@ with sync_playwright() as p:
         'mock_ui_language_restored',
         checks,
     )
+
+    # A paused mock keeps its absolute deadline, but its timer must not replace
+    # an unrelated learning session. The expired mock is graded only when the
+    # learner explicitly resumes it.
+    page.evaluate("LivestockApp.runtime.session = null; LivestockApp.runtime.lastMockResult = null; LivestockApp.runtime.view = 'home'; LivestockApp.render()")
+    page.wait_for_timeout(80)
+    check(dom_click(page, '[data-start="mock"]'), 'paused_mock_timer_fixture_started', checks)
+    page.wait_for_timeout(80)
+    check(dom_click(page, '[data-view="home"]'), 'paused_mock_timer_fixture_interrupted', checks)
+    page.wait_for_timeout(80)
+    page.evaluate("LivestockApp.runtime.state.mockDraft.deadlineAt = new Date(Date.now() - 1000).toISOString()")
+    check(dom_click(page, '[data-start="daily"]'), 'normal_study_started_with_expired_paused_mock', checks)
+    page.wait_for_timeout(1_100)
+    paused_mock_boundary = page.evaluate("""() => ({
+      sessionId: LivestockApp.runtime.session?.id,
+      sessionKind: LivestockApp.runtime.session?.kind,
+      draftStillPaused: LivestockApp.runtime.state.mockDraft !== null,
+      mockResultHidden: LivestockApp.runtime.lastMockResult === null,
+      mockHistoryCount: LivestockApp.runtime.state.mockHistory.length,
+    })""")
+    check(
+        paused_mock_boundary['sessionKind'] == 'daily'
+        and paused_mock_boundary['draftStillPaused']
+        and paused_mock_boundary['mockResultHidden'],
+        'expired_paused_mock_does_not_replace_normal_study',
+        checks,
+    )
+    page.evaluate("document.querySelector('[data-view=\"home\"]')?.click()")
+    page.wait_for_timeout(80)
+    check(dom_click(page, '[data-resume-mock]'), 'expired_mock_resumed_via_dom', checks)
+    page.wait_for_timeout(120)
+    expired_resume_state = page.evaluate("""() => ({
+      draftCleared: LivestockApp.runtime.state.mockDraft === null,
+      resultShown: LivestockApp.runtime.lastMockResult !== null,
+      sessionKind: LivestockApp.runtime.session?.kind,
+      sessionCompleted: LivestockApp.runtime.session?.completed,
+      mockHistoryCount: LivestockApp.runtime.state.mockHistory.length,
+    })""")
+    check(
+        expired_resume_state['draftCleared']
+        and expired_resume_state['resultShown']
+        and expired_resume_state['sessionKind'] == 'mock'
+        and expired_resume_state['sessionCompleted']
+        and expired_resume_state['mockHistoryCount'] == paused_mock_boundary['mockHistoryCount'] + 1,
+        'expired_mock_grades_on_explicit_resume',
+        checks,
+    )
+
     page.evaluate("LivestockApp.runtime.session = null; LivestockApp.runtime.lastMockResult = null; LivestockApp.runtime.view = 'home'; LivestockApp.render()")
     page.wait_for_timeout(100)
     page.evaluate("document.querySelector('[data-ui-language=\"ja\"]')?.click()")

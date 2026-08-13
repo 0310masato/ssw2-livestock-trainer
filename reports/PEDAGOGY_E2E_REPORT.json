@@ -4,6 +4,13 @@
   "checks": {
     "indonesian_ui_default": true,
     "learning_flow_visible": true,
+    "pilot_16_by_level_0_to_3_preanswer_dom_has_no_answer_leak": true,
+    "q045_level3_choice_support_topology_is_uniform": true,
+    "q055_level3_choice_support_topology_is_uniform": true,
+    "q078_level3_choice_support_topology_is_uniform": true,
+    "q079_level3_choice_support_topology_is_uniform": true,
+    "support_mode_contract_guided_adaptive_japanese_only": true,
+    "settings_ui_exposes_mode_and_guided_level_without_legacy_toggles": true,
     "level0_ja_operation_labels": true,
     "level1_ja_operation_labels": true,
     "level2_ja_operation_labels": true,

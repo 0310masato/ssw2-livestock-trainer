@@ -79,11 +79,269 @@ with sync_playwright() as p:
     record(checks, 'indonesian_ui_default', 'Mulai 10 soal hari ini' in body)
     record(checks, 'learning_flow_visible', 'Pahami bahasa Jepang' in body and 'Cara belajar' in body)
 
+    # Render every pilot question at every support level before answering. The
+    # rendered subtree must not contain answer-only material, and support-slot
+    # topology must be independent from which choice is correct.
+    leak_matrix = page.evaluate("""() => {
+      const pilot = LivestockApp.QUESTIONS.filter((question) => question.schemaVersion === '0.4.0');
+      const explicitRegressionIds = new Set(['q045', 'q055', 'q078', 'q079']);
+      const failures = [];
+      const explicit = {};
+      let cases = 0;
+
+      for (const question of pilot) {
+        for (const level of [0, 1, 2, 3]) {
+          cases += 1;
+          const policy = LivestockApp.supportPolicyForLevel(level);
+          const session = {
+            id: `leak-${question.id}-${level}`,
+            kind: 'daily',
+            questionIds: [question.id],
+            index: 0,
+            selectedChoiceId: null,
+            answered: false,
+            startedQuestionAt: Date.now(),
+            supportLevel: level,
+            easyJapaneseVisible: policy.showEasyJapaneseInitially,
+            indonesianVisible: policy.showQuestionTranslationInitially,
+            furiganaVisible: policy.showFuriganaInitially,
+            keywordsVisible: policy.showKeywordsInitially,
+            choiceTranslationsVisible: policy.showChoiceTranslationsInitially,
+            answerIndonesianVisible: false,
+            supportUsage: {
+              furiganaUsed: false,
+              easyJapaneseUsed: false,
+              keywordsOpened: false,
+              questionTranslationOpened: false,
+              choiceTranslationsOpened: false,
+              answerIndonesianOpened: false,
+            },
+            retryOfHistoryId: null,
+            isRetryWithoutSupport: false,
+            confidence: null,
+            pendingReason: null,
+            completed: false,
+          };
+          const settings = {
+            ...LivestockApp.runtime.state.settings,
+            studySupportMode: 'guided',
+            preferredSupportLevel: level,
+            showVocabulary: true,
+            showQuestionPattern: true,
+          };
+          const host = document.createElement('div');
+          host.style.cssText = 'position:fixed;left:-100000px;top:0;width:360px;';
+          host.innerHTML = LivestockApp.renderGuidedQuestionCard(
+            question,
+            session,
+            settings,
+            false,
+            level,
+            1,
+            {
+              showFurigana: policy.showFuriganaInitially,
+              showEasyJapanese: policy.showEasyJapaneseInitially,
+              showIndonesian: policy.showQuestionTranslationInitially,
+              showQuestionTranslation: policy.showQuestionTranslationInitially,
+              showChoiceTranslations: policy.showChoiceTranslationsInitially,
+              showAnswerIndonesian: false,
+              showKeywords: policy.showKeywordsInitially,
+              showKeywordIndonesian: level >= 2,
+              showIntent: policy.showIntent,
+              showIntentIndonesian: level >= 2,
+              compactKeywordHints: policy.compactKeywordHints,
+              allowQuestionTranslation: policy.allowQuestionTranslation,
+              allowChoiceTranslations: policy.allowChoiceTranslations,
+              allowAnswerIndonesian: policy.allowAnswerIndonesian,
+            },
+          );
+          document.body.append(host);
+
+          const forbiddenSelectors = [
+            '[data-learning-component="answer-explanation"]',
+            '[data-learning-component="wrong-choice-explanation"]',
+            '.answer-panel',
+            '.choice-review',
+            '.memory-point',
+            '.choice-button.correct',
+            '.choice-button.wrong',
+            '[data-retry-without-support]',
+          ];
+          for (const selector of forbiddenSelectors) {
+            if (host.querySelector(selector)) failures.push(`${question.id}/L${level}: ${selector}`);
+          }
+
+          const answerOnlyTexts = [
+            question.explanation.ja,
+            question.explanation.easyJa,
+            question.explanation.id,
+            question.learningSupport.memoryPoint.ja,
+            question.learningSupport.memoryPoint.easyJa,
+            question.learningSupport.memoryPoint.id,
+            ...Object.values(question.choiceRationales).flatMap((text) => [text.ja, text.easyJa, text.id]),
+          ].filter((text) => text.length >= 6);
+          for (const text of answerOnlyTexts) {
+            if (host.textContent.includes(text)) failures.push(`${question.id}/L${level}: answer-only text mounted`);
+          }
+
+          const choices = [...host.querySelectorAll('.choice-button')];
+          if (choices.length !== question.choices.length) failures.push(`${question.id}/L${level}: choice count`);
+          const canonicalChoiceSignature = (choice, index) => {
+            const copy = choice.cloneNode(true);
+            const sourceChoice = question.choices[index];
+            const choiceSpecificTexts = [
+              sourceChoice.text.ja,
+              sourceChoice.text.easyJa,
+              sourceChoice.text.id,
+            ].filter(Boolean).sort((left, right) => right.length - left.length);
+            copy.querySelector('.choice-letter')?.replaceChildren('#');
+            copy.querySelector('.choice-ja')?.replaceChildren('<japanese-choice>');
+            copy.querySelector('[data-learning-component="choice-easy-japanese"]')?.replaceChildren('<easy-japanese-choice>');
+            copy.querySelector('[data-learning-component="choice-translation"]')?.replaceChildren('<indonesian-choice>');
+            for (const element of [copy, ...copy.querySelectorAll('*')]) {
+              const attributes = [...element.attributes]
+                .filter((attribute) => attribute.name !== 'data-choice' && attribute.name !== 'aria-label')
+                .map((attribute) => `${attribute.name}=${attribute.value}`)
+                .sort();
+              if (element.hasAttribute('aria-label')) {
+                let ariaLabel = element.getAttribute('aria-label');
+                for (const text of choiceSpecificTexts) ariaLabel = ariaLabel.replaceAll(text, '<choice-content>');
+                attributes.push(`aria-label=${ariaLabel}`);
+              }
+              element.setAttribute('data-signature-attributes', attributes.join('|'));
+              [...element.attributes]
+                .filter((attribute) => attribute.name !== 'data-signature-attributes')
+                .forEach((attribute) => element.removeAttribute(attribute.name));
+              if (element.children.length === 0) element.textContent = '<choice-text>';
+            }
+            return copy.outerHTML;
+          };
+          const topology = choices.map((choice, index) => {
+            const easySlots = [...choice.querySelectorAll('[data-learning-component="choice-easy-japanese"]')];
+            const translationSlots = choice.querySelectorAll('[data-learning-component="choice-translation"]');
+            if (easySlots.length !== (level === 3 ? 1 : 0)) failures.push(`${question.id}/L${level}: easy slot ${index}`);
+            if (translationSlots.length !== (level === 3 ? 1 : 0)) failures.push(`${question.id}/L${level}: translation slot ${index}`);
+            if (level === 3 && (
+              easySlots[0]?.textContent !== question.choices[index].text.easyJa
+              || easySlots[0]?.getAttribute('aria-label') !== `やさしい日本語：${question.choices[index].text.easyJa}`
+              || !easySlots[0]?.classList.contains('choice-easy-japanese')
+            )) failures.push(`${question.id}/L${level}: easy slot value/class/aria ${index}`);
+            return `${easySlots.length}:${translationSlots.length}`;
+          });
+          if (new Set(topology).size !== 1) failures.push(`${question.id}/L${level}: non-uniform support topology`);
+          const domSignatures = choices.map(canonicalChoiceSignature);
+          if (new Set(domSignatures).size !== 1) failures.push(`${question.id}/L${level}: non-uniform DOM/class/ARIA signature`);
+
+          const answerMarkers = /(?:^|[-_:\\s])(correct|incorrect|right|wrong|answer|rationale|explanation|memory|benar|salah)(?:$|[-_:\\s])|正解|不正解|誤り/iu;
+          for (const element of [host, ...host.querySelectorAll('*')]) {
+            for (const attribute of element.attributes) {
+              const isEmptyAnswerControl = attribute.name === 'data-answer' && attribute.value === '';
+              if (!isEmptyAnswerControl
+                  && (answerMarkers.test(attribute.name) || answerMarkers.test(attribute.value))) {
+                failures.push(`${question.id}/L${level}: answer marker ${attribute.name}=${attribute.value}`);
+              }
+              if (attribute.name !== 'data-choice' && attribute.value === question.correctChoiceId) {
+                failures.push(`${question.id}/L${level}: correctChoiceId mounted in ${attribute.name}`);
+              }
+            }
+            const computedStyle = getComputedStyle(element);
+            if (element.matches('[hidden], [aria-hidden="true"]')
+                || computedStyle.display === 'none'
+                || computedStyle.visibility === 'hidden'
+                || computedStyle.contentVisibility === 'hidden'
+                || computedStyle.opacity === '0') {
+              const hiddenText = element.textContent || '';
+              if (answerOnlyTexts.some((text) => hiddenText.includes(text))) {
+                failures.push(`${question.id}/L${level}: answer-only material hidden in DOM`);
+              }
+            }
+          }
+          host.remove();
+
+          if (level === 3 && explicitRegressionIds.has(question.id)) {
+            explicit[question.id] = topology.length === 4
+              && new Set(topology).size === 1
+              && topology[0] === '1:1';
+          }
+        }
+      }
+      return { pilotCount: pilot.length, cases, failures, explicit };
+    }""")
+    if leak_matrix['failures']:
+        print(json.dumps(leak_matrix['failures'], ensure_ascii=False, indent=2), flush=True)
+    record(checks, 'pilot_16_by_level_0_to_3_preanswer_dom_has_no_answer_leak', leak_matrix['pilotCount'] == 16 and leak_matrix['cases'] == 64 and not leak_matrix['failures'])
+    for regression_id in ('q045', 'q055', 'q078', 'q079'):
+        record(checks, f'{regression_id}_level3_choice_support_topology_is_uniform', leak_matrix['explicit'].get(regression_id) is True)
+
+    mode_contract = page.evaluate("""() => {
+      const state = LivestockApp.defaultState();
+      const question = LivestockApp.QUESTIONS.find((item) => item.id === 'q001');
+      state.settings.studySupportMode = 'guided';
+      state.settings.preferredSupportLevel = 1;
+      const guidedWithLegacyTrue = LivestockApp.resolvedSupportLevel(state, question, 'daily');
+      const guidedWithLegacyFalse = LivestockApp.resolvedSupportLevel(state, question, 'daily');
+      state.settings.studySupportMode = 'adaptive';
+      delete state.mastery[question.id];
+      const adaptiveNew = LivestockApp.resolvedSupportLevel(state, question, 'daily');
+      state.mastery[question.id] = { questionId: question.id, factIds: question.sourceFactIds, stage: 2 };
+      const adaptiveStage2 = LivestockApp.resolvedSupportLevel(state, question, 'daily');
+      state.mastery[question.id].stage = 3;
+      const adaptiveStage3 = LivestockApp.resolvedSupportLevel(state, question, 'daily');
+      state.mastery[question.id].stage = 4;
+      const adaptiveStage4 = LivestockApp.resolvedSupportLevel(state, question, 'daily');
+      state.settings.studySupportMode = 'japanese_only';
+      const japaneseOnly = LivestockApp.resolvedSupportLevel(state, question, 'daily');
+      state.settings.studySupportMode = 'adaptive';
+      const mock = LivestockApp.resolvedSupportLevel(state, question, 'mock');
+      return { guidedWithLegacyTrue, guidedWithLegacyFalse, adaptiveNew, adaptiveStage2, adaptiveStage3, adaptiveStage4, japaneseOnly, mock };
+    }""")
+    record(checks, 'support_mode_contract_guided_adaptive_japanese_only', mode_contract == {
+        'guidedWithLegacyTrue': 1,
+        'guidedWithLegacyFalse': 1,
+        'adaptiveNew': 3,
+        'adaptiveStage2': 2,
+        'adaptiveStage3': 1,
+        'adaptiveStage4': 0,
+        'japaneseOnly': 0,
+        'mock': 0,
+    })
+
+    settings_contract = page.evaluate("""() => {
+      const previousView = LivestockApp.runtime.view;
+      LivestockApp.runtime.view = 'settings';
+      Object.assign(LivestockApp.runtime.state.settings, { studySupportMode: 'guided', preferredSupportLevel: 2 });
+      LivestockApp.render();
+      const guidedLevel = document.querySelector('[data-setting-level]');
+      const legacySelectors = [
+        '[data-setting-checkbox="automaticSupport"]',
+        '[data-setting-checkbox="showFurigana"]',
+        '[data-setting-checkbox="showEasyJapanese"]',
+        '[data-setting-checkbox="showIndonesian"]',
+      ];
+      const legacyControls = legacySelectors.some((selector) => document.querySelector(selector));
+      LivestockApp.runtime.state.settings.studySupportMode = 'adaptive';
+      LivestockApp.render();
+      const adaptiveLevel = document.querySelector('[data-setting-level]');
+      const result = {
+        guidedLevelEnabled: Boolean(guidedLevel && !guidedLevel.disabled),
+        adaptiveLevelDisabled: Boolean(adaptiveLevel?.disabled),
+        legacyControls,
+      };
+      LivestockApp.runtime.view = previousView;
+      LivestockApp.render();
+      return result;
+    }""")
+    record(checks, 'settings_ui_exposes_mode_and_guided_level_without_legacy_toggles', settings_contract == {
+        'guidedLevelEnabled': True,
+        'adaptiveLevelDisabled': True,
+        'legacyControls': False,
+    })
+
     # Level 2 starts with furigana, terminology, and intent. Full-question and
     # choice translations are available but remain closed until the learner asks.
     page.evaluate("""() => {
       Object.assign(LivestockApp.runtime.state.settings, {
-        studySupportMode: 'adaptive', automaticSupport: false, preferredSupportLevel: 2,
+        studySupportMode: 'guided', preferredSupportLevel: 2,
       });
     }""")
     page.evaluate("document.querySelector('[data-start=\"daily\"]')?.click()")

@@ -198,10 +198,6 @@ namespace LivestockApp {
     showVocabulary: boolean;
     showQuestionPattern: boolean;
     preferredSupportLevel: SupportLevel;
-    automaticSupport: boolean;
-    showFurigana: boolean;
-    showEasyJapanese: boolean;
-    showIndonesian: boolean;
     dailyQuestionCount: number;
     reviewContentEnabled: boolean;
   }

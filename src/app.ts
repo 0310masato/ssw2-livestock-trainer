@@ -1,4 +1,11 @@
 namespace LivestockApp {
+  export const MAX_IMPORT_BYTES = 20 * 1024 * 1024;
+
+  export function assertImportFileSize(size: number): void {
+    if (!Number.isSafeInteger(size) || size < 0 || size > MAX_IMPORT_BYTES) {
+      throw new Error('Imported state file exceeds the 20 MiB safety limit.');
+    }
+  }
   export let runtime: AppRuntime;
   let mockTimerHandle: number | null = null;
   let confirmCallback: (() => void) | null = null;
@@ -69,7 +76,12 @@ namespace LivestockApp {
   }
 
   function startMockTickerIfNeeded(): void {
-    if (!runtime.state.mockDraft || runtime.view !== 'study' || runtime.lastMockResult) return;
+    if (
+      !runtime.state.mockDraft
+      || runtime.view !== 'study'
+      || runtime.session?.kind !== 'mock'
+      || runtime.lastMockResult
+    ) return;
     const update = () => {
       const draft = runtime.state.mockDraft;
       if (!draft) return;
@@ -143,9 +155,9 @@ namespace LivestockApp {
       selectedChoiceId: null,
       answered: false,
       startedQuestionAt: performance.now(),
-      easyJapaneseVisible: runtime.state.settings.showEasyJapanese,
-      indonesianVisible: runtime.state.settings.showIndonesian,
-      furiganaVisible: runtime.state.settings.showFurigana,
+      easyJapaneseVisible: false,
+      indonesianVisible: false,
+      furiganaVisible: false,
       supportLevel: 0,
       keywordsVisible: false,
       choiceTranslationsVisible: false,
@@ -467,12 +479,19 @@ namespace LivestockApp {
       'ふりがな', 'やさしい日本語', '重要語', '全文インドネシア語', '選択肢訳', '回答後インドネシア語',
       '知識不足', '日本語不足', '日本語のみ再挑戦',
     ];
-    const rows = runtime.state.history.map((entry) => [
+    const rows = runtime.state.history.map((entry) => {
+      const question = questionById(entry.questionId);
+      const selectedChoiceIsValid = entry.selectedChoiceId === null
+        || Boolean(question?.choices.some((choice) => choice.id === entry.selectedChoiceId));
+      const trustedCorrect = Boolean(question)
+        && selectedChoiceIsValid
+        && entry.selectedChoiceId === question?.correctChoiceId;
+      return [
       entry.at,
-      entry.questionId,
-      entry.category,
-      entry.topic,
-      entry.correct ? '正解' : '不正解',
+      question?.id ?? '',
+      question?.category ?? '',
+      question?.topic ?? '',
+      trustedCorrect ? '正解' : '不正解',
       Math.round(entry.elapsedMs / 1000),
       entry.reason ? ERROR_REASON_LABELS[entry.reason] : '',
       entry.supportLevel,
@@ -485,7 +504,8 @@ namespace LivestockApp {
       entry.knowledgeGap,
       entry.japaneseGap,
       entry.isRetryWithoutSupport,
-    ]);
+    ];
+    });
     downloadText('畜産2号トレーナー_学習履歴_v0.5.csv', '\uFEFF' + [header, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n'), 'text/csv');
   }
 
@@ -505,6 +525,7 @@ namespace LivestockApp {
 
   async function importProgress(file: File): Promise<void> {
     try {
+      assertImportFileSize(file.size);
       const parsed = JSON.parse(await file.text());
       const raw = parsed.state ?? parsed;
       const imported = validateImportedState(raw);

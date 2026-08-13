@@ -142,7 +142,6 @@ namespace LivestockApp {
   }
 
   export function effectiveSupportLevel(state: AppState, question: Question): SupportLevel {
-    if (!state.settings.automaticSupport) return state.settings.preferredSupportLevel;
     const mastery = state.mastery[question.id];
     if (!mastery) return 3;
     if (mastery.stage >= 4) return 0;
@@ -158,10 +157,8 @@ namespace LivestockApp {
     forceWithoutSupport = false,
   ): SupportLevel {
     if (kind === 'mock' || forceWithoutSupport || state.settings.studySupportMode === 'japanese_only') return 0;
-    if (state.settings.studySupportMode === 'guided') {
-      return state.settings.automaticSupport ? 3 : state.settings.preferredSupportLevel;
-    }
-    return state.settings.automaticSupport ? effectiveSupportLevel(state, question) : state.settings.preferredSupportLevel;
+    if (state.settings.studySupportMode === 'guided') return state.settings.preferredSupportLevel;
+    return effectiveSupportLevel(state, question);
   }
 
   export function supportPolicyForLevel(level: SupportLevel): ResolvedSupportPolicy {
@@ -238,7 +235,11 @@ namespace LivestockApp {
     return supportPolicyForLevel(resolvedSupportLevel(state, question, kind, forceWithoutSupport));
   }
 
-  export function supportSettingsForLevel(level: number): Pick<UserSettings, 'showFurigana' | 'showEasyJapanese' | 'showIndonesian'> {
+  export function supportSettingsForLevel(level: number): {
+    showFurigana: boolean;
+    showEasyJapanese: boolean;
+    showIndonesian: boolean;
+  } {
     const normalized = clamp(Math.round(level), 0, 3) as SupportLevel;
     const policy = supportPolicyForLevel(normalized);
     return {

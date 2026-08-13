@@ -52,6 +52,12 @@
     "mock_submit_confirmed_via_dom": true,
     "mock_submit_and_grade_handler": true,
     "mock_ui_language_restored": true,
+    "paused_mock_timer_fixture_started": true,
+    "paused_mock_timer_fixture_interrupted": true,
+    "normal_study_started_with_expired_paused_mock": true,
+    "expired_paused_mock_does_not_replace_normal_study": true,
+    "expired_mock_resumed_via_dom": true,
+    "expired_mock_grades_on_explicit_resume": true,
     "desktop_render": true,
     "desktop_no_horizontal_overflow": true,
     "no_runtime_errors": true

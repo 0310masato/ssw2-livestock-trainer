@@ -119,7 +119,7 @@ async function loadApp() {
 
 const { app, indexedDbRecords } = await loadApp();
 
-test('internal review build exposes all 80 source-checked questions', () => {
+test('temporary PR review build exposes all 80 source-checked questions', () => {
   const state = app.defaultState();
   assert.equal(app.activeQuestions(state).length, 80);
   state.settings.reviewContentEnabled = false;
@@ -183,7 +183,6 @@ test('adaptive support fades after repeated success without equating supported a
   const state = app.defaultState();
   const question = app.QUESTIONS[3];
   state.settings.studySupportMode = 'adaptive';
-  state.settings.automaticSupport = true;
   const observedLevels = [];
 
   for (let index = 0; index < 6; index += 1) {
@@ -244,7 +243,183 @@ test('UI language defaults to Indonesian and can be persisted', () => {
     settings: { uiLanguage: 'ja', studySupportMode: 'guided', automaticSupport: false, preferredSupportLevel: 2 },
   });
   assert.equal(supportSettings.settings.preferredSupportLevel, 2);
-  assert.equal(supportSettings.settings.automaticSupport, false);
+  assert.equal('automaticSupport' in supportSettings.settings, false);
+});
+
+test('legacy support settings migrate into the current seven-key settings model', () => {
+  const japaneseOnly = app.validateImportedState({
+    settings: {
+      uiLanguage: 'ja',
+      automaticSupport: false,
+      showFurigana: false,
+      showEasyJapanese: false,
+      showIndonesian: false,
+      showVocabulary: false,
+      showQuestionPattern: false,
+    },
+  });
+  assert.equal(japaneseOnly.settings.studySupportMode, 'japanese_only');
+  assert.equal(japaneseOnly.settings.preferredSupportLevel, 0);
+  assert.deepEqual(
+    Object.keys(japaneseOnly.settings).sort(),
+    ['dailyQuestionCount', 'preferredSupportLevel', 'reviewContentEnabled', 'showQuestionPattern', 'showVocabulary', 'studySupportMode', 'uiLanguage'].sort(),
+  );
+
+  const adaptive = app.validateImportedState({
+    settings: { automaticSupport: true, showFurigana: true, showEasyJapanese: true, showIndonesian: true },
+  });
+  assert.equal(adaptive.settings.studySupportMode, 'adaptive');
+  assert.equal(adaptive.settings.preferredSupportLevel, 3);
+
+  const explicitModeWins = app.validateImportedState({
+    settings: {
+      studySupportMode: 'guided',
+      preferredSupportLevel: 2,
+      automaticSupport: true,
+      showFurigana: false,
+      showEasyJapanese: false,
+      showIndonesian: false,
+    },
+  });
+  assert.equal(explicitModeWins.settings.studySupportMode, 'guided');
+  assert.equal(explicitModeWins.settings.preferredSupportLevel, 2);
+});
+
+test('state import rejects unknown or malformed data and rebuilds question-derived history fields', () => {
+  const validHistory = {
+    id: 'history-1',
+    sessionId: 'session-1',
+    questionId: 'q001',
+    factIds: ['general-001'],
+    category: '畜産共通',
+    topic: '畜産の概要',
+    sessionKind: 'daily',
+    selectedChoiceId: 'b',
+    correct: false,
+    elapsedMs: 1_000,
+    usedEasyJapanese: false,
+    usedIndonesian: false,
+    usedFurigana: false,
+    openedKeywords: false,
+    openedQuestionTranslation: false,
+    openedChoiceTranslations: false,
+    openedAnswerIndonesian: false,
+    supportLevel: 1,
+    knowledgeGap: false,
+    japaneseGap: true,
+    retryOfHistoryId: null,
+    isRetryWithoutSupport: false,
+    reason: 'japanese',
+    confidence: 'unsure',
+    at: '2026-08-12T00:00:00.000Z',
+  };
+
+  const imported = app.validateImportedState({ history: [validHistory] });
+  assert.deepEqual(Array.from(imported.history[0].factIds), ['general-001']);
+  assert.equal(imported.history[0].category, '畜産共通');
+  assert.equal(imported.history[0].topic, '畜産の概要');
+  assert.notEqual(imported.history[0].factIds, validHistory.factIds, 'derived arrays must be reconstructed');
+
+  assert.throws(() => app.validateImportedState({ unexpected: true }), /unexpected/i);
+  assert.throws(() => app.validateImportedState({ settings: { showVocabulary: 'yes' } }), /showVocabulary/i);
+  assert.throws(() => app.validateImportedState({ settings: { studySupportMode: 'unsafe' } }), /studySupportMode/i);
+  assert.throws(() => app.validateImportedState({ settings: { dailyQuestionCount: 11 } }), /dailyQuestionCount/i);
+  assert.throws(() => app.validateImportedState({ lastOpenedAt: 'not-an-iso-date' }), /lastOpenedAt/i);
+  assert.throws(() => app.validateImportedState({ lastOpenedAt: '2026-02-31T00:00:00.000Z' }), /lastOpenedAt/i);
+  assert.throws(() => app.validateImportedState({ lastSessionQuestionIds: Array(81).fill('q001') }), /lastSessionQuestionIds/i);
+  assert.throws(() => app.validateImportedState({ history: [{ ...validHistory, questionId: 'q999' }] }), /questionId/i);
+  const rebuilt = app.validateImportedState({
+    history: [{
+      ...validHistory,
+      factIds: ['legacy-fact'],
+      category: '=HYPERLINK("https:\/\/example.invalid")',
+      topic: 'legacy-topic',
+      selectedChoiceId: 'a',
+      correct: false,
+    }],
+  });
+  assert.deepEqual(Array.from(rebuilt.history[0].factIds), ['general-001']);
+  assert.equal(rebuilt.history[0].category, '畜産共通');
+  assert.equal(rebuilt.history[0].topic, '畜産の概要');
+  assert.equal(rebuilt.history[0].correct, true, 'correct must be rebuilt from the canonical correctChoiceId');
+});
+
+test('state import rejects oversized files before reading or parsing their contents', () => {
+  assert.doesNotThrow(() => app.assertImportFileSize(app.MAX_IMPORT_BYTES));
+  assert.throws(() => app.assertImportFileSize(app.MAX_IMPORT_BYTES + 1), /20 MiB/);
+  assert.throws(() => app.assertImportFileSize(Number.NaN), /20 MiB/);
+});
+
+test('state import enforces nested caps, finite numbers, enum variants, and safe reconstruction', () => {
+  const base = {
+    id: 'history-enum', sessionId: 'session-enum', questionId: 'q001', factIds: ['legacy'],
+    category: '<img src=x onerror=alert(1)>', topic: '<script>alert(1)</script>',
+    sessionKind: 'category', selectedChoiceId: 'a', correct: false, elapsedMs: 100,
+    usedEasyJapanese: false, usedIndonesian: false, usedFurigana: false, supportLevel: 0,
+    reason: 'calculation', confidence: 'sure', at: '2026-08-12T00:00:00.000Z',
+  };
+  const imported = app.validateImportedState({
+    history: [base],
+    reviews: { q001: { status: '要修正', note: '<script>alert(1)</script>', updatedAt: '2026-08-12T00:00:00.000Z' } },
+  });
+  assert.equal(imported.history[0].category, '畜産共通');
+  assert.equal(imported.history[0].topic, '畜産の概要');
+  assert.equal(imported.history[0].correct, true);
+  assert.equal(imported.history[0].sessionKind, 'category');
+  assert.equal(imported.history[0].reason, 'calculation');
+  assert.equal(imported.reviews.q001.note, '<script>alert(1)</script>', 'free-form notes remain data and are escaped at render time');
+
+  assert.throws(() => app.validateImportedState({ settings: { dailyQuestionCount: '<img onerror=alert(1)>' } }), /dailyQuestionCount/i);
+  assert.throws(() => app.validateImportedState({ revision: Number.MAX_SAFE_INTEGER }), /revision/i);
+  assert.equal(app.validateImportedState({ revision: Number.MAX_SAFE_INTEGER - 1 }).revision, Number.MAX_SAFE_INTEGER - 1);
+  assert.throws(() => app.validateImportedState({ history: Array(20_001).fill(base) }), /at most 20000/i);
+  assert.throws(() => app.validateImportedState({ mockHistory: Array(1_001).fill({}) }), /at most 1000/i);
+  assert.throws(() => app.validateImportedState({ history: [{ ...base, elapsedMs: Number.NaN }] }), /elapsedMs/i);
+  assert.throws(() => app.validateImportedState({ history: [{ ...base, elapsedMs: Number.POSITIVE_INFINITY }] }), /elapsedMs/i);
+  assert.throws(() => app.validateImportedState({ history: [{ ...base, sessionKind: 'invalid' }] }), /sessionKind/i);
+  assert.throws(() => app.validateImportedState({ history: [{ ...base, reason: 'invalid' }] }), /reason/i);
+  assert.throws(() => app.validateImportedState({
+    reviews: Object.fromEntries(Array.from({ length: 81 }, (_, index) => [`q${String(index + 1).padStart(3, '0')}`, {}])),
+  }), /reviews.*at most 80/i);
+});
+
+test('CSV cells neutralize spreadsheet formulas after leading whitespace and control characters', () => {
+  for (const unsafe of [
+    '=1+1', '  +cmd', '\t@SUM(A1:A2)', '\r-2+3', '\n=IMPORTDATA("https://example.invalid")',
+    '  \tplain text', ' \rplain text', '   \nplain text',
+  ]) {
+    const encoded = app.csvCell(unsafe);
+    const decoded = encoded.startsWith('"') ? encoded.slice(1, -1).replaceAll('""', '"') : encoded;
+    assert.equal(decoded.startsWith("'"), true, unsafe);
+  }
+  assert.equal(app.csvCell('ordinary text'), 'ordinary text');
+});
+
+test('approved questions require every applicable automated and human review gate', () => {
+  const legacy = structuredClone(app.QUESTIONS.find((question) => question.schemaVersion === '0.3.0'));
+  legacy.status = 'approved';
+  legacy.prototypeOnly = false;
+  Object.assign(legacy.review, {
+    content: 'pass', languageJa: 'pass', languageId: 'pass', legalRights: 'pass', approvalByUser: 'approved',
+    furigana: 'pass', japaneseLearning: 'pass', answerLeak: 'pass', reviewedAt: '2026-08-13T00:00:00.000Z',
+  });
+  assert.equal(app.isQuestionApproved(legacy), true);
+  legacy.review.languageId = 'pending_native_review';
+  assert.equal(app.isQuestionApproved(legacy), false);
+  legacy.review.languageId = 'pass';
+  legacy.review.reviewedAt = '2026-02-31T00:00:00.000Z';
+  assert.equal(app.isQuestionApproved(legacy), false);
+
+  const pilot = structuredClone(app.QUESTIONS.find((question) => question.schemaVersion === '0.4.0'));
+  pilot.status = 'approved';
+  pilot.prototypeOnly = false;
+  Object.assign(pilot.review, {
+    content: 'pass', languageJa: 'pass', languageId: 'pass', legalRights: 'pass', approvalByUser: 'approved',
+    furigana: 'pass', japaneseLearning: 'pass', answerLeak: 'pass', reviewedAt: '2026-08-13T00:00:00.000Z',
+  });
+  assert.equal(app.isQuestionApproved(pilot), true);
+  pilot.review.answerLeak = 'pending';
+  assert.equal(app.isQuestionApproved(pilot), false);
 });
 
 test('guided study mode always exposes Japanese-learning supports', () => {
@@ -290,18 +465,16 @@ test('configured modes and mock exams determine the effective support level', ()
   const state = app.defaultState();
   const question = app.QUESTIONS[0];
   state.settings.studySupportMode = 'adaptive';
-  state.settings.automaticSupport = false;
   state.settings.preferredSupportLevel = 2;
+  assert.equal(app.resolvedSupportLevel(state, question, 'daily'), 3);
+  state.mastery[question.id] = { questionId: question.id, factIds: question.sourceFactIds, stage: 2 };
   assert.equal(app.resolvedSupportLevel(state, question, 'daily'), 2);
   assert.equal(app.resolvedSupportLevel(state, question, 'mock'), 0);
   state.settings.studySupportMode = 'japanese_only';
   assert.equal(app.resolvedSupportLevel(state, question, 'daily'), 0);
   state.settings.studySupportMode = 'guided';
-  state.settings.automaticSupport = true;
-  assert.equal(app.resolvedSupportLevel(state, question, 'daily'), 3);
-  state.settings.automaticSupport = false;
   state.settings.preferredSupportLevel = 1;
-  assert.equal(app.resolvedSupportLevel(state, question, 'daily'), 1, 'fixed level must be respected when automatic support is off');
+  assert.equal(app.resolvedSupportLevel(state, question, 'daily'), 1, 'guided must respect the preferred support level');
 });
 
 test('an immediate retry without support is recorded without changing mastery scheduling', () => {
@@ -351,8 +524,8 @@ test('an immediate retry without support is recorded without changing mastery sc
 test('older history imports gain explicit support-usage and gap fields', () => {
   const migrated = app.validateImportedState({
     history: [{
-      id: 'legacy', sessionId: 's', questionId: 'q001', factIds: ['fact-001'], category: '畜産共通',
-      topic: 'test', sessionKind: 'daily', selectedChoiceId: 'a', correct: false, elapsedMs: 1000,
+      id: 'legacy', sessionId: 's', questionId: 'q001', factIds: ['general-001'], category: '畜産共通',
+      topic: '畜産の概要', sessionKind: 'daily', selectedChoiceId: 'b', correct: false, elapsedMs: 1000,
       usedEasyJapanese: false, usedIndonesian: true, usedFurigana: false, supportLevel: 2,
       reason: 'knowledge', confidence: 'unsure', at: '2026-08-12T00:00:00.000Z',
     }],
@@ -377,7 +550,7 @@ test('legacy state migrates to the current schema without losing progress or rev
         lastCorrect: true, lastSupportLevel: 2,
       },
     },
-    reviews: { q001: { content: 'pass' } },
+    reviews: { q001: { status: '承認候補', note: '既存メモ', updatedAt: '2026-08-10T00:00:00.000Z' } },
     settings: { uiLanguage: 'ja' },
     lastSessionQuestionIds: ['q001'],
   });
@@ -386,7 +559,8 @@ test('legacy state migrates to the current schema without losing progress or rev
   assert.equal(migrated.revision, 12);
   assert.equal(migrated.mastery.q001.stage, 2);
   assert.equal(migrated.mastery.q001.dueAt, '2026-08-20T00:00:00.000Z');
-  assert.equal(migrated.reviews.q001.content, 'pass');
+  assert.equal(migrated.reviews.q001.status, '承認候補');
+  assert.equal(migrated.reviews.q001.note, '既存メモ');
   assert.equal(migrated.settings.uiLanguage, 'ja');
   assert.deepEqual(Array.from(migrated.lastSessionQuestionIds), ['q001']);
 });
