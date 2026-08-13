@@ -52,6 +52,13 @@ await update('e2e/smoke.py', (source) => source.replace(
 ));
 
 await update('e2e/smoke.py', (source) => source.replace(
+  `    check('Mulai 10 soal hari ini' in body and 'Belum ada soal berstatus approved' in body, 'home_render_indonesian', checks)
+    check(page.locator('[data-ui-language]').count() == 2 and page.evaluate("document.documentElement.lang === 'id'"), 'language_switcher_default', checks)`,
+  `    check('Pelatih Peternakan Tingkat 2' in body and 'Mulai 10 soal hari ini' in body, 'home_render_indonesian', checks)
+    check(page.locator('[data-ui-language="id"].active').count() == 1 and page.evaluate("document.documentElement.lang === 'id'"), 'language_switcher_default', checks)`,
+));
+
+await update('e2e/smoke.py', (source) => source.replace(
   `    page.locator('[data-mock-choice]').first.click()
     page.locator('[data-mock-next]').click()`,
   `    page.evaluate("document.querySelector('[data-mock-choice]')?.click()")
