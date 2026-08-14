@@ -28,7 +28,7 @@
 | REV-013 | P0再是正・自動検証済み | `e2e/http_pwa_smoke.py`, CI | localhostで実際の旧HEADから新buildへ同一origin更新し、SW・CacheStorage・実IndexedDB・offline起動を検査する | `a6533c3...`→現buildの`page.goto` HTTP E2E |
 | REV-014 | 対応・自動検証済み | CI, README, review docs | public repositoryの期限付き一時artifactとして表記を統一した | artifact名・保持期間・非正式配布表示 |
 | REV-015 | 対応・自動検証済み | `src/storage.ts`, settings UI | 旧表示checkboxをmigration入力だけにし、mode/Levelを正本化した | 設定UI→IDB→reload→新session E2E |
-| REV-016 | 対応・自動検証済み | `.github/workflows/pages.yml`, `.github/workflows/publish-gh-pages-branch.yml` | すべてのPages公開経路を手動実行だけに限定した | workflow trigger静的検査 |
+| REV-016 | P3再是正・自動検証済み | `.github/workflows/pages.yml`, `docs/DEPLOYMENT.md` | Pages公開経路をActions Pagesの手動workflow 1本へ統一し、branch force-push workflowを削除した | workflow trigger・廃止workflow不在の静的検査 |
 
 ## P0再是正: 選択肢easyJaによる正答推測
 

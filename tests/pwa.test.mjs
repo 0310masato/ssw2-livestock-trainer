@@ -170,7 +170,7 @@ test('temporary review distribution excludes PDFs, private keys, and local user 
 test('PR artifact is temporary and Pages deployment remains manual-only', async () => {
   const ciWorkflow = await readFile(resolve(root, '.github', 'workflows', 'ci.yml'), 'utf8');
   const pagesWorkflow = await readFile(resolve(root, '.github', 'workflows', 'pages.yml'), 'utf8');
-  const branchPublishWorkflow = await readFile(resolve(root, '.github', 'workflows', 'publish-gh-pages-branch.yml'), 'utf8');
+  const workflowFiles = await readdir(resolve(root, '.github', 'workflows'));
   const packageJson = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'));
   assert.match(packageJson.scripts['test:e2e:http'], /python e2e\/http_pwa_smoke\.py/);
   assert.match(packageJson.scripts['test:e2e'], /npm run test:e2e:http/);
@@ -181,5 +181,6 @@ test('PR artifact is temporary and Pages deployment remains manual-only', async 
   assert.doesNotMatch(ciWorkflow, /actions\/deploy-pages/);
   assert.match(ciWorkflow, /PyMuPDF==1\.27\.2\.2/);
   assert.deepEqual(workflowTriggers(pagesWorkflow), ['workflow_dispatch']);
-  assert.deepEqual(workflowTriggers(branchPublishWorkflow), ['workflow_dispatch']);
+  assert.equal(workflowFiles.includes('publish-gh-pages-branch.yml'), false);
+  assert.doesNotMatch(pagesWorkflow, /gh-pages|force/i);
 });

@@ -10,6 +10,8 @@
 
 PR #5は、人による代表16問レビューと実機テストを始められる状態へ整える段階にある。レビュー完了前にDraftを解除、merge、既存Pagesへ配信、Phase 6へ着手しない。
 
+Pages公開の正本経路は `.github/workflows/pages.yml` の手動 `workflow_dispatch` だけである。PR CIやpushからは起動せず、この段階では実行禁止とする。`gh-pages` branch方式は使用しない。
+
 ## 実施順序
 
 ### 1. PR #5のレビュー準備

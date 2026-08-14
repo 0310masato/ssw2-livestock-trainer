@@ -19,7 +19,7 @@ Draft PR #5の代表16問レビューでは、Pull Request CIの7日間保持art
 
 ## Pages手順（PR #5では使用禁止）
 
-以下は将来、公開範囲と権利を別途承認した場合だけ使用する履歴手順です。
+以下は将来、公開範囲と権利を別途承認した場合だけ使用できる唯一の正本手順です。現在は実行禁止です。
 
 1. GitHubのRepository Settings → PagesでSourceを **GitHub Actions** にする。
 2. Actions → **Deploy review build to GitHub Pages** を開く。
@@ -29,7 +29,7 @@ Draft PR #5の代表16問レビューでは、Pull Request CIの7日間保持art
 
 ## 自動実行しない理由
 
-`.github/workflows/pages.yml` と `.github/workflows/publish-gh-pages-branch.yml` は、いずれも `workflow_dispatch` のみです。pushのたびに未承認問題を公開しないためです。PR #5のレビューではどちらも実行しません。
+Pages公開の正本は `.github/workflows/pages.yml` だけで、`workflow_dispatch` の手動実行だけを許可する。Pull Request CI、push、scheduleからは起動しない。`gh-pages` branchへのforce-push方式はworkflowを削除し、[廃止した代替案](archive/GH_PAGES_BRANCH_ALTERNATIVE.md)として履歴だけを残した。PR #5のレビューではPages workflowを実行しない。
 
 ## CI
 

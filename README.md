@@ -165,6 +165,8 @@ Draft PR #5の成功したPull Request CI Runから、名前が `temporary-pr-re
 
 このリポジトリはpublicであり、artifactは指定レビュアーだけに制限された保管場所ではありません。未確認翻訳を含む期限付きPR確認物で、正式な配布物、長期保管物、承認済み教材ではありません。`standalone-review.html` は単体表示確認に利用できますが、Service WorkerとPWAインストールの確認にはHTTP配信とsecure contextが必要です。PR #5のレビューでは既存Pages、本番URL、一般公開ホストへ反映しません。
 
+GitHub Pagesの正本経路は `.github/workflows/pages.yml` のActions Pages deployだけで、手動 `workflow_dispatch` からしか起動しません。PR CIやpushでは実行されず、現在は実行禁止です。`gh-pages` branch方式は使用しません。
+
 ## 既知の制約
 
 端末内stateの連続saveは一つの画面内で順序を保ちますが、複数タブ・複数ウィンドウ・ブラウザ版とインストール版を同時に使った競合更新は未対応です。[Issue #6](https://github.com/0310masato/ssw2-livestock-trainer/issues/6) が完了するまで、学習履歴を記録するときは一つのタブまたはウィンドウだけを使用してください。
