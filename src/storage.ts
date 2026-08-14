@@ -22,8 +22,16 @@ namespace LivestockApp {
   ] as const;
   const LEGACY_SETTING_KEYS = ['automaticSupport', 'showFurigana', 'showEasyJapanese', 'showIndonesian'] as const;
   let writeQueue: Promise<void> = Promise.resolve();
+  let latestDurableRevision = 0;
 
   type UnknownRecord = Record<string, unknown>;
+
+  export interface SaveStateResult {
+    revision: number;
+    updatedAt: string;
+    localStorage: boolean;
+    indexedDb: boolean;
+  }
 
   export function defaultState(): AppState {
     return {
@@ -319,7 +327,7 @@ namespace LivestockApp {
         sessionKind: enumAt(entry.sessionKind, SESSION_KINDS, `${path}.sessionKind`),
         selectedChoiceId,
         correct: selectedChoiceId === question.correctChoiceId,
-        elapsedMs: integerAt(entry.elapsedMs, `${path}.elapsedMs`, 0, 7 * 24 * 60 * 60 * 1_000),
+        elapsedMs: finiteNumberAt(entry.elapsedMs, `${path}.elapsedMs`, 0, 7 * 24 * 60 * 60 * 1_000),
         usedEasyJapanese: optionalBoolean(entry, 'usedEasyJapanese', false, path),
         usedIndonesian: optionalBoolean(entry, 'usedIndonesian', false, path),
         usedFurigana: optionalBoolean(entry, 'usedFurigana', false, path),
@@ -515,13 +523,27 @@ namespace LivestockApp {
   async function writeIndexedDb(state: AppState): Promise<void> {
     const database = await openDatabase();
     return new Promise((resolve, reject) => {
-      const transaction = database.transaction(STORE_NAME, 'readwrite');
-      transaction.objectStore(STORE_NAME).put(state, STATE_KEY);
-      transaction.oncomplete = () => {
+      let settled = false;
+      const fail = (error: unknown): void => {
+        if (settled) return;
+        settled = true;
         database.close();
-        resolve();
+        reject(error);
       };
-      transaction.onerror = () => reject(transaction.error ?? new Error('IndexedDB write failed'));
+      try {
+        const transaction = database.transaction(STORE_NAME, 'readwrite');
+        transaction.objectStore(STORE_NAME).put(state, STATE_KEY);
+        transaction.oncomplete = () => {
+          if (settled) return;
+          settled = true;
+          database.close();
+          resolve();
+        };
+        transaction.onerror = () => fail(transaction.error ?? new Error('IndexedDB write failed'));
+        transaction.onabort = () => fail(transaction.error ?? new Error('IndexedDB write aborted'));
+      } catch (error) {
+        fail(error);
+      }
     });
   }
 
@@ -540,25 +562,82 @@ namespace LivestockApp {
       console.warn('Fallback state load failed.', error);
     }
     const state = mergeState(freshest(indexed, fallback));
+    latestDurableRevision = Math.max(latestDurableRevision, state.revision);
     state.lastOpenedAt = nowIso();
     return state;
   }
 
-  export async function saveState(state: AppState): Promise<void> {
+  function nextSafeRevision(stateRevision: number): number {
+    if (!Number.isSafeInteger(stateRevision) || stateRevision < 0) {
+      throw new Error('State revision must be a non-negative safe integer.');
+    }
+    const baseRevision = Math.max(stateRevision, latestDurableRevision);
+    const nextRevision = baseRevision + 1;
+    if (!Number.isSafeInteger(nextRevision)) {
+      throw new Error('State revision cannot be incremented safely.');
+    }
+    return nextRevision;
+  }
+
+  async function writeDurableSnapshot(state: AppState, source: AppState): Promise<SaveStateResult> {
+    const revision = nextSafeRevision(source.revision);
     const timestamp = nowIso();
-    state.revision = Math.max(0, Number(state.revision) || 0) + 1;
+    const snapshot: AppState = {
+      ...source,
+      revision,
+      updatedAt: timestamp,
+      lastOpenedAt: timestamp,
+    };
+    const serialized = JSON.stringify(snapshot);
+
+    let fallbackSaved = false;
+    let fallbackError: unknown = null;
+    try {
+      localStorage.setItem(FALLBACK_KEY, serialized);
+      fallbackSaved = true;
+    } catch (error) {
+      fallbackError = error;
+    }
+
+    let indexedDbSaved = false;
+    let indexedDbError: unknown = null;
+    try {
+      await writeIndexedDb(snapshot);
+      indexedDbSaved = true;
+    } catch (error) {
+      indexedDbError = error;
+    }
+
+    if (!fallbackSaved && !indexedDbSaved) {
+      throw new AggregateError(
+        [fallbackError, indexedDbError],
+        'State could not be saved to localStorage or IndexedDB.',
+      );
+    }
+    if (!fallbackSaved) {
+      console.warn('localStorage save failed. State is preserved in IndexedDB.', fallbackError);
+    }
+    if (!indexedDbSaved) {
+      console.warn('IndexedDB save failed. State is preserved in localStorage.', indexedDbError);
+    }
+
+    latestDurableRevision = revision;
+    state.revision = revision;
     state.updatedAt = timestamp;
     state.lastOpenedAt = timestamp;
-    const serialized = JSON.stringify(state);
-    localStorage.setItem(FALLBACK_KEY, serialized);
-    const snapshot = JSON.parse(serialized) as AppState;
-    const write = writeQueue.catch(() => undefined).then(() => writeIndexedDb(snapshot));
-    writeQueue = write.catch(() => undefined);
-    try {
-      await write;
-    } catch (error) {
-      console.warn('IndexedDB save failed. State is preserved in localStorage.', error);
-    }
+    return {
+      revision,
+      updatedAt: timestamp,
+      localStorage: fallbackSaved,
+      indexedDb: indexedDbSaved,
+    };
+  }
+
+  export async function saveState(state: AppState): Promise<SaveStateResult> {
+    const source = JSON.parse(JSON.stringify(state)) as AppState;
+    const write = writeQueue.then(() => writeDurableSnapshot(state, source));
+    writeQueue = write.then(() => undefined, () => undefined);
+    return write;
   }
 
   export async function clearProgressKeepReviews(state: AppState): Promise<AppState> {

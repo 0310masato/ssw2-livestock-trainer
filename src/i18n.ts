@@ -180,6 +180,7 @@ namespace LivestockApp {
     'インストールを開始しました。': 'Instalasi dimulai.',
     'インストールをキャンセルしました。': 'Instalasi dibatalkan.',
     '学習データを読み込みました。': 'Data belajar berhasil dimuat.',
+    '学習データを読み込み中です。完了後にもう一度お試しください。': 'Data belajar sedang diimpor. Coba lagi setelah proses selesai.',
     '学習データを読み込めませんでした。JSON形式を確認してください。': 'Data belajar tidak dapat dimuat. Periksa format JSON.',
     '学習を中断': 'Hentikan belajar sementara',
     '回答済みの履歴は残してホームへ戻ります。': 'Riwayat jawaban yang sudah diberikan tetap disimpan, lalu kembali ke beranda.',

@@ -70,12 +70,20 @@ with sync_playwright() as p:
     page.on('console', lambda message: page_errors.append(f'console:{message.text}') if message.type == 'error' else None)
     page.evaluate("""() => {
       const memory = new Map();
+      const controls = { failWrites: false };
       try { delete window.indexedDB; } catch (_) {}
+      Object.defineProperty(window, '__e2eStorageControls', {
+        configurable: true,
+        value: controls,
+      });
       Object.defineProperty(window, 'localStorage', {
         configurable: true,
         value: {
           getItem: (key) => memory.get(key) ?? null,
-          setItem: (key, value) => memory.set(key, String(value)),
+          setItem: (key, value) => {
+            if (controls.failWrites) throw new Error('Simulated localStorage write failure');
+            memory.set(key, String(value));
+          },
           removeItem: (key) => memory.delete(key),
           clear: () => memory.clear(),
         },
@@ -238,6 +246,119 @@ with sync_playwright() as p:
         checks,
     )
     print('E2E core: settings checked', flush=True)
+
+    # Imports must ignore the source device's revision and only replace the
+    # live runtime after at least one durable backend accepts the candidate.
+    import_baseline_revision = page.evaluate("""async () => {
+      await LivestockApp.saveState(LivestockApp.runtime.state);
+      return LivestockApp.runtime.state.revision;
+    }""")
+    import_fixture = page.evaluate("""() => {
+      const state = structuredClone(LivestockApp.runtime.state);
+      state.revision = Number.MAX_SAFE_INTEGER - 1;
+      state.settings.dailyQuestionCount = 15;
+      return JSON.stringify({ state });
+    }""")
+    page.locator('[data-import-progress]').set_input_files({
+        'name': 'safe-revision-import.json',
+        'mimeType': 'application/json',
+        'buffer': import_fixture.encode('utf-8'),
+    })
+    page.wait_for_timeout(300)
+    page.wait_for_function("LivestockApp.runtime.notice === '学習データを読み込みました。'")
+    imported_state = page.evaluate("""() => {
+      const saved = JSON.parse(localStorage.getItem('livestock2-state-v0.4'));
+      return {
+        revision: LivestockApp.runtime.state.revision,
+        count: LivestockApp.runtime.state.settings.dailyQuestionCount,
+        savedRevision: saved.revision,
+        savedCount: saved.settings.dailyQuestionCount,
+        safe: Number.isSafeInteger(LivestockApp.runtime.state.revision),
+        notice: LivestockApp.runtime.notice,
+      };
+    }""")
+    check(
+        imported_state == {
+            'revision': import_baseline_revision + 1,
+            'count': 15,
+            'savedRevision': import_baseline_revision + 1,
+            'savedCount': 15,
+            'safe': True,
+            'notice': '学習データを読み込みました。',
+        },
+        'import_revision_rebased_to_local_safe_sequence',
+        checks,
+    )
+
+    import_followup = page.evaluate("""async () => {
+      const first = await LivestockApp.saveState(LivestockApp.runtime.state);
+      const second = await LivestockApp.saveState(LivestockApp.runtime.state);
+      const loaded = await LivestockApp.loadState();
+      return {
+        firstRevision: first.revision,
+        secondRevision: second.revision,
+        runtimeRevision: LivestockApp.runtime.state.revision,
+        loadedRevision: loaded.revision,
+        loadedCount: loaded.settings.dailyQuestionCount,
+        allSafe: [first.revision, second.revision, loaded.revision].every(Number.isSafeInteger),
+      };
+    }""")
+    check(
+        import_followup == {
+            'firstRevision': imported_state['revision'] + 1,
+            'secondRevision': imported_state['revision'] + 2,
+            'runtimeRevision': imported_state['revision'] + 2,
+            'loadedRevision': imported_state['revision'] + 2,
+            'loadedCount': 15,
+            'allSafe': True,
+        },
+        'import_followup_revisions_safe_monotonic_and_reloadable',
+        checks,
+    )
+
+    rollback_before = page.evaluate("""() => ({
+      state: JSON.stringify(LivestockApp.runtime.state),
+      fallback: localStorage.getItem('livestock2-state-v0.4'),
+      history: JSON.stringify(LivestockApp.runtime.state.history),
+      mastery: JSON.stringify(LivestockApp.runtime.state.mastery),
+      revision: LivestockApp.runtime.state.revision,
+    })""")
+    rollback_fixture = page.evaluate("""() => {
+      const state = structuredClone(LivestockApp.runtime.state);
+      state.revision = 777;
+      state.history = [];
+      state.mastery = {};
+      state.settings.dailyQuestionCount = 20;
+      return JSON.stringify({ state });
+    }""")
+    page.evaluate("window.__e2eStorageControls.failWrites = true")
+    page.locator('[data-import-progress]').set_input_files({
+        'name': 'must-rollback-import.json',
+        'mimeType': 'application/json',
+        'buffer': rollback_fixture.encode('utf-8'),
+    })
+    page.wait_for_function("LivestockApp.runtime.notice === '保存に失敗しました。ブラウザの空き容量を確認してください。'")
+    rollback_after = page.evaluate("""() => ({
+      state: JSON.stringify(LivestockApp.runtime.state),
+      fallback: localStorage.getItem('livestock2-state-v0.4'),
+      history: JSON.stringify(LivestockApp.runtime.state.history),
+      mastery: JSON.stringify(LivestockApp.runtime.state.mastery),
+      revision: LivestockApp.runtime.state.revision,
+      notice: LivestockApp.runtime.notice,
+      indexedDbUnavailable: !('indexedDB' in window),
+    })""")
+    page.evaluate("window.__e2eStorageControls.failWrites = false")
+    check(
+        rollback_after['state'] == rollback_before['state']
+        and rollback_after['fallback'] == rollback_before['fallback']
+        and rollback_after['history'] == rollback_before['history']
+        and rollback_after['mastery'] == rollback_before['mastery']
+        and rollback_after['revision'] == rollback_before['revision']
+        and rollback_after['notice'] == '保存に失敗しました。ブラウザの空き容量を確認してください。'
+        and rollback_after['indexedDbUnavailable'],
+        'import_dual_backend_failure_rolls_back_runtime_and_durable_state',
+        checks,
+    )
 
     # Set the saved display-language precondition before exercising the mock
     # flow entirely through production DOM click handlers.

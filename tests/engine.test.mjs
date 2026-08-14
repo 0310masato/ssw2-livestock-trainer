@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import { randomUUID, webcrypto } from 'node:crypto';
 
-function createIndexedDbStub(records) {
+function createIndexedDbStub(records, controls) {
   let initialized = false;
   const clone = (value) => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
   return {
@@ -30,8 +30,13 @@ function createIndexedDbStub(records) {
               put: (value, key) => {
                 // Make revision 1 slower so this test detects unordered writes:
                 // without the production write queue, revision 1 would win last.
-                const delay = value.revision === 1 ? 10 : 0;
+                const delay = controls.indexedDbWriteDelayMs ?? (value.revision === 1 ? 10 : 0);
                 setTimeout(() => {
+                  if (controls.failIndexedDbWrites) {
+                    transaction.error = new Error('Simulated IndexedDB write failure');
+                    transaction.onerror?.();
+                    return;
+                  }
                   records.set(key, clone(value));
                   transaction.oncomplete?.();
                 }, delay);
@@ -49,11 +54,16 @@ function createIndexedDbStub(records) {
   };
 }
 
-async function loadApp() {
+async function loadApp(options = {}) {
   const source = await readFile(new URL('../build/app.js', import.meta.url), 'utf8');
-  const storage = new Map();
-  const indexedDbRecords = new Map();
-  const indexedDB = createIndexedDbStub(indexedDbRecords);
+  const storage = options.storage ?? new Map();
+  const indexedDbRecords = options.indexedDbRecords ?? new Map();
+  const controls = options.controls ?? {
+    failLocalStorageWrites: false,
+    failIndexedDbWrites: false,
+    indexedDbWriteDelayMs: undefined,
+  };
+  const indexedDB = createIndexedDbStub(indexedDbRecords, controls);
   const noop = () => {};
   const windowStub = {
     addEventListener: noop,
@@ -80,6 +90,7 @@ async function loadApp() {
     Boolean,
     RegExp,
     Error,
+    AggregateError,
     Blob,
     URL,
     TextEncoder,
@@ -103,10 +114,15 @@ async function loadApp() {
       querySelectorAll: () => [],
       createElement: () => ({ click: noop, remove: noop, style: {}, set href(_) {}, set download(_) {} }),
       body: { append: noop },
+      documentElement: { lang: '', dataset: {} },
+      title: '',
     },
     localStorage: {
       getItem: (key) => storage.get(key) ?? null,
-      setItem: (key, value) => storage.set(key, String(value)),
+      setItem: (key, value) => {
+        if (controls.failLocalStorageWrites) throw new Error('Simulated localStorage write failure');
+        storage.set(key, String(value));
+      },
       removeItem: (key) => storage.delete(key),
     },
   };
@@ -114,7 +130,7 @@ async function loadApp() {
   windowStub.document = sandbox.document;
   vm.createContext(sandbox);
   vm.runInContext(source, sandbox, { filename: 'app.js' });
-  return { app: sandbox.LivestockApp, indexedDbRecords };
+  return { app: sandbox.LivestockApp, storage, indexedDbRecords, controls };
 }
 
 const { app, indexedDbRecords } = await loadApp();
@@ -319,6 +335,11 @@ test('state import rejects unknown or malformed data and rebuilds question-deriv
   assert.equal(imported.history[0].category, '畜産共通');
   assert.equal(imported.history[0].topic, '畜産の概要');
   assert.notEqual(imported.history[0].factIds, validHistory.factIds, 'derived arrays must be reconstructed');
+  assert.equal(
+    app.validateImportedState({ history: [{ ...validHistory, elapsedMs: 1_000.5 }] }).history[0].elapsedMs,
+    1_000.5,
+    'production performance timings may contain fractional milliseconds',
+  );
 
   assert.throws(() => app.validateImportedState({ unexpected: true }), /unexpected/i);
   assert.throws(() => app.validateImportedState({ settings: { showVocabulary: 'yes' } }), /showVocabulary/i);
@@ -570,13 +591,181 @@ test('consecutive saves retain the newest revision in IndexedDB and fallback per
   const firstSave = app.saveState(state);
   state.settings.uiLanguage = 'ja';
   const secondSave = app.saveState(state);
+  assert.equal(state.revision, 0, 'metadata must not advance before a durable backend succeeds');
+  const [firstResult, secondResult] = await Promise.all([firstSave, secondSave]);
+
+  assert.equal(firstResult.revision, 1);
+  assert.equal(secondResult.revision, 2);
   assert.equal(state.revision, 2);
   assert.ok(Date.parse(state.updatedAt) > 0);
-  await Promise.all([firstSave, secondSave]);
-
   assert.equal(indexedDbRecords.get('state-v0.4').revision, 2);
   assert.equal(indexedDbRecords.get('state-v0.4').settings.uiLanguage, 'ja');
   const loaded = await app.loadState();
   assert.equal(loaded.revision, 2);
   assert.equal(loaded.settings.uiLanguage, 'ja');
+});
+
+test('durable saves succeed when either localStorage or IndexedDB remains available', async () => {
+  const indexedOnly = await loadApp();
+  const indexedState = indexedOnly.app.defaultState();
+  await indexedOnly.app.saveState(indexedState);
+  const staleFallback = indexedOnly.storage.get('livestock2-state-v0.4');
+  indexedOnly.controls.failLocalStorageWrites = true;
+  indexedState.settings.uiLanguage = 'ja';
+  const indexedResult = await indexedOnly.app.saveState(indexedState);
+
+  assert.equal(indexedResult.localStorage, false);
+  assert.equal(indexedResult.indexedDb, true);
+  assert.equal(indexedState.revision, 2);
+  assert.equal(indexedOnly.storage.get('livestock2-state-v0.4'), staleFallback);
+  assert.equal(indexedOnly.indexedDbRecords.get('state-v0.4').revision, 2);
+  assert.equal((await indexedOnly.app.loadState()).settings.uiLanguage, 'ja');
+
+  const fallbackOnly = await loadApp();
+  const fallbackState = fallbackOnly.app.defaultState();
+  await fallbackOnly.app.saveState(fallbackState);
+  const staleIndexed = JSON.stringify(fallbackOnly.indexedDbRecords.get('state-v0.4'));
+  fallbackOnly.controls.failIndexedDbWrites = true;
+  fallbackState.settings.uiLanguage = 'ja';
+  const fallbackResult = await fallbackOnly.app.saveState(fallbackState);
+
+  assert.equal(fallbackResult.localStorage, true);
+  assert.equal(fallbackResult.indexedDb, false);
+  assert.equal(fallbackState.revision, 2);
+  assert.equal(JSON.stringify(fallbackOnly.indexedDbRecords.get('state-v0.4')), staleIndexed);
+  assert.equal(JSON.parse(fallbackOnly.storage.get('livestock2-state-v0.4')).revision, 2);
+  assert.equal((await fallbackOnly.app.loadState()).settings.uiLanguage, 'ja');
+});
+
+test('dual-backend save failure preserves caller metadata and existing durable state', async () => {
+  const environment = await loadApp();
+  const current = environment.app.defaultState();
+  await environment.app.saveState(current);
+  const fallbackBefore = environment.storage.get('livestock2-state-v0.4');
+  const indexedBefore = JSON.stringify(environment.indexedDbRecords.get('state-v0.4'));
+  const currentBefore = JSON.stringify(current);
+
+  const candidate = environment.app.validateImportedState({
+    revision: Number.MAX_SAFE_INTEGER - 1,
+    settings: { uiLanguage: 'ja' },
+  });
+  candidate.revision = current.revision;
+  const candidateRevision = candidate.revision;
+  const candidateUpdatedAt = candidate.updatedAt;
+  const candidateLastOpenedAt = candidate.lastOpenedAt;
+  environment.controls.failLocalStorageWrites = true;
+  environment.controls.failIndexedDbWrites = true;
+
+  await assert.rejects(
+    environment.app.saveState(candidate),
+    /localStorage or IndexedDB/,
+  );
+  assert.equal(candidate.revision, candidateRevision);
+  assert.equal(candidate.updatedAt, candidateUpdatedAt);
+  assert.equal(candidate.lastOpenedAt, candidateLastOpenedAt);
+  assert.equal(JSON.stringify(current), currentBefore);
+  assert.equal(environment.storage.get('livestock2-state-v0.4'), fallbackBefore);
+  assert.equal(JSON.stringify(environment.indexedDbRecords.get('state-v0.4')), indexedBefore);
+});
+
+test('import revisions are rebased onto a safe local sequence and survive reload', async () => {
+  const environment = await loadApp();
+  const current = environment.app.defaultState();
+  await environment.app.saveState(current);
+
+  const imported = environment.app.validateImportedState({
+    revision: Number.MAX_SAFE_INTEGER - 1,
+    settings: { uiLanguage: 'ja' },
+  });
+  assert.equal(imported.revision, Number.MAX_SAFE_INTEGER - 1, 'the source revision remains parseable for compatibility');
+  imported.revision = current.revision;
+  const importedSave = await environment.app.saveState(imported);
+  const followupSave = await environment.app.saveState(imported);
+
+  assert.equal(importedSave.revision, 2);
+  assert.equal(followupSave.revision, 3);
+  assert.equal(imported.revision, 3);
+  assert.equal(Number.isSafeInteger(imported.revision), true);
+  const loaded = await environment.app.loadState();
+  assert.equal(loaded.revision, 3);
+  assert.equal(loaded.settings.uiLanguage, 'ja');
+});
+
+test('saveState rejects instead of advancing beyond the safe-integer revision boundary', async () => {
+  const environment = await loadApp();
+  const state = environment.app.defaultState();
+  await environment.app.saveState(state);
+  const fallbackBefore = environment.storage.get('livestock2-state-v0.4');
+  const indexedBefore = JSON.stringify(environment.indexedDbRecords.get('state-v0.4'));
+  state.revision = Number.MAX_SAFE_INTEGER;
+  const updatedAtBefore = state.updatedAt;
+  const lastOpenedAtBefore = state.lastOpenedAt;
+
+  await assert.rejects(environment.app.saveState(state), /incremented safely/);
+  assert.equal(state.revision, Number.MAX_SAFE_INTEGER);
+  assert.equal(state.updatedAt, updatedAtBefore);
+  assert.equal(state.lastOpenedAt, lastOpenedAtBefore);
+  assert.equal(environment.storage.get('livestock2-state-v0.4'), fallbackBefore);
+  assert.equal(JSON.stringify(environment.indexedDbRecords.get('state-v0.4')), indexedBefore);
+});
+
+test('import barrier prevents delayed old-runtime saves and concurrent imports from overwriting the candidate', async () => {
+  const environment = await loadApp({
+    controls: {
+      failLocalStorageWrites: false,
+      failIndexedDbWrites: false,
+      indexedDbWriteDelayMs: 40,
+    },
+  });
+  await environment.app.boot();
+  await environment.app.persist();
+  const baselineRevision = environment.app.runtime.state.revision;
+
+  const candidate = environment.app.defaultState();
+  candidate.revision = Number.MAX_SAFE_INTEGER - 1;
+  candidate.settings.uiLanguage = 'id';
+  candidate.settings.dailyQuestionCount = 15;
+  const candidateText = JSON.stringify({ state: candidate });
+  let releaseFileText;
+  const delayedText = new Promise((resolve) => { releaseFileText = resolve; });
+  const importPromise = environment.app.importProgress({
+    size: Buffer.byteLength(candidateText),
+    text: () => delayedText,
+  });
+
+  const oldRuntime = environment.app.runtime.state;
+  oldRuntime.settings.uiLanguage = 'ja';
+  oldRuntime.settings.dailyQuestionCount = 5;
+  let postStartPersistSettled = false;
+  const postStartPersist = environment.app.persist().then(() => {
+    postStartPersistSettled = true;
+  });
+
+  const ignoredCandidate = environment.app.defaultState();
+  ignoredCandidate.settings.dailyQuestionCount = 20;
+  const ignoredText = JSON.stringify({ state: ignoredCandidate });
+  await environment.app.importProgress({
+    size: Buffer.byteLength(ignoredText),
+    text: async () => ignoredText,
+  });
+  await new Promise((resolve) => setTimeout(resolve, 15));
+  assert.equal(postStartPersistSettled, false, 'ordinary persistence must wait for the active import transaction');
+
+  releaseFileText(candidateText);
+  await Promise.all([importPromise, postStartPersist]);
+
+  assert.notEqual(environment.app.runtime.state, oldRuntime);
+  assert.equal(environment.app.runtime.state.settings.uiLanguage, 'id');
+  assert.equal(environment.app.runtime.state.settings.dailyQuestionCount, 15);
+  assert.equal(environment.app.runtime.state.revision, baselineRevision + 2);
+  const fallback = JSON.parse(environment.storage.get('livestock2-state-v0.4'));
+  const indexed = environment.indexedDbRecords.get('state-v0.4');
+  assert.equal(fallback.settings.dailyQuestionCount, 15);
+  assert.equal(indexed.settings.dailyQuestionCount, 15);
+  assert.equal(fallback.revision, baselineRevision + 2);
+  assert.equal(indexed.revision, baselineRevision + 2);
+  const reloaded = await environment.app.loadState();
+  assert.equal(reloaded.settings.uiLanguage, 'id');
+  assert.equal(reloaded.settings.dailyQuestionCount, 15);
+  assert.equal(reloaded.revision, baselineRevision + 2);
 });

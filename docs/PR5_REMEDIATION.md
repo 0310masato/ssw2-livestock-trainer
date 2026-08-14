@@ -18,7 +18,7 @@
 | REV-003 | 対応・自動検証済み | `src/engine.ts`, `src/views.ts`, `src/pedagogy.ts` | guided/adaptive/japanese_onlyのLevel決定規則を単一化した | mode・mastery・Levelの単体/E2E |
 | REV-004 | Issueへ延期 | [Issue #6](https://github.com/0310masato/ssw2-livestock-trainer/issues/6) | 複数タブのlost updateはPR #5で実装せず、Alphaを単一タブ利用に限定 | Issueの2ページE2E受入条件 |
 | REV-005 | P2再是正・自動検証済み | `src/app.ts`, `e2e/smoke.py` | 模試timerを表示中かつ未採点のmock sessionだけで動かし、期限切れ採点後にintervalを作らない | 模試中断→期限切れ→再開→採点後1.2秒、active ticker 0・履歴1件 |
-| REV-006 | 対応・自動検証済み | `src/storage.ts`, `src/app.ts` | import stateを明示検証・再構成し、20 MiB上限を含め不正入力を全体拒否する | HTML相当、未知key、過大配列、無効ID/日時/数値 |
+| REV-006 | P2再是正・自動検証済み | `src/storage.ts`, `src/app.ts` | import stateを明示検証・再構成し、20 MiB上限を含め不正入力を全体拒否する。永続化成功後だけruntimeを置換する | 不正入力、片方の保存先失敗、両方失敗時rollback、revision境界、import競合 |
 | REV-007 | 対応・自動検証済み | `src/utils.ts` | CSVの式開始文字をquote処理とは別に無害化する | `=`, `+`, `-`, `@`, tab/CR/LFテスト |
 | REV-008 | 対応・自動検証済み | `src/utils.ts`, `public/question.schema.json`, `scripts/validate_content.py` | approved条件をSchema・validator・runtimeで共通化した | 各gateと不正日時のnegative fixture |
 | REV-009 | 対応・自動検証済み | `scripts/generate_data.mjs` | `src/data.ts`を決定的に全生成し、意味的TypeScript検証後だけatomic置換する | 境界文字列、不正JSON、非配列、重複、失敗時不変 |
@@ -56,6 +56,14 @@ PR #5の技術的な境界修正は、選択肢の `easyJa` を学習者向け�
 `usedEasyJapanese` は、回答前に学習者へ実際に表示された問題文または重要語のやさしい日本語だけを記録する。Level 1の短い重要語ヒントを含み、一度表示した後に閉じても使用済みを維持する。選択肢のレビュー用`easyJa`と、回答後に初めて現れる解説は対象外である。Level 1の初期表示・非表示・開閉、Level 2の読みのみ、Level 3の問題文表示をproduction event経路で検査する。
 
 期限切れ模試を再開したときは、最初のtimer更新で採点された後にdraft、画面、session、結果、残り時間を再確認する。すでに結果画面へ移った場合は1秒intervalを登録せず、履歴が一度だけ増えた状態を待機後も維持する。
+
+## P2再是正: importのdurable saveとrevision境界
+
+import元のrevisionは別端末の保存順序であるため、検証後に現在端末のrevisionへrebaseし、次のsafe integerを一度だけ採番する。localStorageとIndexedDBへ同一snapshotを保存し、少なくとも一方が成功した場合だけdurable saveを成功とする。両方が失敗した場合は候補state、現在のruntime、既存の永続stateを変更せず、成功通知も表示しない。
+
+import開始時にはapp内のbarrierを同期的に設ける。開始前から実行中の保存を先に完了させた後、import候補の保存とruntime置換を一つの排他区間で行い、開始後に要求された通常保存は置換後のruntimeを保存する。これにより、遅延したIndexedDB書込み中に旧runtimeの保存要求が来ても、import済みstateを古い内容で上書きしない。同時に二つ目のimportを開始せず、処理中noticeを表示する。
+
+回帰検査では、localStorageのみ失敗、IndexedDBのみ失敗、両方失敗、`Number.MAX_SAFE_INTEGER`境界、import後の連続保存とreloadに加え、遅延File読込・遅延IndexedDB・旧runtimeからの同時保存を組み合わせ、最終runtimeと両保存先がimport候補のままであることを確認する。productionで記録される小数ミリ秒の回答時間もexport/import可能な有限数として受理する。
 
 ## 人が再確認する事項
 

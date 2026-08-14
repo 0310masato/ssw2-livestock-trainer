@@ -9,6 +9,10 @@ namespace LivestockApp {
   export let runtime: AppRuntime;
   let mockTimerHandle: number | null = null;
   let confirmCallback: (() => void) | null = null;
+  let persistenceQueue: Promise<void> = Promise.resolve();
+  let importInProgress = false;
+  let importBarrier: Promise<void> | null = null;
+  let releaseImportBarrier: (() => void) | null = null;
 
   function initialRuntime(state: AppState): AppRuntime {
     return {
@@ -122,9 +126,17 @@ namespace LivestockApp {
     mockTimerHandle = window.setInterval(update, 1_000);
   }
 
-  async function persist(): Promise<void> {
+  function runPersistenceExclusive<T>(operation: () => Promise<T>): Promise<T> {
+    const result = persistenceQueue.then(operation);
+    persistenceQueue = result.then(() => undefined, () => undefined);
+    return result;
+  }
+
+  export async function persist(): Promise<void> {
+    const barrier = importBarrier;
+    if (barrier) await barrier;
     try {
-      await saveState(runtime.state);
+      await runPersistenceExclusive(() => saveState(runtime.state));
     } catch (error) {
       console.error(error);
       runtime.notice = '保存に失敗しました。ブラウザの空き容量を確認してください。';
@@ -572,19 +584,47 @@ namespace LivestockApp {
     downloadText('畜産2号トレーナー_80問レビュー_v0.5.json', JSON.stringify(records, null, 2));
   }
 
-  async function importProgress(file: File): Promise<void> {
+  export async function importProgress(file: File): Promise<void> {
+    if (importInProgress) {
+      showNotice('学習データを読み込み中です。完了後にもう一度お試しください。');
+      return;
+    }
+    importInProgress = true;
+    importBarrier = new Promise((resolve) => {
+      releaseImportBarrier = resolve;
+    });
     try {
-      assertImportFileSize(file.size);
-      const parsed = JSON.parse(await file.text());
-      const raw = parsed.state ?? parsed;
-      const imported = validateImportedState(raw);
-      imported.revision = Math.max(imported.revision, runtime.state.revision);
-      runtime.state = imported;
-      await persist();
+      let imported: AppState;
+      try {
+        assertImportFileSize(file.size);
+        const parsed = JSON.parse(await file.text());
+        const raw = parsed.state ?? parsed;
+        imported = validateImportedState(raw);
+      } catch (error) {
+        console.warn('Imported state validation failed.', error);
+        showNotice('学習データを読み込めませんでした。JSON形式を確認してください。');
+        return;
+      }
+
+      try {
+        await runPersistenceExclusive(async () => {
+          imported.revision = runtime.state.revision;
+          await saveState(imported);
+          runtime.state = imported;
+        });
+      } catch (error) {
+        console.warn('Imported state persistence failed.', error);
+        showNotice('保存に失敗しました。ブラウザの空き容量を確認してください。');
+        return;
+      }
+
       showNotice('学習データを読み込みました。');
-    } catch (error) {
-      console.error(error);
-      showNotice('学習データを読み込めませんでした。JSON形式を確認してください。');
+    } finally {
+      importInProgress = false;
+      const release = releaseImportBarrier;
+      importBarrier = null;
+      releaseImportBarrier = null;
+      release?.();
     }
   }
 
@@ -725,15 +765,25 @@ namespace LivestockApp {
     document.querySelectorAll<HTMLElement>('[data-export-progress-csv]').forEach((element) => element.addEventListener('click', exportProgressCsv));
     document.querySelectorAll<HTMLElement>('[data-export-reviews]').forEach((element) => element.addEventListener('click', exportReviews));
     document.querySelector<HTMLInputElement>('[data-import-progress]')?.addEventListener('change', (event) => {
-      const file = (event.currentTarget as HTMLInputElement).files?.[0];
-      if (file) void importProgress(file);
+      const input = event.currentTarget as HTMLInputElement;
+      const file = input.files?.[0];
+      if (file) {
+        input.disabled = true;
+        void importProgress(file).finally(() => {
+          if (input.isConnected) input.disabled = false;
+        });
+      }
     });
     document.querySelector<HTMLElement>('[data-reset-progress]')?.addEventListener('click', () => {
       askConfirm('学習履歴をリセット', '学習履歴・復習予定・模試履歴を削除します。レビュー結果と設定は残します。', async () => {
-        runtime.state = await clearProgressKeepReviews(runtime.state);
-        runtime.session = null;
-        runtime.lastMockResult = null;
-        render();
+        const barrier = importBarrier;
+        if (barrier) await barrier;
+        await runPersistenceExclusive(async () => {
+          runtime.state = await clearProgressKeepReviews(runtime.state);
+          runtime.session = null;
+          runtime.lastMockResult = null;
+          render();
+        });
       });
     });
 
