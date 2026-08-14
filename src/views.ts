@@ -1,5 +1,7 @@
 namespace LivestockApp {
   export function appShell(content: string): string {
+    const mockActive = Boolean(runtime.view === 'study' && runtime.state.mockDraft && runtime.session?.kind === 'mock' && !runtime.lastMockResult);
+    const shellAttributes = mockActive ? ' class="mock-app-shell" lang="ja" data-mock-app-shell="true" data-no-ui-translation="true"' : '';
     const navItems: Array<{ view: ViewName; label: string }> = [
       { view: 'home', label: 'ホーム' },
       { view: 'study', label: '学習' },
@@ -10,6 +12,7 @@ namespace LivestockApp {
       { view: 'settings', label: '設定' },
     ];
     return `
+      <div${shellAttributes}>
       <header class="app-header">
         <div class="brand-row">
           <button class="brand" data-view="home" aria-label="ホームへ戻る">
@@ -47,6 +50,7 @@ namespace LivestockApp {
           </div>
         </form>
       </dialog>
+      </div>
     `;
   }
 
@@ -70,7 +74,7 @@ namespace LivestockApp {
     const due = dueCount(state);
     const reviewCandidateCount = Object.values(state.reviews).filter((review) => review.status === '承認候補').length;
     const weak = weakestCategories(state, 3);
-    const todayAnswers = state.history.filter((entry) => dateKey(entry.at) === dateKey(new Date())).length;
+    const todayAnswers = assessmentHistory(state).filter((entry) => dateKey(entry.at) === dateKey(new Date())).length;
     const dailyTarget = state.settings.dailyQuestionCount;
     return `
       <section class="hero-panel">
@@ -168,14 +172,10 @@ namespace LivestockApp {
     const progress = Math.round(((session.index + 1) / total) * 100);
     const latest = runtime.state.history.findLast((entry) => entry.sessionId === session.id && entry.questionId === question.id);
     const correct = latest?.correct ?? false;
-    const supportLevel = effectiveSupportLevel(runtime.state, question);
+    const supportLevel = session.supportLevel;
+    const supportPolicy = supportPolicyForLevel(supportLevel);
 
-    const settings: UserSettings = {
-      ...runtime.state.settings,
-      showFurigana: session.furiganaVisible,
-      showEasyJapanese: session.easyJapaneseVisible,
-      showIndonesian: session.indonesianVisible,
-    };
+    const settings = runtime.state.settings;
 
     return `
       <section class="session-shell">
@@ -185,7 +185,23 @@ namespace LivestockApp {
         </div>
         <div class="question-progress" aria-label="${session.index + 1}問目 / ${total}問"><i style="width:${progress}%"></i></div>
 
-        ${renderGuidedQuestionCard(question, session, settings, correct, supportLevel, total)}
+        ${renderGuidedQuestionCard(question, session, settings, correct, supportLevel, total, {
+          showFurigana: session.furiganaVisible,
+          showEasyJapanese: session.easyJapaneseVisible,
+          showIndonesian: session.indonesianVisible,
+          showQuestionTranslation: session.indonesianVisible,
+          showChoiceTranslations: session.choiceTranslationsVisible,
+          showAnswerIndonesian: session.answerIndonesianVisible,
+          showKeywords: session.keywordsVisible,
+          showKeywordIndonesian: supportLevel >= 2,
+          showIntent: supportPolicy.showIntent,
+          showIntentIndonesian: supportLevel >= 2,
+          compactKeywordHints: supportPolicy.compactKeywordHints,
+          allowQuestionTranslation: supportPolicy.allowQuestionTranslation,
+          allowChoiceTranslations: supportPolicy.allowChoiceTranslations,
+          allowAnswerIndonesian: supportPolicy.allowAnswerIndonesian,
+          isRetryWithoutSupport: session.isRetryWithoutSupport,
+        })}
       </section>
     `;
   }
@@ -196,7 +212,9 @@ namespace LivestockApp {
 
   function sessionResultView(): string {
     const session = runtime.session!;
-    const entries = runtime.state.history.filter((entry) => entry.sessionId === session.id);
+    const sessionEntries = runtime.state.history.filter((entry) => entry.sessionId === session.id);
+    const entries = sessionEntries.filter((entry) => !entry.isRetryWithoutSupport);
+    const retries = sessionEntries.length - entries.length;
     const correct = entries.filter((entry) => entry.correct).length;
     const accuracy = entries.length ? Math.round((correct / entries.length) * 100) : 0;
     const avg = entries.length ? Math.round(entries.reduce((sum, entry) => sum + entry.elapsedMs, 0) / entries.length / 1000) : 0;
@@ -207,7 +225,7 @@ namespace LivestockApp {
         <span class="result-icon" aria-hidden="true">✓</span>
         <h1>${entries.length}問が終わりました</h1>
         <strong>${correct} / ${entries.length}（${accuracy}%）</strong>
-        <p>平均回答時間 ${avg}秒。日本語が原因の誤答は${japanese}件です。</p>
+        <p>平均回答時間 ${avg}秒。日本語が原因の誤答は${japanese}件です。${retries ? `日本語のみ再挑戦 ${retries}件。` : ''}</p>
       </section>
       <div class="metric-grid">
         <article class="metric-card"><strong>${correct}</strong><span>正解</span></article>
@@ -230,7 +248,7 @@ namespace LivestockApp {
     const selected = draft.answers[question.id] ?? null;
     const unanswered = draft.questionIds.filter((id) => !draft.answers[id]).length;
     return `
-      <section class="mock-shell">
+      <section class="mock-shell" lang="ja" data-no-ui-translation="true">
         <div class="mock-header"><div><span class="pill danger">模擬試験</span><strong>問題 ${index + 1} / ${draft.questionIds.length}</strong></div><div class="mock-timer" data-mock-timer>${formatClock(remaining)}</div></div>
         <div class="mock-note">日本語のみ・途中解説なし・非公式練習結果です。残り未回答 ${unanswered}問。</div>
         <article class="question-card mock-card">
@@ -268,7 +286,7 @@ namespace LivestockApp {
       return (!needle || text.includes(needle)) && (runtime.glossaryFilter === 'all' || item.termJa.startsWith(runtime.glossaryFilter));
     });
     return `
-      <div class="section-heading"><h1>日本語専門用語</h1><p>試験問題を読むための60語です。一般日本語ではなく、畜産・安全衛生の専門語に絞っています。</p></div>
+      <div class="section-heading"><h1>日本語専門用語</h1><p>試験問題を読むための63語です。一般日本語ではなく、畜産・安全衛生の専門語に絞っています。</p></div>
       <div class="search-bar"><input type="search" data-glossary-search value="${escapeHtml(runtime.glossarySearch)}" placeholder="例：分娩、飼料、防疫、melahirkan"><span>${items.length}語</span></div>
       <div class="glossary-list">${items.map((item) => `<article class="glossary-row"><div class="glossary-term"><ruby>${escapeHtml(item.termJa)}<rt>${escapeHtml(item.reading)}</rt></ruby><span>${escapeHtml(item.idn)}</span></div><p>${escapeHtml(item.easyJa)}</p><button class="text-button" data-glossary-study="${escapeHtml(item.termJa)}">関連問題を探す</button></article>`).join('') || '<div class="empty-state"><h2>該当する用語がありません</h2></div>'}</div>
     `;
@@ -276,15 +294,16 @@ namespace LivestockApp {
 
   function resultsView(): string {
     const state = runtime.state;
+    const attempts = assessmentHistory(state);
     const stats = calculateCategoryStats(state);
-    const recent = state.history.slice(-10).reverse();
+    const recent = attempts.slice(-10).reverse();
     const weak = stats.filter((item) => item.answered > 0).sort((left, right) => (left.accuracy ?? 101) - (right.accuracy ?? 101));
-    const reasons = (Object.keys(ERROR_REASON_LABELS) as ErrorReason[]).map((reason) => ({ reason, count: state.history.filter((entry) => entry.reason === reason).length }));
+    const reasons = (Object.keys(ERROR_REASON_LABELS) as ErrorReason[]).map((reason) => ({ reason, count: attempts.filter((entry) => entry.reason === reason).length }));
     const maxReason = Math.max(1, ...reasons.map((item) => item.count));
     return `
       <div class="section-heading"><h1>成績と弱点</h1><p>正答率だけでなく、回答時間と誤答原因を見ます。</p></div>
       <div class="metric-grid">
-        <article class="metric-card"><strong>${state.history.length}</strong><span>累計解答</span></article>
+        <article class="metric-card"><strong>${attempts.length}</strong><span>累計解答</span></article>
         <article class="metric-card"><strong>${overallAccuracy(state)}%</strong><span>累計正答率</span></article>
         <article class="metric-card"><strong>${dueCount(state)}</strong><span>復習待ち</span></article>
         <article class="metric-card"><strong>${state.mockHistory.length}</strong><span>模試回数</span></article>
@@ -301,7 +320,8 @@ namespace LivestockApp {
 
   function managerView(): string {
     const state = runtime.state;
-    const recent = state.history.filter((entry) => withinDays(entry.at, 7));
+    const attempts = assessmentHistory(state);
+    const recent = attempts.filter((entry) => withinDays(entry.at, 7));
     const correct = recent.filter((entry) => entry.correct).length;
     const wrongWithReason = recent.filter((entry) => !entry.correct && entry.reason);
     const japanese = wrongWithReason.filter((entry) => entry.reason === 'japanese').length;
@@ -310,7 +330,7 @@ namespace LivestockApp {
       const date = new Date();
       date.setDate(date.getDate() - (13 - reverseIndex));
       const key = dateKey(date);
-      return { label: `${date.getMonth() + 1}/${date.getDate()}`, count: state.history.filter((entry) => dateKey(entry.at) === key).length };
+      return { label: `${date.getMonth() + 1}/${date.getDate()}`, count: attempts.filter((entry) => dateKey(entry.at) === key).length };
     });
     const maxActivity = Math.max(1, ...activity.map((item) => item.count));
     const stats = calculateCategoryStats(state).filter((item) => item.answered > 0).sort((left, right) => (left.accuracy ?? 101) - (right.accuracy ?? 101));
@@ -342,7 +362,8 @@ namespace LivestockApp {
       <div class="review-list">${items.map((question) => {
         const review = runtime.state.reviews[question.id] ?? { status: '未確認' as ReviewMark, note: '', updatedAt: '' };
         const correctChoice = question.choices.find((choice) => choice.id === question.correctChoiceId);
-        return `<article class="review-card ${review.status === '要修正' ? 'needs-fix' : review.status === '承認候補' ? 'candidate-ok' : ''}"><div class="tag-list"><span class="pill">${question.id}</span><span class="pill">${escapeHtml(question.category)}</span><span class="pill orange">${escapeHtml(question.topic)}</span><span class="pill ${review.status === '要修正' ? 'danger' : review.status === '保留' ? 'warn' : review.status === '承認候補' ? 'success' : ''}">${escapeHtml(review.status)}</span></div><h2>${escapeHtml(question.question.ja)}</h2><p><strong>正解：</strong>${escapeHtml(correctChoice?.text.ja ?? '-')}</p><p class="review-source">${escapeHtml(question.source.documentTitle)}／PDF ${question.source.pdfPage}／冊子 ${escapeHtml(question.source.printedPageLabel || '-')}／${escapeHtml(question.source.section)}<br>内容 ${escapeHtml(question.review.content)}・日本語 ${escapeHtml(question.review.languageJa)}・インドネシア語 ${escapeHtml(question.review.languageId)}・権利 ${escapeHtml(question.review.legalRights)}</p>${review.note ? `<div class="review-note"><strong>メモ：</strong>${escapeHtml(review.note)}</div>` : ''}<div class="review-actions"><button class="btn small secondary" data-review-set="${question.id}|承認候補">承認候補</button><button class="btn small danger" data-review-set="${question.id}|要修正">要修正</button><button class="btn small ghost" data-review-set="${question.id}|保留">保留</button><button class="btn small ghost" data-review-set="${question.id}|未確認">未確認</button></div></article>`;
+        const choiceComparison = `<section class="review-choice-comparison" data-review-choice-comparison="${escapeHtml(question.id)}"><h3>選択肢の日本語／やさしい日本語</h3>${question.choices.map((choice) => `<div class="review-choice-comparison-row" data-review-choice-id="${escapeHtml(choice.id)}"><strong>${escapeHtml(choice.id.toUpperCase())}</strong><p><span>日本語：</span><span lang="ja" data-review-choice-ja>${escapeHtml(choice.text.ja)}</span></p><p><span>やさしい日本語：</span><span lang="ja" data-review-choice-easy-ja>${escapeHtml(choice.text.easyJa)}</span></p></div>`).join('')}</section>`;
+        return `<article class="review-card ${review.status === '要修正' ? 'needs-fix' : review.status === '承認候補' ? 'candidate-ok' : ''}"><div class="tag-list"><span class="pill">${question.id}</span><span class="pill">${escapeHtml(question.category)}</span><span class="pill orange">${escapeHtml(question.topic)}</span><span class="pill ${review.status === '要修正' ? 'danger' : review.status === '保留' ? 'warn' : review.status === '承認候補' ? 'success' : ''}">${escapeHtml(review.status)}</span></div><h2>${escapeHtml(question.question.ja)}</h2><p><strong>正解：</strong>${escapeHtml(correctChoice?.text.ja ?? '-')}</p>${choiceComparison}<p class="review-source">${escapeHtml(question.source.documentTitle)}／PDF ${question.source.pdfPage}／冊子 ${escapeHtml(question.source.printedPageLabel || '-')}／${escapeHtml(question.source.section)}<br>内容 ${escapeHtml(question.review.content)}・日本語 ${escapeHtml(question.review.languageJa)}・インドネシア語 ${escapeHtml(question.review.languageId)}・権利 ${escapeHtml(question.review.legalRights)}</p>${review.note ? `<div class="review-note"><strong>メモ：</strong>${escapeHtml(review.note)}</div>` : ''}<div class="review-actions"><button class="btn small secondary" data-review-set="${question.id}|承認候補">承認候補</button><button class="btn small danger" data-review-set="${question.id}|要修正">要修正</button><button class="btn small ghost" data-review-set="${question.id}|保留">保留</button><button class="btn small ghost" data-review-set="${question.id}|未確認">未確認</button></div></article>`;
       }).join('') || '<div class="empty-state"><h2>条件に合う問題がありません</h2></div>'}</div>
     `;
   }
@@ -352,7 +373,7 @@ namespace LivestockApp {
     return `
       <div class="section-heading"><h1>設定</h1><p>母語補助、復習データ、端末へのインストールを管理します。</p></div>
       ${renderPedagogySettingsPanel(settings)}
-      <section class="settings-panel"><h2>言語支援</h2><label class="setting-row select-row"><span><strong>アプリの表示言語</strong><small>画面全体の案内・ボタン・設定を切り替えます。問題の日本語は練習のため残ります。</small></span><select data-setting-ui-language><option value="id" ${settings.uiLanguage === 'id' ? 'selected' : ''}>Bahasa Indonesia</option><option value="ja" ${settings.uiLanguage === 'ja' ? 'selected' : ''}>日本語</option></select></label><label class="setting-row"><span><strong>自動支援レベル</strong><small>習得度に応じて母語・やさしい日本語を減らします。</small></span><input type="checkbox" data-setting-checkbox="automaticSupport" ${settings.automaticSupport ? 'checked' : ''}></label><label class="setting-row"><span><strong>ふりがな</strong><small>用語集に登録した専門語へ表示します。</small></span><input type="checkbox" data-setting-checkbox="showFurigana" ${settings.showFurigana ? 'checked' : ''}></label><label class="setting-row"><span><strong>やさしい日本語</strong><small>学習モードだけで表示します。</small></span><input type="checkbox" data-setting-checkbox="showEasyJapanese" ${settings.showEasyJapanese ? 'checked' : ''}></label><label class="setting-row"><span><strong>インドネシア語</strong><small>ネイティブ確認前の機械下書きです。</small></span><input type="checkbox" data-setting-checkbox="showIndonesian" ${settings.showIndonesian ? 'checked' : ''}></label><label class="setting-row select-row"><span><strong>固定支援レベル</strong><small>自動支援OFFのときに使います。</small></span><select data-setting-level ${settings.automaticSupport ? 'disabled' : ''}>${[3,2,1,0].map((level) => `<option value="${level}" ${settings.preferredSupportLevel === level ? 'selected' : ''}>Level ${level}：${escapeHtml(SUPPORT_LEVEL_LABELS[level])}</option>`).join('')}</select></label></section>
+      <section class="settings-panel"><h2>表示言語</h2><label class="setting-row select-row"><span><strong>アプリの表示言語</strong><small>画面全体の案内・ボタン・設定を切り替えます。問題の日本語は練習のため残ります。</small></span><select data-setting-ui-language><option value="id" ${settings.uiLanguage === 'id' ? 'selected' : ''}>Bahasa Indonesia</option><option value="ja" ${settings.uiLanguage === 'ja' ? 'selected' : ''}>日本語</option></select></label></section>
       <section class="settings-panel"><h2>学習</h2><label class="setting-row select-row"><span><strong>今日の問題数</strong><small>5～20問から選びます。</small></span><select data-setting-count>${[5,10,15,20].map((count) => `<option value="${count}" ${settings.dailyQuestionCount === count ? 'selected' : ''}>${count}問</option>`).join('')}</select></label><label class="setting-row"><span><strong>source_checked問題を表示</strong><small>内部レビュー用。一般公開版ではOFF固定にします。</small></span><input type="checkbox" data-setting-checkbox="reviewContentEnabled" ${settings.reviewContentEnabled ? 'checked' : ''}></label></section>
       <section class="settings-panel"><h2>端末とデータ</h2><div class="button-stack">${runtime.installPrompt ? '<button class="btn primary" data-install>ホーム画面へインストール</button>' : '<p class="muted">インストールボタンは対応ブラウザで条件を満たすと表示されます。iPhoneは共有メニューの「ホーム画面に追加」を使います。</p>'}<button class="btn ghost" data-export-progress>学習データを書き出す</button><label class="btn ghost file-button">学習データを読み込む<input type="file" accept="application/json" data-import-progress></label><button class="btn danger" data-reset-progress>学習履歴をリセット</button></div></section>
       <section class="settings-panel"><h2>この版について</h2><dl class="definition-list"><div><dt>版</dt><dd>${escapeHtml(APP_VERSION)}</dd></div><div><dt>モード</dt><dd>内部レビュー</dd></div><div><dt>問題</dt><dd>source_checked 80問／approved 0問</dd></div><div><dt>保存</dt><dd>IndexedDB＋localStorage予備</dd></div><div><dt>AI</dt><dd>アプリ利用中は使用しません</dd></div></dl></section>

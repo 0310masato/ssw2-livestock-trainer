@@ -1,7 +1,18 @@
 namespace LivestockApp {
+  export const MAX_IMPORT_BYTES = 20 * 1024 * 1024;
+
+  export function assertImportFileSize(size: number): void {
+    if (!Number.isSafeInteger(size) || size < 0 || size > MAX_IMPORT_BYTES) {
+      throw new Error('Imported state file exceeds the 20 MiB safety limit.');
+    }
+  }
   export let runtime: AppRuntime;
   let mockTimerHandle: number | null = null;
   let confirmCallback: (() => void) | null = null;
+  let persistenceQueue: Promise<void> = Promise.resolve();
+  let importInProgress = false;
+  let importBarrier: Promise<void> | null = null;
+  let releaseImportBarrier: (() => void) | null = null;
 
   function initialRuntime(state: AppState): AppRuntime {
     return {
@@ -49,7 +60,23 @@ namespace LivestockApp {
   async function registerServiceWorker(): Promise<void> {
     if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
     try {
-      await navigator.serviceWorker.register('./sw.js', { scope: './' });
+      const hadController = Boolean(navigator.serviceWorker.controller);
+      const registration = await navigator.serviceWorker.register('./sw.js', {
+        scope: './',
+        updateViaCache: 'none',
+      });
+      const watchInstallingWorker = (): void => {
+        const worker = registration.installing;
+        if (!hadController || !worker) return;
+        worker.addEventListener('statechange', () => {
+          if (worker.state === 'installed') {
+            showNotice('アプリを更新できます。学習中の画面は維持され、次回の再読み込みで新しい版になります。');
+          }
+        });
+      };
+      registration.addEventListener('updatefound', watchInstallingWorker);
+      watchInstallingWorker();
+      await registration.update();
     } catch (error) {
       console.warn('Service Worker registration failed.', error);
     }
@@ -69,10 +96,15 @@ namespace LivestockApp {
   }
 
   function startMockTickerIfNeeded(): void {
-    if (!runtime.state.mockDraft || runtime.view !== 'study' || runtime.lastMockResult) return;
-    const update = () => {
+    if (
+      !runtime.state.mockDraft
+      || runtime.view !== 'study'
+      || runtime.session?.kind !== 'mock'
+      || runtime.lastMockResult
+    ) return;
+    const update = (): boolean => {
       const draft = runtime.state.mockDraft;
-      if (!draft) return;
+      if (!draft) return false;
       const remaining = mockSecondsRemaining(draft);
       const timer = document.querySelector<HTMLElement>('[data-mock-timer]');
       if (timer) timer.textContent = formatClock(remaining);
@@ -80,15 +112,33 @@ namespace LivestockApp {
         if (mockTimerHandle !== null) window.clearInterval(mockTimerHandle);
         mockTimerHandle = null;
         submitMock(true);
+        return false;
       }
+      return true;
     };
-    update();
+    const shouldStartTicker = update();
+    const activeDraft = runtime.state.mockDraft;
+    if (
+      !shouldStartTicker
+      || !activeDraft
+      || runtime.view !== 'study'
+      || runtime.session?.kind !== 'mock'
+      || runtime.lastMockResult
+    ) return;
     mockTimerHandle = window.setInterval(update, 1_000);
   }
 
-  async function persist(): Promise<void> {
+  function runPersistenceExclusive<T>(operation: () => Promise<T>): Promise<T> {
+    const result = persistenceQueue.then(operation);
+    persistenceQueue = result.then(() => undefined, () => undefined);
+    return result;
+  }
+
+  export async function persist(): Promise<void> {
+    const barrier = importBarrier;
+    if (barrier) await barrier;
     try {
-      await saveState(runtime.state);
+      await runPersistenceExclusive(() => saveState(runtime.state));
     } catch (error) {
       console.error(error);
       runtime.notice = '保存に失敗しました。ブラウザの空き容量を確認してください。';
@@ -104,11 +154,58 @@ namespace LivestockApp {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
+  function emptySupportUsage(): SupportUsage {
+    return {
+      furiganaUsed: false,
+      easyJapaneseUsed: false,
+      keywordsOpened: false,
+      questionTranslationOpened: false,
+      choiceTranslationsOpened: false,
+      answerIndonesianOpened: false,
+    };
+  }
+
+  function easyJapaneseVisibleBeforeAnswer(session: SessionState, question: Question): boolean {
+    if (session.answered || session.kind === 'mock' || session.supportLevel === 0 || session.isRetryWithoutSupport) {
+      return false;
+    }
+    const questionEasyJapaneseVisible = session.easyJapaneseVisible
+      && question.question.easyJa.trim().length > 0;
+    const policy = supportPolicyForLevel(session.supportLevel);
+    const keywordEasyJapaneseVisible = runtime.state.settings.showVocabulary
+      && session.keywordsVisible
+      && policy.compactKeywordHints
+      && question.learningSupport.keyTermIds.some((id) => {
+        const term = GLOSSARY.find((item) => item.id === id);
+        return Boolean(term?.easyJa.trim());
+      });
+    return questionEasyJapaneseVisible || keywordEasyJapaneseVisible;
+  }
+
+  function recordVisibleEasyJapanese(session: SessionState, question: Question): void {
+    if (easyJapaneseVisibleBeforeAnswer(session, question)) {
+      session.supportUsage.easyJapaneseUsed = true;
+    }
+  }
+
   function questionSupport(session: SessionState, question: Question): void {
-    const support = supportSettingsForStudy(runtime.state, question, session.kind);
-    session.furiganaVisible = support.showFurigana;
-    session.easyJapaneseVisible = support.showEasyJapanese;
-    session.indonesianVisible = support.showIndonesian;
+    const policy = resolveSupportPolicy(runtime.state, question, session.kind, session.isRetryWithoutSupport);
+    session.supportLevel = policy.level;
+    session.furiganaVisible = policy.showFuriganaInitially;
+    session.easyJapaneseVisible = policy.showEasyJapaneseInitially;
+    session.indonesianVisible = policy.showQuestionTranslationInitially;
+    session.keywordsVisible = policy.showKeywordsInitially && runtime.state.settings.showVocabulary;
+    session.choiceTranslationsVisible = policy.showChoiceTranslationsInitially;
+    session.answerIndonesianVisible = false;
+    session.supportUsage = {
+      furiganaUsed: session.furiganaVisible,
+      easyJapaneseUsed: false,
+      keywordsOpened: session.keywordsVisible,
+      questionTranslationOpened: session.indonesianVisible,
+      choiceTranslationsOpened: session.choiceTranslationsVisible,
+      answerIndonesianOpened: false,
+    };
+    recordVisibleEasyJapanese(session, question);
   }
 
   function createSession(kind: SessionKind, questionIds: string[]): SessionState {
@@ -120,9 +217,16 @@ namespace LivestockApp {
       selectedChoiceId: null,
       answered: false,
       startedQuestionAt: performance.now(),
-      easyJapaneseVisible: runtime.state.settings.showEasyJapanese,
-      indonesianVisible: runtime.state.settings.showIndonesian,
-      furiganaVisible: runtime.state.settings.showFurigana,
+      easyJapaneseVisible: false,
+      indonesianVisible: false,
+      furiganaVisible: false,
+      supportLevel: 0,
+      keywordsVisible: false,
+      choiceTranslationsVisible: false,
+      answerIndonesianVisible: false,
+      supportUsage: emptySupportUsage(),
+      retryOfHistoryId: null,
+      isRetryWithoutSupport: false,
       confidence: null,
       pendingReason: null,
       completed: false,
@@ -203,18 +307,28 @@ namespace LivestockApp {
     if (!session || session.answered || !session.selectedChoiceId) return;
     const question = questionById(session.questionIds[session.index]);
     if (!question) return;
-    const supportLevel = effectiveSupportLevel(runtime.state, question);
+    const policy = supportPolicyForLevel(session.supportLevel);
+    session.answerIndonesianVisible = policy.showAnswerIndonesianInitially;
+    if (session.answerIndonesianVisible) session.supportUsage.answerIndonesianOpened = true;
     const entry = recordAnswer(runtime.state, question, {
       sessionId: session.id,
       sessionKind: session.kind,
       selectedChoiceId: session.selectedChoiceId,
       elapsedMs: performance.now() - session.startedQuestionAt,
-      usedEasyJapanese: session.easyJapaneseVisible,
-      usedIndonesian: session.indonesianVisible,
-      usedFurigana: session.furiganaVisible,
-      supportLevel,
+      usedEasyJapanese: session.supportUsage.easyJapaneseUsed,
+      usedIndonesian: session.supportUsage.questionTranslationOpened
+        || session.supportUsage.choiceTranslationsOpened
+        || session.supportUsage.answerIndonesianOpened,
+      usedFurigana: session.supportUsage.furiganaUsed,
+      openedKeywords: session.supportUsage.keywordsOpened,
+      openedQuestionTranslation: session.supportUsage.questionTranslationOpened,
+      openedChoiceTranslations: session.supportUsage.choiceTranslationsOpened,
+      openedAnswerIndonesian: session.supportUsage.answerIndonesianOpened,
+      supportLevel: session.supportLevel,
       reason: null,
       confidence: session.confidence,
+      retryOfHistoryId: session.retryOfHistoryId,
+      isRetryWithoutSupport: session.isRetryWithoutSupport,
     });
     session.answered = true;
     session.pendingReason = entry.correct ? null : null;
@@ -223,13 +337,37 @@ namespace LivestockApp {
     announce(entry.correct ? '正解です。' : '不正解です。正解と解説を確認してください。');
   }
 
+  function currentHistoryEntry(session: SessionState): HistoryEntry | undefined {
+    const questionId = session.questionIds[session.index];
+    return runtime.state.history.findLast((item) => item.sessionId === session.id && item.questionId === questionId);
+  }
+
+  function syncAnsweredSupportUsage(session: SessionState): boolean {
+    if (!session.answered) return false;
+    const entry = currentHistoryEntry(session);
+    if (!entry) return false;
+    entry.usedFurigana = session.supportUsage.furiganaUsed;
+    entry.usedEasyJapanese = session.supportUsage.easyJapaneseUsed;
+    entry.openedKeywords = session.supportUsage.keywordsOpened;
+    entry.openedQuestionTranslation = session.supportUsage.questionTranslationOpened;
+    entry.openedChoiceTranslations = session.supportUsage.choiceTranslationsOpened;
+    entry.openedAnswerIndonesian = session.supportUsage.answerIndonesianOpened;
+    entry.usedIndonesian = entry.openedQuestionTranslation
+      || entry.openedChoiceTranslations
+      || entry.openedAnswerIndonesian;
+    return true;
+  }
+
   function chooseReason(reason: ErrorReason): void {
     const session = runtime.session;
     if (!session || !session.answered) return;
     session.pendingReason = reason;
-    const questionId = session.questionIds[session.index];
-    const entry = runtime.state.history.findLast((item) => item.sessionId === session.id && item.questionId === questionId);
-    if (entry) entry.reason = reason;
+    const entry = currentHistoryEntry(session);
+    if (entry) {
+      entry.reason = reason;
+      entry.knowledgeGap = reason === 'knowledge';
+      entry.japaneseGap = reason === 'japanese';
+    }
     void persist();
     render();
   }
@@ -237,8 +375,7 @@ namespace LivestockApp {
   function nextStudy(): void {
     const session = runtime.session;
     if (!session || !session.answered) return;
-    const questionId = session.questionIds[session.index];
-    const entry = runtime.state.history.findLast((item) => item.sessionId === session.id && item.questionId === questionId);
+    const entry = currentHistoryEntry(session);
     if (entry && !entry.correct && !session.pendingReason) return;
     if (session.index >= session.questionIds.length - 1) {
       session.completed = true;
@@ -250,6 +387,8 @@ namespace LivestockApp {
     session.answered = false;
     session.pendingReason = null;
     session.confidence = null;
+    session.retryOfHistoryId = null;
+    session.isRetryWithoutSupport = false;
     session.startedQuestionAt = performance.now();
     const question = questionById(session.questionIds[session.index]);
     if (question) questionSupport(session, question);
@@ -257,13 +396,58 @@ namespace LivestockApp {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
-  function toggleSessionSupport(kind: 'furigana' | 'easy' | 'id'): void {
+  type SessionSupportToggle = 'furigana' | 'easy' | 'id' | 'question-id' | 'choices-id' | 'keywords' | 'answer-id';
+
+  function toggleSessionSupport(kind: SessionSupportToggle): void {
     const session = runtime.session;
     if (!session || session.kind === 'mock') return;
-    if (kind === 'furigana') session.furiganaVisible = !session.furiganaVisible;
-    if (kind === 'easy') session.easyJapaneseVisible = !session.easyJapaneseVisible;
-    if (kind === 'id') session.indonesianVisible = !session.indonesianVisible;
+    const policy = supportPolicyForLevel(session.supportLevel);
+    if (kind === 'furigana' && session.supportLevel > 0) {
+      session.furiganaVisible = !session.furiganaVisible;
+      if (session.furiganaVisible) session.supportUsage.furiganaUsed = true;
+    }
+    if (kind === 'easy' && session.supportLevel === 3) {
+      session.easyJapaneseVisible = !session.easyJapaneseVisible;
+    }
+    if (kind === 'keywords' && session.supportLevel > 0) {
+      session.keywordsVisible = !session.keywordsVisible;
+      if (session.keywordsVisible) session.supportUsage.keywordsOpened = true;
+    }
+    const question = questionById(session.questionIds[session.index]);
+    if (question) recordVisibleEasyJapanese(session, question);
+    if ((kind === 'id' || kind === 'question-id') && policy.allowQuestionTranslation) {
+      session.indonesianVisible = !session.indonesianVisible;
+      if (session.indonesianVisible) session.supportUsage.questionTranslationOpened = true;
+    }
+    if (kind === 'choices-id' && policy.allowChoiceTranslations) {
+      session.choiceTranslationsVisible = !session.choiceTranslationsVisible;
+      if (session.choiceTranslationsVisible) session.supportUsage.choiceTranslationsOpened = true;
+    }
+    if (kind === 'answer-id' && session.answered && policy.allowAnswerIndonesian) {
+      session.answerIndonesianVisible = !session.answerIndonesianVisible;
+      if (session.answerIndonesianVisible) session.supportUsage.answerIndonesianOpened = true;
+    }
+    if (syncAnsweredSupportUsage(session)) void persist();
     render();
+  }
+
+  function retryWithoutSupport(): void {
+    const session = runtime.session;
+    if (!session || session.kind === 'mock' || !session.answered || session.isRetryWithoutSupport) return;
+    const entry = currentHistoryEntry(session);
+    if (!entry || (!entry.correct && !session.pendingReason)) return;
+    session.retryOfHistoryId = entry.id;
+    session.isRetryWithoutSupport = true;
+    session.selectedChoiceId = null;
+    session.answered = false;
+    session.pendingReason = null;
+    session.confidence = null;
+    session.startedQuestionAt = performance.now();
+    const question = questionById(session.questionIds[session.index]);
+    if (question) questionSupport(session, question);
+    render();
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    announce('学習支援を外しました。日本語だけでもう一度解いてください。');
   }
 
   function resumeMock(): void {
@@ -322,15 +506,16 @@ namespace LivestockApp {
 
   function askConfirm(title: string, text: string, callback: () => void): void {
     confirmCallback = callback;
+    const language: UiLanguage = runtime.session?.kind === 'mock' ? 'ja' : currentUiLanguage();
     const dialog = document.querySelector<HTMLDialogElement>('[data-confirm-dialog]');
     const titleNode = document.querySelector<HTMLElement>('[data-confirm-title]');
     const textNode = document.querySelector<HTMLElement>('[data-confirm-text]');
     if (!dialog || !titleNode || !textNode) {
-      if (window.confirm(translateUiText(text))) callback();
+      if (window.confirm(translateUiText(text, language))) callback();
       return;
     }
-    titleNode.textContent = translateUiText(title);
-    textNode.textContent = translateUiText(text);
+    titleNode.textContent = translateUiText(title, language);
+    textNode.textContent = translateUiText(text, language);
     dialog.showModal();
   }
 
@@ -348,13 +533,43 @@ namespace LivestockApp {
   }
 
   function exportProgress(): void {
-    downloadText('畜産2号トレーナー_学習データ_v0.4.json', JSON.stringify({ exportedAt: nowIso(), appVersion: APP_VERSION, state: runtime.state }, null, 2));
+    downloadText('畜産2号トレーナー_学習データ_v0.5.json', JSON.stringify({ exportedAt: nowIso(), appVersion: APP_VERSION, state: runtime.state }, null, 2));
   }
 
   function exportProgressCsv(): void {
-    const header = ['日時', '問題ID', '分野', 'トピック', '正誤', '回答時間秒', '誤答原因', '支援レベル', 'やさしい日本語', 'インドネシア語', 'ふりがな'];
-    const rows = runtime.state.history.map((entry) => [entry.at, entry.questionId, entry.category, entry.topic, entry.correct ? '正解' : '不正解', Math.round(entry.elapsedMs / 1000), entry.reason ? ERROR_REASON_LABELS[entry.reason] : '', entry.supportLevel, entry.usedEasyJapanese, entry.usedIndonesian, entry.usedFurigana]);
-    downloadText('畜産2号トレーナー_学習履歴_v0.4.csv', '\uFEFF' + [header, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n'), 'text/csv');
+    const header = [
+      '日時', '問題ID', '分野', 'トピック', '正誤', '回答時間秒', '誤答原因', '支援レベル',
+      'ふりがな', 'やさしい日本語（回答前に実表示）', '重要語', '全文インドネシア語', '選択肢訳', '回答後インドネシア語',
+      '知識不足', '日本語不足', '日本語のみ再挑戦',
+    ];
+    const rows = runtime.state.history.map((entry) => {
+      const question = questionById(entry.questionId);
+      const selectedChoiceIsValid = entry.selectedChoiceId === null
+        || Boolean(question?.choices.some((choice) => choice.id === entry.selectedChoiceId));
+      const trustedCorrect = Boolean(question)
+        && selectedChoiceIsValid
+        && entry.selectedChoiceId === question?.correctChoiceId;
+      return [
+      entry.at,
+      question?.id ?? '',
+      question?.category ?? '',
+      question?.topic ?? '',
+      trustedCorrect ? '正解' : '不正解',
+      Math.round(entry.elapsedMs / 1000),
+      entry.reason ? ERROR_REASON_LABELS[entry.reason] : '',
+      entry.supportLevel,
+      entry.usedFurigana,
+      entry.usedEasyJapanese,
+      entry.openedKeywords,
+      entry.openedQuestionTranslation,
+      entry.openedChoiceTranslations,
+      entry.openedAnswerIndonesian,
+      entry.knowledgeGap,
+      entry.japaneseGap,
+      entry.isRetryWithoutSupport,
+    ];
+    });
+    downloadText('畜産2号トレーナー_学習履歴_v0.5.csv', '\uFEFF' + [header, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n'), 'text/csv');
   }
 
   function exportReviews(): void {
@@ -368,19 +583,50 @@ namespace LivestockApp {
       printedPage: question.source.printedPageLabel,
       questionJa: question.question.ja,
     }));
-    downloadText('畜産2号トレーナー_80問レビュー_v0.4.json', JSON.stringify(records, null, 2));
+    downloadText('畜産2号トレーナー_80問レビュー_v0.5.json', JSON.stringify(records, null, 2));
   }
 
-  async function importProgress(file: File): Promise<void> {
+  export async function importProgress(file: File): Promise<void> {
+    if (importInProgress) {
+      showNotice('学習データを読み込み中です。完了後にもう一度お試しください。');
+      return;
+    }
+    importInProgress = true;
+    importBarrier = new Promise((resolve) => {
+      releaseImportBarrier = resolve;
+    });
     try {
-      const parsed = JSON.parse(await file.text());
-      const raw = parsed.state ?? parsed;
-      runtime.state = validateImportedState(raw);
-      await persist();
+      let imported: AppState;
+      try {
+        assertImportFileSize(file.size);
+        const parsed = JSON.parse(await file.text());
+        const raw = parsed.state ?? parsed;
+        imported = validateImportedState(raw);
+      } catch (error) {
+        console.warn('Imported state validation failed.', error);
+        showNotice('学習データを読み込めませんでした。JSON形式を確認してください。');
+        return;
+      }
+
+      try {
+        await runPersistenceExclusive(async () => {
+          imported.revision = runtime.state.revision;
+          await saveState(imported);
+          runtime.state = imported;
+        });
+      } catch (error) {
+        console.warn('Imported state persistence failed.', error);
+        showNotice('保存に失敗しました。ブラウザの空き容量を確認してください。');
+        return;
+      }
+
       showNotice('学習データを読み込みました。');
-    } catch (error) {
-      console.error(error);
-      showNotice('学習データを読み込めませんでした。JSON形式を確認してください。');
+    } finally {
+      importInProgress = false;
+      const release = releaseImportBarrier;
+      importBarrier = null;
+      releaseImportBarrier = null;
+      release?.();
     }
   }
 
@@ -388,7 +634,7 @@ namespace LivestockApp {
     document.querySelectorAll<HTMLElement>('[data-view]').forEach((element) => {
       element.addEventListener('click', () => setView(element.dataset.view as ViewName));
     });
-    document.querySelectorAll<HTMLElement>('[data-ui-language]').forEach((element) => {
+    document.querySelectorAll<HTMLButtonElement>('button[data-ui-language]').forEach((element) => {
       element.addEventListener('click', () => {
         runtime.state.settings.uiLanguage = element.dataset.uiLanguage === 'ja' ? 'ja' : 'id';
         void persist();
@@ -410,8 +656,9 @@ namespace LivestockApp {
       element.addEventListener('click', () => chooseReason(element.dataset.reason as ErrorReason));
     });
     document.querySelectorAll<HTMLElement>('[data-session-toggle]').forEach((element) => {
-      element.addEventListener('click', () => toggleSessionSupport(element.dataset.sessionToggle as 'furigana' | 'easy' | 'id'));
+      element.addEventListener('click', () => toggleSessionSupport(element.dataset.sessionToggle as SessionSupportToggle));
     });
+    document.querySelector<HTMLElement>('[data-retry-without-support]')?.addEventListener('click', retryWithoutSupport);
     document.querySelectorAll<HTMLElement>('[data-confidence]').forEach((element) => {
       element.addEventListener('click', () => setConfidence(element.dataset.confidence as 'sure' | 'unsure'));
     });
@@ -505,7 +752,7 @@ namespace LivestockApp {
       render();
     });
     document.querySelector<HTMLSelectElement>('[data-setting-level]')?.addEventListener('change', (event) => {
-      runtime.state.settings.preferredSupportLevel = Number((event.currentTarget as HTMLSelectElement).value) as 0 | 1 | 2 | 3;
+      runtime.state.settings.preferredSupportLevel = Number((event.currentTarget as HTMLSelectElement).value) as SupportLevel;
       void persist();
       render();
     });
@@ -520,15 +767,25 @@ namespace LivestockApp {
     document.querySelectorAll<HTMLElement>('[data-export-progress-csv]').forEach((element) => element.addEventListener('click', exportProgressCsv));
     document.querySelectorAll<HTMLElement>('[data-export-reviews]').forEach((element) => element.addEventListener('click', exportReviews));
     document.querySelector<HTMLInputElement>('[data-import-progress]')?.addEventListener('change', (event) => {
-      const file = (event.currentTarget as HTMLInputElement).files?.[0];
-      if (file) void importProgress(file);
+      const input = event.currentTarget as HTMLInputElement;
+      const file = input.files?.[0];
+      if (file) {
+        input.disabled = true;
+        void importProgress(file).finally(() => {
+          if (input.isConnected) input.disabled = false;
+        });
+      }
     });
     document.querySelector<HTMLElement>('[data-reset-progress]')?.addEventListener('click', () => {
       askConfirm('学習履歴をリセット', '学習履歴・復習予定・模試履歴を削除します。レビュー結果と設定は残します。', async () => {
-        runtime.state = await clearProgressKeepReviews(runtime.state);
-        runtime.session = null;
-        runtime.lastMockResult = null;
-        render();
+        const barrier = importBarrier;
+        if (barrier) await barrier;
+        await runPersistenceExclusive(async () => {
+          runtime.state = await clearProgressKeepReviews(runtime.state);
+          runtime.session = null;
+          runtime.lastMockResult = null;
+          render();
+        });
       });
     });
 

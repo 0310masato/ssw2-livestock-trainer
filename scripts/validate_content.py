@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-import hashlib
+import csv
+import argparse
 import json
+import os
 import pathlib
 import re
 import sys
 import unicodedata
 from collections import Counter
+from datetime import datetime
 from difflib import SequenceMatcher
 
 try:
@@ -14,11 +17,26 @@ try:
 except ModuleNotFoundError:
     fitz = None
 
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, FormatChecker
+from content_validation_helpers import verify_pdf_documents
+
+
+ARG_PARSER = argparse.ArgumentParser(description='Validate canonical livestock trainer content.')
+ARG_PARSER.add_argument(
+    '--require-pdfs',
+    action='store_true',
+    help='Require both controlled official PDFs and run hash, page-count, and anchor verification.',
+)
+ARG_PARSER.add_argument(
+    '--report-dir',
+    type=pathlib.Path,
+    help='Write generated validation reports to this directory (primarily for isolated tests).',
+)
+ARGS = ARG_PARSER.parse_args()
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DATA = ROOT / 'public'
-REPORTS = ROOT / 'reports'
+REPORTS = ARGS.report_dir.resolve() if ARGS.report_dir else ROOT / 'reports'
 REPORTS.mkdir(exist_ok=True, parents=True)
 
 QUESTIONS = json.loads((DATA / 'questions-alpha-80.json').read_text(encoding='utf-8'))
@@ -26,22 +44,47 @@ FACTS = json.loads((DATA / 'source-facts.json').read_text(encoding='utf-8'))
 GLOSSARY = json.loads((DATA / 'glossary-ja-id.json').read_text(encoding='utf-8'))
 SCHEMA = json.loads((DATA / 'question.schema.json').read_text(encoding='utf-8'))
 LEDGER = json.loads((DATA / 'source-ledger.json').read_text(encoding='utf-8'))
+with (DATA / 'review-checklist.csv').open(encoding='utf-8', newline='') as review_file:
+    REVIEW_READER = csv.DictReader(review_file)
+    REVIEW_FIELDNAMES = REVIEW_READER.fieldnames or []
+    REVIEW_ROWS = list(REVIEW_READER)
 
+SOURCE_DIR = pathlib.Path(os.environ.get('SSW2_SOURCE_DIR', '/mnt/data'))
+RUNNING_IN_GITHUB_ACTIONS = os.environ.get('GITHUB_ACTIONS') == 'true'
+SOURCE_DIR_CONFIGURED = bool(os.environ.get('SSW2_SOURCE_DIR'))
+PDF_VERIFICATION_REQUIRED = ARGS.require_pdfs or SOURCE_DIR_CONFIGURED
 PDFS = {
-    'livestock-textbook-2023-09': pathlib.Path('/mnt/data/技能測定試験（畜産農業）.pdf'),
-    'safety-textbook-2023-09': pathlib.Path('/mnt/data/衛生管理（畜産農業）.pdf'),
+    'livestock-textbook-2023-09': SOURCE_DIR / '技能測定試験（畜産農業）.pdf',
+    'safety-textbook-2023-09': SOURCE_DIR / '衛生管理（畜産農業）.pdf',
 }
 LEDGER_BY_ID = {doc['sourceId']: doc for doc in LEDGER.get('officialDocuments', [])}
-SOURCE_PDFS_AVAILABLE = fitz is not None and all(path.exists() for path in PDFS.values())
+SOURCE_PDFS_PRESENT = fitz is not None and all(path.exists() for path in PDFS.values())
+SOURCE_PDFS_AVAILABLE = PDF_VERIFICATION_REQUIRED and SOURCE_PDFS_PRESENT
+if SOURCE_PDFS_AVAILABLE:
+    EXECUTION_SCOPE = 'local-controlled-source-review'
+elif PDF_VERIFICATION_REQUIRED:
+    EXECUTION_SCOPE = 'local-required-source-review-failed'
+elif RUNNING_IN_GITHUB_ACTIONS:
+    EXECUTION_SCOPE = 'github-ci-without-official-pdfs'
+else:
+    EXECUTION_SCOPE = 'local-structural-validation-without-official-pdfs'
 ASSET_DIR = ROOT / 'public' / 'assets'
 
 
-def sha256(path: pathlib.Path) -> str:
-    h = hashlib.sha256()
-    with path.open('rb') as f:
-        for chunk in iter(lambda: f.read(1024 * 1024), b''):
-            h.update(chunk)
-    return h.hexdigest()
+def is_valid_date_time(value: object) -> bool:
+    if not isinstance(value, str) or not re.fullmatch(
+        r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})', value
+    ):
+        return False
+    try:
+        datetime.fromisoformat(value.replace('Z', '+00:00'))
+        return True
+    except ValueError:
+        return False
+
+
+FORMAT_CHECKER = FormatChecker()
+FORMAT_CHECKER.checks('date-time')(is_valid_date_time)
 
 
 def norm(text: str) -> str:
@@ -66,20 +109,112 @@ def check(condition: bool, name: str, detail: str = '') -> dict:
     return {'name': name, 'pass': bool(condition), 'detail': detail}
 
 
+HAN_RE = re.compile(r'[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff々〆ヶ]')
+PILOT_TERM_ANNOTATION_RE = re.compile(r'（[^（）]*[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff々〆ヶ][^（）]*）')
+PILOT_TERM_WITH_READING_RE = re.compile(
+    r'（[^（）]*[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff々〆ヶ][^（）]*／[^（）]+）'
+)
+
+
+def localized_texts(question: dict) -> list[tuple[str, dict]]:
+    values = [('question', question.get('question', {})), ('explanation', question.get('explanation', {}))]
+    values.extend((f"choice:{choice.get('id')}", choice.get('text', {})) for choice in question.get('choices', []))
+    values.extend((f"rationale:{choice_id}", value) for choice_id, value in question.get('choiceRationales', {}).items())
+    support = question.get('learningSupport', {})
+    values.extend([('lessonObjective', support.get('lessonObjective', {})), ('memoryPoint', support.get('memoryPoint', {}))])
+    if support.get('intentOverride'):
+        values.append(('intentOverride', support['intentOverride']))
+    return values
+
+
+def missing_han_readings(value: dict) -> list[str]:
+    return [
+        str(segment.get('text', ''))
+        for segment in value.get('rubyJa', [])
+        if HAN_RE.search(str(segment.get('text', ''))) and not str(segment.get('reading', '')).strip()
+    ]
+
+
+def is_question_approved(question: dict) -> bool:
+    review = question.get('review', {})
+    required = ('content', 'languageJa', 'languageId', 'legalRights', 'furigana', 'japaneseLearning', 'answerLeak')
+    reviewed_at = review.get('reviewedAt')
+    reviewed_at_valid = is_valid_date_time(reviewed_at)
+    return (
+        question.get('status') == 'approved'
+        and question.get('prototypeOnly') is False
+        and all(review.get(key) == 'pass' for key in required)
+        and review.get('approvalByUser') == 'approved'
+        and reviewed_at_valid
+    )
+
+
+def approved_gate_negative_fixtures() -> list[str]:
+    pilot = next((q for q in QUESTIONS if q.get('schemaVersion') == '0.4.0'), None)
+    if not pilot:
+        return ['no 0.4.0 fixture question available']
+    base = json.loads(json.dumps(pilot))
+    base['status'] = 'approved'
+    base['prototypeOnly'] = False
+    base['review'].update({
+        'content': 'pass',
+        'languageJa': 'pass',
+        'languageId': 'pass',
+        'legalRights': 'pass',
+        'furigana': 'pass',
+        'japaneseLearning': 'pass',
+        'answerLeak': 'pass',
+        'approvalByUser': 'approved',
+        'reviewedAt': '2026-08-13T00:00:00.000Z',
+    })
+    failures = []
+    if list(validator.iter_errors(base)) or not is_question_approved(base):
+        failures.append('valid approved fixture was rejected')
+    mutations = {
+        'prototypeOnly': lambda q: q.update(prototypeOnly=True),
+        'content': lambda q: q['review'].update(content='pending'),
+        'languageJa': lambda q: q['review'].update(languageJa='pending'),
+        'languageId': lambda q: q['review'].update(languageId='pending_native_review'),
+        'legalRights': lambda q: q['review'].update(legalRights='pending'),
+        'furigana': lambda q: q['review'].update(furigana='pending'),
+        'japaneseLearning': lambda q: q['review'].update(japaneseLearning='pending'),
+        'answerLeak': lambda q: q['review'].update(answerLeak='pending'),
+        'approvalByUser': lambda q: q['review'].update(approvalByUser='pending'),
+        'reviewedAt:null': lambda q: q['review'].update(reviewedAt=None),
+        'reviewedAt:invalid': lambda q: q['review'].update(reviewedAt='not-a-date'),
+        'reviewedAt:invalid-calendar': lambda q: q['review'].update(reviewedAt='2026-02-31T00:00:00.000Z'),
+    }
+    for name, mutate in mutations.items():
+        candidate = json.loads(json.dumps(base))
+        mutate(candidate)
+        if not list(validator.iter_errors(candidate)):
+            failures.append(f'{name}: schema accepted')
+        if is_question_approved(candidate):
+            failures.append(f'{name}: runtime gate accepted')
+    return failures
+
+
 checks: list[dict] = []
 issues: list[dict] = []
-validator = Draft202012Validator(SCHEMA)
+validator = Draft202012Validator(SCHEMA, format_checker=FORMAT_CHECKER)
 schema_errors = []
 for q in QUESTIONS:
     for err in validator.iter_errors(q):
         schema_errors.append({'questionId': q.get('id'), 'path': '/'.join(map(str, err.path)), 'message': err.message})
 checks.append(check(not schema_errors, 'JSON Schema validation', f'{len(schema_errors)} error(s)'))
 issues.extend({'type': 'schema', **e} for e in schema_errors)
+approved_fixture_failures = approved_gate_negative_fixtures()
+checks.append(check(
+    not approved_fixture_failures,
+    'Approved gate rejects every incomplete human-review condition',
+    str(approved_fixture_failures),
+))
+issues.extend({'type': 'approved_gate_fixture', 'item': item} for item in approved_fixture_failures)
 
 checks += [
     check(len(FACTS) == 100, 'Knowledge-card count', f'{len(FACTS)} / 100'),
     check(len(QUESTIONS) == 80, 'Alpha-question count', f'{len(QUESTIONS)} / 80'),
-    check(len(GLOSSARY) == 60, 'Glossary count', f'{len(GLOSSARY)} / 60'),
+    check(len(GLOSSARY) == 63, 'Glossary count', f'{len(GLOSSARY)} / 63'),
 ]
 
 qids = [q['id'] for q in QUESTIONS]
@@ -97,9 +232,22 @@ bad_correct = []
 bad_sources = []
 bad_rights = []
 bad_status = []
+bad_approved_gate = []
 bad_language = []
 missing_assets = []
 bad_pedagogy = []
+pilot_ids = set()
+pilot_missing_translation = []
+pilot_missing_furigana = []
+pilot_missing_correct_reason = []
+pilot_missing_wrong_reason = []
+pilot_duplicate_wrong_reasons = []
+pilot_missing_keywords = []
+pilot_missing_source = []
+pilot_missing_review_flags = []
+pilot_missing_language_points = []
+pilot_missing_term_annotations = []
+pilot_native_unchecked = []
 for q in QUESTIONS:
     for fid in q.get('sourceFactIds', []):
         if fid not in fact_ids:
@@ -123,6 +271,8 @@ for q in QUESTIONS:
         bad_rights.append(q['id'])
     if q.get('status') != 'source_checked':
         bad_status.append(q['id'])
+    if q.get('status') == 'approved' and not is_question_approved(q):
+        bad_approved_gate.append(q['id'])
     for field in ('question', 'explanation'):
         text = q.get(field, {})
         if not all(str(text.get(k, '')).strip() for k in ('ja', 'easyJa', 'id')):
@@ -134,7 +284,7 @@ for q in QUESTIONS:
     rationales = q.get('choiceRationales', {})
     ruby_fields = [q.get('question', {}), q.get('explanation', {}), *[c.get('text', {}) for c in q.get('choices', [])], *rationales.values()]
     if (
-        q.get('schemaVersion') != '0.3.0'
+        q.get('schemaVersion') not in {'0.3.0', '0.4.0'}
         or not support.get('questionPattern')
         or not support.get('keyTermIds')
         or len(rationales) != len(q.get('choices', []))
@@ -142,22 +292,143 @@ for q in QUESTIONS:
         or any(not all(str(item.get(k, '')).strip() for k in ('ja', 'easyJa', 'id')) for item in rationales.values())
     ):
         bad_pedagogy.append(q['id'])
+    if q.get('schemaVersion') == '0.4.0':
+        qid = q['id']
+        pilot_ids.add(qid)
+        for path, value in localized_texts(q):
+            if not all(str(value.get(key, '')).strip() for key in ('ja', 'easyJa', 'id')):
+                pilot_missing_translation.append((qid, path))
+            if not value.get('rubyJa') or missing_han_readings(value):
+                pilot_missing_furigana.append((qid, path, missing_han_readings(value)))
+        if not str(q.get('explanation', {}).get('ja', '')).strip() or not str(q.get('explanation', {}).get('id', '')).strip():
+            pilot_missing_correct_reason.append(qid)
+        for choice in q.get('choices', []):
+            rationale = q.get('choiceRationales', {}).get(choice.get('id'), {})
+            if choice.get('id') != q.get('correctChoiceId') and not all(str(rationale.get(key, '')).strip() for key in ('ja', 'easyJa', 'id')):
+                pilot_missing_wrong_reason.append((qid, choice.get('id')))
+        wrong_reason_texts = [
+            norm(q.get('choiceRationales', {}).get(choice.get('id'), {}).get('ja', ''))
+            for choice in q.get('choices', [])
+            if choice.get('id') != q.get('correctChoiceId')
+        ]
+        if len(wrong_reason_texts) != len(set(wrong_reason_texts)):
+            pilot_duplicate_wrong_reasons.append(qid)
+        if not 1 <= len(support.get('keyTermIds', [])) <= 5:
+            pilot_missing_keywords.append(qid)
+        if not support.get('languagePointKeys'):
+            pilot_missing_language_points.append(qid)
+        annotated_translations = [('question', q.get('question', {}).get('id', ''))]
+        annotated_translations.extend(
+            (f"choice:{choice.get('id')}", choice.get('text', {}).get('id', ''))
+            for choice in q.get('choices', [])
+        )
+        for path, text in annotated_translations:
+            annotations = PILOT_TERM_ANNOTATION_RE.findall(str(text))
+            if not annotations or any(
+                HAN_RE.search(annotation) and not PILOT_TERM_WITH_READING_RE.fullmatch(annotation)
+                for annotation in annotations
+            ):
+                pilot_missing_term_annotations.append((qid, path))
+        if not all(src.get(key) not in (None, '') for key in ('documentTitle', 'edition', 'pdfPage', 'section')):
+            pilot_missing_source.append(qid)
+        review = q.get('review', {})
+        if not all(key in review for key in ('furigana', 'japaneseLearning', 'answerLeak')):
+            pilot_missing_review_flags.append(qid)
+        if review.get('languageId') != 'pass':
+            pilot_native_unchecked.append(qid)
     if q.get('visual'):
         aid = q['visual'].get('assetId')
         if not aid or not (ASSET_DIR / f'{aid}.svg').exists():
             missing_assets.append((q['id'], aid))
 
+question_by_id = {q['id']: q for q in QUESTIONS}
+review_ids = [row.get('question_id', '') for row in REVIEW_ROWS]
+review_duplicate_ids = sorted(qid for qid, count in Counter(review_ids).items() if count > 1)
+review_missing_or_extra_ids = sorted(set(question_by_id) ^ set(review_ids))
+review_field_mismatches = []
+review_column_map = {
+    'schema_version': lambda q: q.get('schemaVersion'),
+    'category': lambda q: q.get('category'),
+    'topic': lambda q: q.get('topic'),
+    'status': lambda q: q.get('status'),
+    'source_id': lambda q: q.get('source', {}).get('sourceId'),
+    'pdf_page': lambda q: q.get('source', {}).get('pdfPage'),
+    'printed_page': lambda q: q.get('source', {}).get('printedPageLabel'),
+    'content_review': lambda q: q.get('review', {}).get('content'),
+    'japanese_review': lambda q: q.get('review', {}).get('languageJa'),
+    'indonesian_review': lambda q: q.get('review', {}).get('languageId'),
+    'furigana_review': lambda q: q.get('review', {}).get('furigana'),
+    'japanese_learning_review': lambda q: q.get('review', {}).get('japaneseLearning'),
+    'answer_leak_review': lambda q: q.get('review', {}).get('answerLeak'),
+    'rights_review': lambda q: q.get('review', {}).get('legalRights'),
+    'user_approval': lambda q: q.get('review', {}).get('approvalByUser'),
+    'language_point_keys': lambda q: '|'.join(q.get('learningSupport', {}).get('languagePointKeys', [])),
+    'question_ja': lambda q: q.get('question', {}).get('ja'),
+    'notes': lambda q: q.get('review', {}).get('notes'),
+}
+for row in REVIEW_ROWS:
+    q = question_by_id.get(row.get('question_id'))
+    if not q:
+        continue
+    for column, expected_value in review_column_map.items():
+        expected = expected_value(q)
+        if (row.get(column) or '') != ('' if expected is None else str(expected)):
+            review_field_mismatches.append((q['id'], column))
+
+required_human_review_columns = {
+    'pilot_set', 'source_title', 'source_edition', 'source_section',
+    'current_reviewer_type', 'current_reviewed_at', 'device_review', 'correction_notes',
+}
+pilot_review_rows = [row for row in REVIEW_ROWS if row.get('question_id') in pilot_ids]
+pilot_set_counts = Counter(row.get('pilot_set') for row in pilot_review_rows)
+nonpilot_assigned_sets = sorted(
+    row.get('question_id') for row in REVIEW_ROWS
+    if row.get('question_id') not in pilot_ids and row.get('pilot_set')
+)
+pilot_review_metadata_missing = []
+for row in pilot_review_rows:
+    q = question_by_id[row['question_id']]
+    source = q.get('source', {})
+    review = q.get('review', {})
+    expected_metadata = {
+        'source_title': source.get('documentTitle'),
+        'source_edition': source.get('edition'),
+        'source_section': source.get('section'),
+        'current_reviewer_type': review.get('reviewerType'),
+        'current_reviewed_at': review.get('reviewedAt'),
+    }
+    for column, expected in expected_metadata.items():
+        if (row.get(column) or '') != ('' if expected is None else str(expected)):
+            pilot_review_metadata_missing.append((q['id'], column))
+    if row.get('device_review') not in {'pending', 'pass', 'fail'}:
+        pilot_review_metadata_missing.append((q['id'], 'device_review'))
+
 checks += [
     check(not missing_refs, 'All question-to-fact references resolve', str(missing_refs[:10])),
     check(not bad_correct, 'Every correctChoiceId exists', str(bad_correct[:10])),
-    check(not bad_sources, 'All source documents and PDF pages exist', str(bad_sources[:10])),
+    check(not bad_sources, 'All source IDs and ledger page ranges resolve', str(bad_sources[:10])),
     check(not bad_rights, 'Rights flags prohibit official/competitor reuse', str(bad_rights[:10])),
     check(not bad_status, 'All questions remain source_checked (not auto-approved)', str(bad_status[:10])),
+    check(not bad_approved_gate, 'Approved questions satisfy every automated and human review gate', str(bad_approved_gate[:10])),
     check(not bad_language, 'All multilingual fields are populated', str(bad_language[:10])),
     check(not bad_pedagogy, 'All questions include ruby and pedagogical support', str(bad_pedagogy[:10])),
     check(not missing_assets, 'All declared original visual assets exist', str(missing_assets[:10])),
+    check(len(pilot_ids) == 16, 'Representative question-schema 0.4 pilot count', f'{len(pilot_ids)} / 16'),
+    check(len(REVIEW_ROWS) == len(QUESTIONS) and not review_duplicate_ids and not review_missing_or_extra_ids, 'Review checklist has one row for each of the 80 questions', f'rows={len(REVIEW_ROWS)}, duplicates={review_duplicate_ids[:10]}, idDiff={review_missing_or_extra_ids[:10]}'),
+    check(not review_field_mismatches, 'Review checklist canonical fields match question data', str(review_field_mismatches[:10])),
+    check(required_human_review_columns.issubset(REVIEW_FIELDNAMES) and pilot_set_counts == Counter({'A': 4, 'B': 4, 'C': 4, 'D': 4}) and not nonpilot_assigned_sets and not pilot_review_metadata_missing, 'Pilot review checklist exposes four 4-question sets, source metadata, device status, and correction notes', f'sets={dict(pilot_set_counts)}, nonpilotSets={nonpilot_assigned_sets[:10]}, metadata={pilot_review_metadata_missing[:10]}'),
+    check(not pilot_missing_translation, 'Pilot required translations are populated', str(pilot_missing_translation[:10])),
+    check(not pilot_missing_furigana, 'Pilot kanji ruby segments have readings', str(pilot_missing_furigana[:10])),
+    check(not pilot_missing_correct_reason, 'Pilot correct-answer reasons are populated', str(pilot_missing_correct_reason[:10])),
+    check(not pilot_missing_wrong_reason, 'Pilot wrong-choice reasons are populated', str(pilot_missing_wrong_reason[:10])),
+    check(not pilot_duplicate_wrong_reasons, 'Pilot wrong-choice reasons are choice-specific', str(pilot_duplicate_wrong_reasons[:10])),
+    check(not pilot_missing_keywords, 'Pilot questions have 1 to 5 key terms', str(pilot_missing_keywords[:10])),
+    check(not pilot_missing_language_points, 'Pilot questions identify at least one Japanese language point', str(pilot_missing_language_points[:10])),
+    check(not pilot_missing_term_annotations, 'Pilot question and choice translations retain Japanese term annotations and readings for kanji', str(pilot_missing_term_annotations[:10])),
+    check(not pilot_missing_source, 'Pilot questions identify source title, edition, page, and section', str(pilot_missing_source[:10])),
+    check(not pilot_missing_review_flags, 'Pilot review gates are explicit', str(pilot_missing_review_flags[:10])),
 ]
-for name, items in [('missing_fact_reference', missing_refs), ('bad_correct_choice', bad_correct), ('bad_source', bad_sources), ('bad_rights', bad_rights), ('bad_status', bad_status), ('bad_language', bad_language), ('bad_pedagogy', bad_pedagogy), ('missing_asset', missing_assets)]:
+for name, items in [('missing_fact_reference', missing_refs), ('bad_correct_choice', bad_correct), ('bad_source', bad_sources), ('bad_rights', bad_rights), ('bad_status', bad_status), ('bad_approved_gate', bad_approved_gate), ('bad_language', bad_language), ('bad_pedagogy', bad_pedagogy), ('missing_asset', missing_assets), ('pilot_missing_translation', pilot_missing_translation), ('pilot_missing_furigana', pilot_missing_furigana), ('pilot_missing_correct_reason', pilot_missing_correct_reason), ('pilot_missing_wrong_reason', pilot_missing_wrong_reason), ('pilot_duplicate_wrong_reasons', pilot_duplicate_wrong_reasons), ('pilot_missing_keywords', pilot_missing_keywords), ('pilot_missing_language_points', pilot_missing_language_points), ('pilot_missing_term_annotations', pilot_missing_term_annotations), ('pilot_missing_source', pilot_missing_source), ('pilot_missing_review_flags', pilot_missing_review_flags)]:
     issues.extend({'type': name, 'item': item} for item in items)
 
 # Source ledger and PDF verification.
@@ -169,20 +440,26 @@ anchor_total = sum(bool(fact.get('source', {}).get('verificationAnchors')) for f
 manual_page_refs = len(FACTS) - anchor_total
 anchor_pass = 0
 anchor_failures = []
-anchor_skipped = not SOURCE_PDFS_AVAILABLE
+anchor_skipped = not PDF_VERIFICATION_REQUIRED
+
+if PDF_VERIFICATION_REQUIRED and not SOURCE_PDFS_PRESENT:
+    required_pdf_issues = []
+    if not SOURCE_DIR_CONFIGURED:
+        required_pdf_issues.append('SSW2_SOURCE_DIR is not configured')
+    if fitz is None:
+        required_pdf_issues.append('PyMuPDF (fitz) is unavailable')
+    for source_id, path in PDFS.items():
+        if not path.exists():
+            required_pdf_issues.append(f'{source_id}: missing {path.name}')
+    checks.append(check(
+        False,
+        'Required official PDFs are available',
+        '; '.join(required_pdf_issues),
+    ))
+    issues.extend({'type': 'required_source_pdf', 'item': item} for item in required_pdf_issues)
 
 if SOURCE_PDFS_AVAILABLE:
-    for doc in LEDGER.get('officialDocuments', []):
-        sid = doc['sourceId']
-        pdf_path = PDFS.get(sid)
-        if not pdf_path or not pdf_path.exists():
-            ledger_issues.append((sid, 'missing file'))
-            continue
-        if sha256(pdf_path) != doc.get('sha256'):
-            ledger_issues.append((sid, 'sha256 mismatch'))
-        with fitz.open(pdf_path) as pdf:
-            if pdf.page_count != doc.get('pageCount'):
-                ledger_issues.append((sid, f"page count {pdf.page_count} != {doc.get('pageCount')}"))
+    ledger_issues = verify_pdf_documents(PDFS, LEDGER.get('officialDocuments', []), fitz)
     checks.append(check(not ledger_issues, 'Official-source hashes and page counts match ledger', str(ledger_issues)))
     issues.extend({'type': 'source_ledger', 'item': item} for item in ledger_issues)
 
@@ -208,19 +485,29 @@ if SOURCE_PDFS_AVAILABLE:
     ))
     issues.extend({'type': 'anchor', **item} for item in anchor_failures)
 else:
+    binary_skip_detail = (
+        'FAILED required PDF validation: use SSW2_SOURCE_DIR with both controlled official PDFs.'
+        if PDF_VERIFICATION_REQUIRED
+        else 'SKIPPED by structural-validation policy: official PDF binary checks run only with --require-pdfs.'
+    )
+    anchor_skip_detail = (
+        f'FAILED required PDF validation: {anchor_total} anchored facts could not be checked.'
+        if PDF_VERIFICATION_REQUIRED
+        else f'SKIPPED by structural-validation policy: {anchor_total} anchored facts require --require-pdfs.'
+    )
     checks.append({
         'name': 'Official-source binary verification',
-        'pass': True,
-        'detail': 'SKIPPED: official PDFs are not mounted in this CI environment; source IDs and page ranges were checked against source-ledger.json.',
-        'warning': True,
-        'skipped': True,
+        'pass': False if PDF_VERIFICATION_REQUIRED else None,
+        'detail': binary_skip_detail,
+        'warning': not PDF_VERIFICATION_REQUIRED,
+        'skipped': not PDF_VERIFICATION_REQUIRED,
     })
     checks.append({
         'name': 'Automated PDF anchor verification',
-        'pass': True,
-        'detail': f'SKIPPED: {anchor_total} anchored facts require the mounted official PDFs. Run npm run validate:content in the controlled source-review environment for full verification.',
-        'warning': True,
-        'skipped': True,
+        'pass': False if PDF_VERIFICATION_REQUIRED else None,
+        'detail': anchor_skip_detail,
+        'warning': not PDF_VERIFICATION_REQUIRED,
+        'skipped': not PDF_VERIFICATION_REQUIRED,
     })
 
 # Exact and near-duplicate question wording checks.
@@ -245,10 +532,45 @@ status_counts = Counter(q['status'] for q in QUESTIONS)
 category_counts = Counter(q['category'] for q in QUESTIONS)
 fact_subject_counts = Counter(f['subject'] for f in FACTS)
 review_counts = Counter(q.get('review', {}).get('languageId', 'missing') for q in QUESTIONS)
-all_pass = all(c['pass'] for c in checks if c['name'] != 'Near-duplicate review queue')
+pilot_questions = [q for q in QUESTIONS if q['id'] in pilot_ids]
+pilot_review_states = {
+    key: dict(Counter(q.get('review', {}).get(key, 'missing') for q in pilot_questions))
+    for key in ('content', 'languageJa', 'languageId', 'furigana', 'japaneseLearning', 'answerLeak', 'legalRights', 'approvalByUser')
+}
+pilot_device_review_states = dict(Counter(row.get('device_review', 'missing') or 'missing' for row in pilot_review_rows))
+pilot_pending_gate_counts = {
+    'nativeIndonesian': pilot_review_states['languageId'].get('pending_native_review', 0),
+    'furigana': pilot_review_states['furigana'].get('pending', 0),
+    'japaneseLearning': pilot_review_states['japaneseLearning'].get('pending', 0),
+    'answerLeak': pilot_review_states['answerLeak'].get('pending', 0),
+    'userApproval': pilot_review_states['approvalByUser'].get('pending', 0),
+    'deviceReview': pilot_device_review_states.get('pending', 0),
+}
+checks.append({
+    'name': 'Pilot native-Indonesian review queue',
+    'pass': True,
+    'detail': f'{len(pilot_native_unchecked)} / {len(pilot_ids)} pilot question(s) remain outside approved until languageId=pass',
+    'warning': bool(pilot_native_unchecked),
+})
+all_pass = all(
+    c['pass']
+    for c in checks
+    if c['name'] != 'Near-duplicate review queue' and not c.get('skipped')
+)
 
 report = {
     'generatedAt': '2026-08-13',
+    'reportKind': 'canonical-generated-summary',
+    'executionScope': {
+        'name': EXECUTION_SCOPE,
+        'githubActions': RUNNING_IN_GITHUB_ACTIONS,
+        'sourceDirConfigured': SOURCE_DIR_CONFIGURED,
+        'pdfVerificationRequired': PDF_VERIFICATION_REQUIRED,
+        'officialPdfsPresent': SOURCE_PDFS_PRESENT,
+        'officialPdfsAvailable': SOURCE_PDFS_AVAILABLE,
+        'githubCiPolicy': 'Standard PR CI validates repository data and code but skips PDF binary hashes, page counts, and text anchors because official PDFs are not stored in Git.',
+        'localPdfPolicy': 'Set SSW2_SOURCE_DIR to the controlled folder containing both official PDFs and run validate:content:pdf (or --require-pdfs) to require binary hash, page-count, and text-anchor checks.',
+    },
     'overall': 'PASS' if all_pass else 'FAIL',
     'releaseMeaning': 'PASS means the Alpha v0.5 pack passed structural, pedagogical, rights, and available source checks. A skipped PDF check is reported explicitly and PASS never means public-use approval.',
     'counts': {'facts': len(FACTS), 'questions': len(QUESTIONS), 'glossary': len(GLOSSARY), 'visualAssets': len(list(ASSET_DIR.glob('*.svg')))},
@@ -256,7 +578,16 @@ report = {
     'questionCountsByCategory': dict(category_counts),
     'factCountsBySubject': dict(fact_subject_counts),
     'indonesianReviewCounts': dict(review_counts),
-    'anchorVerification': {'available': SOURCE_PDFS_AVAILABLE, 'skipped': anchor_skipped, 'anchoredFacts': anchor_total, 'passed': anchor_pass, 'failed': len(anchor_failures), 'legacyManualPageReferences': manual_page_refs},
+    'pilot': {
+        'questionIds': sorted(pilot_ids),
+        'count': len(pilot_ids),
+        'nativeIndonesianUnchecked': len(pilot_native_unchecked),
+        'nativeIndonesianUncheckedIds': sorted(pilot_native_unchecked),
+        'reviewStates': pilot_review_states,
+        'deviceReviewStates': pilot_device_review_states,
+        'pendingGates': {**pilot_pending_gate_counts, 'total': sum(pilot_pending_gate_counts.values())},
+    },
+    'anchorVerification': {'required': PDF_VERIFICATION_REQUIRED, 'available': SOURCE_PDFS_AVAILABLE, 'skipped': anchor_skipped, 'anchoredFacts': anchor_total, 'passed': anchor_pass, 'failed': len(anchor_failures), 'legacyManualPageReferences': manual_page_refs},
     'checks': checks,
     'nearDuplicates': near_dupes,
     'issues': issues,
@@ -264,6 +595,7 @@ report = {
         'sourceChecked': sum(q['status'] == 'source_checked' for q in QUESTIONS),
         'approved': sum(q['status'] == 'approved' for q in QUESTIONS),
         'nativeIndonesianReviewed': sum(q.get('review', {}).get('languageId') == 'pass' for q in QUESTIONS),
+        'pilotNativeIndonesianUnchecked': len(pilot_native_unchecked),
         'remaining': ['インドネシア語ネイティブ確認', '利用者操作テスト', 'マサトさん最終承認']
     }
 }
@@ -272,19 +604,39 @@ report = {
 lines = [
     '# Alpha v0.5 Content Validation Report', '',
     f"**Overall: {report['overall']}**", '',
-    '> PASSは構造・参照・権利フラグ・自動検査が通ったことを示します。公開用approvedを意味しません。', '',
+    '> このファイルは再生成可能な正本サマリーです。GitHub Actionsの実行ログやartifact一覧そのものではありません。', '',
+    '> PASSは構造・参照・権利フラグ・この実行範囲で利用可能な自動検査が通ったことを示します。公開用approvedを意味しません。', '',
+    '## Verification scope', '',
+    f"- Current report scope: `{EXECUTION_SCOPE}`",
+    f"- Required PDF verification enabled in this run: {'yes' if PDF_VERIFICATION_REQUIRED else 'no'}",
+    f"- Official PDFs available to required verification: {'yes' if SOURCE_PDFS_AVAILABLE else 'no'}",
+    '- GitHub PR CI: リポジトリ内のデータ同期、Schema、型、単体テスト、E2E、ビルドを検査します。公式PDFをGitへ保存しないため、標準CIではPDFバイナリのSHA-256、ページ数、本文アンカー照合をSKIPします。',
+    '- Controlled local review: `SSW2_SOURCE_DIR` を明示した場合、または `npm run validate:content:pdf` を実行した場合、PDFのSHA-256、ページ数、本文アンカー照合を必須検査として実行します。PDF不足はFAILです。', '',
     '## Counts', '',
     f"- Knowledge cards: {len(FACTS)}", f"- Questions: {len(QUESTIONS)}", f"- Glossary: {len(GLOSSARY)}", f"- Original SVG assets: {report['counts']['visualAssets']}", '',
     '## Checks', '',
 ]
 for c in checks:
-    icon = 'PASS' if c['pass'] else 'FAIL'
+    icon = 'SKIP' if c.get('skipped') else 'PASS' if c['pass'] else 'FAIL'
     suffix = ' (warning)' if c.get('warning') else ''
     lines.append(f"- **{icon}{suffix}** — {c['name']}: {c.get('detail','')}")
 lines += ['', '## Coverage', '']
 for k, v in sorted(category_counts.items()):
     lines.append(f'- {k}: {v}問')
-lines += ['', '## Approval Gate', '', '- source_checked: 80', '- approved: 0', '- インドネシア語ネイティブ確認: 0/80', '- 残り: ネイティブ確認、利用者操作テスト、マサトさん最終承認', '']
+lines += [
+    '', '## Approval Gate', '',
+    f"- source_checked: {report['approvalGate']['sourceChecked']}",
+    f"- approved: {report['approvalGate']['approved']}",
+    f"- インドネシア語ネイティブ確認: {report['approvalGate']['nativeIndonesianReviewed']}/{len(QUESTIONS)}",
+    f"- 代表16問の review.languageId 未確認: {pilot_review_states['languageId'].get('pending_native_review', 0)}",
+    f"- 代表16問の review.furigana 未確認: {pilot_review_states['furigana'].get('pending', 0)}",
+    f"- 代表16問の review.japaneseLearning 未確認: {pilot_review_states['japaneseLearning'].get('pending', 0)}",
+    f"- 代表16問の review.answerLeak 未確認: {pilot_review_states['answerLeak'].get('pending', 0)}",
+    f"- 代表16問の review.approvalByUser 未確認: {pilot_review_states['approvalByUser'].get('pending', 0)}",
+    f"- 代表16問の device_review 未確認: {pilot_device_review_states.get('pending', 0)}",
+    f"- 代表16問の未確認ゲート記録合計: {sum(pilot_pending_gate_counts.values())}",
+    '- 残り: 代表16問の人手レビュー、実機テスト、マサトさん最終承認', ''
+]
 if near_dupes:
     lines += ['## Near-duplicate review queue', '']
     lines += [f"- {x['q1']} / {x['q2']}: {x['ratio']}" for x in near_dupes]

@@ -1,11 +1,22 @@
 {
   "generatedAt": "2026-08-13",
+  "reportKind": "canonical-generated-summary",
+  "executionScope": {
+    "name": "local-controlled-source-review",
+    "githubActions": false,
+    "sourceDirConfigured": true,
+    "pdfVerificationRequired": true,
+    "officialPdfsPresent": true,
+    "officialPdfsAvailable": true,
+    "githubCiPolicy": "Standard PR CI validates repository data and code but skips PDF binary hashes, page counts, and text anchors because official PDFs are not stored in Git.",
+    "localPdfPolicy": "Set SSW2_SOURCE_DIR to the controlled folder containing both official PDFs and run validate:content:pdf (or --require-pdfs) to require binary hash, page-count, and text-anchor checks."
+  },
   "overall": "PASS",
   "releaseMeaning": "PASS means the Alpha v0.5 pack passed structural, pedagogical, rights, and available source checks. A skipped PDF check is reported explicitly and PASS never means public-use approval.",
   "counts": {
     "facts": 100,
     "questions": 80,
-    "glossary": 60,
+    "glossary": 63,
     "visualAssets": 5
   },
   "statusCounts": {
@@ -36,11 +47,90 @@
   "indonesianReviewCounts": {
     "pending_native_review": 80
   },
+  "pilot": {
+    "questionIds": [
+      "q001",
+      "q004",
+      "q008",
+      "q013",
+      "q016",
+      "q029",
+      "q033",
+      "q035",
+      "q044",
+      "q045",
+      "q049",
+      "q055",
+      "q057",
+      "q078",
+      "q079",
+      "q080"
+    ],
+    "count": 16,
+    "nativeIndonesianUnchecked": 16,
+    "nativeIndonesianUncheckedIds": [
+      "q001",
+      "q004",
+      "q008",
+      "q013",
+      "q016",
+      "q029",
+      "q033",
+      "q035",
+      "q044",
+      "q045",
+      "q049",
+      "q055",
+      "q057",
+      "q078",
+      "q079",
+      "q080"
+    ],
+    "reviewStates": {
+      "content": {
+        "pass": 16
+      },
+      "languageJa": {
+        "pass": 16
+      },
+      "languageId": {
+        "pending_native_review": 16
+      },
+      "furigana": {
+        "pending": 16
+      },
+      "japaneseLearning": {
+        "pending": 16
+      },
+      "answerLeak": {
+        "pending": 16
+      },
+      "legalRights": {
+        "pass": 16
+      },
+      "approvalByUser": {
+        "pending": 16
+      }
+    },
+    "deviceReviewStates": {
+      "pending": 16
+    },
+    "pendingGates": {
+      "nativeIndonesian": 16,
+      "furigana": 16,
+      "japaneseLearning": 16,
+      "answerLeak": 16,
+      "userApproval": 16,
+      "deviceReview": 16,
+      "total": 96
+    }
+  },
   "anchorVerification": {
-    "available": false,
-    "skipped": true,
+    "required": true,
+    "available": true,
+    "skipped": false,
     "anchoredFacts": 50,
-    "passed": 0,
+    "passed": 50,
     "failed": 0,
     "legacyManualPageReferences": 50
   },
@@ -49,6 +139,11 @@
       "name": "JSON Schema validation",
       "pass": true,
       "detail": "0 error(s)"
+    },
+    {
+      "name": "Approved gate rejects every incomplete human-review condition",
+      "pass": true,
+      "detail": "[]"
     },
     {
       "name": "Knowledge-card count",
@@ -63,7 +158,7 @@
     {
       "name": "Glossary count",
       "pass": true,
-      "detail": "60 / 60"
+      "detail": "63 / 63"
     },
     {
       "name": "Unique question IDs",
@@ -91,7 +186,7 @@
       "detail": "[]"
     },
     {
-      "name": "All source documents and PDF pages exist",
+      "name": "All source IDs and ledger page ranges resolve",
       "pass": true,
       "detail": "[]"
     },
@@ -102,6 +197,11 @@
     },
     {
       "name": "All questions remain source_checked (not auto-approved)",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Approved questions satisfy every automated and human review gate",
       "pass": true,
       "detail": "[]"
     },
@@ -121,18 +221,84 @@
       "detail": "[]"
     },
     {
-      "name": "Official-source binary verification",
+      "name": "Representative question-schema 0.4 pilot count",
       "pass": true,
-      "detail": "SKIPPED: official PDFs are not mounted in this CI environment; source IDs and page ranges were checked against source-ledger.json.",
-      "warning": true,
-      "skipped": true
+      "detail": "16 / 16"
+    },
+    {
+      "name": "Review checklist has one row for each of the 80 questions",
+      "pass": true,
+      "detail": "rows=80, duplicates=[], idDiff=[]"
+    },
+    {
+      "name": "Review checklist canonical fields match question data",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot review checklist exposes four 4-question sets, source metadata, device status, and correction notes",
+      "pass": true,
+      "detail": "sets={'A': 4, 'C': 4, 'D': 4, 'B': 4}, nonpilotSets=[], metadata=[]"
+    },
+    {
+      "name": "Pilot required translations are populated",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot kanji ruby segments have readings",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot correct-answer reasons are populated",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot wrong-choice reasons are populated",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot wrong-choice reasons are choice-specific",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot questions have 1 to 5 key terms",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot questions identify at least one Japanese language point",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot question and choice translations retain Japanese term annotations and readings for kanji",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot questions identify source title, edition, page, and section",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Pilot review gates are explicit",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "Official-source hashes and page counts match ledger",
+      "pass": true,
+      "detail": "[]"
     },
     {
       "name": "Automated PDF anchor verification",
       "pass": true,
-      "detail": "SKIPPED: 50 anchored facts require the mounted official PDFs. Run npm run validate:content in the controlled source-review environment for full verification.",
-      "warning": true,
-      "skipped": true
+      "detail": "50/50 anchored facts passed; 50 legacy facts retain manual page references"
     },
     {
       "name": "No exact duplicate question wording",
@@ -144,6 +310,12 @@
       "pass": true,
       "detail": "0 pair(s) at similarity >= 0.92",
       "warning": false
+    },
+    {
+      "name": "Pilot native-Indonesian review queue",
+      "pass": true,
+      "detail": "16 / 16 pilot question(s) remain outside approved until languageId=pass",
+      "warning": true
     }
   ],
   "nearDuplicates": [],
@@ -152,6 +324,7 @@
     "sourceChecked": 80,
     "approved": 0,
     "nativeIndonesianReviewed": 0,
+    "pilotNativeIndonesianUnchecked": 16,
     "remaining": [
       "インドネシア語ネイティブ確認",
       "利用者操作テスト",

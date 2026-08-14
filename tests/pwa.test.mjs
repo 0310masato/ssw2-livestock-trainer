@@ -1,10 +1,91 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { access, readFile, stat } from 'node:fs/promises';
+import { access, readFile, readdir, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { runInNewContext } from 'node:vm';
+import { computeContentBuildId } from '../scripts/build.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const dist = resolve(root, 'dist');
+
+function workflowTriggers(source) {
+  const lines = source.split(/\r?\n/);
+  const onIndex = lines.findIndex((line) => /^on:\s*$/.test(line));
+  assert.notEqual(onIndex, -1, 'workflow is missing an on block');
+  const triggers = [];
+  for (const line of lines.slice(onIndex + 1)) {
+    if (line.trim() === '') continue;
+    if (!/^\s/.test(line)) break;
+    const match = line.match(/^ {2}([\w-]+):/);
+    if (match) triggers.push(match[1]);
+  }
+  return triggers;
+}
+
+function createCacheStorage(origin = 'https://example.test') {
+  const stores = new Map();
+  let globalMatchCalls = 0;
+  const keyFor = (request) => new URL(typeof request === 'string' ? request : request.url, `${origin}/`).href;
+  const createCache = () => {
+    const entries = new Map();
+    return {
+      async match(request) {
+        return entries.get(keyFor(request))?.clone();
+      },
+      async put(request, response) {
+        entries.set(keyFor(request), response.clone());
+      },
+    };
+  };
+  return {
+    get globalMatchCalls() { return globalMatchCalls; },
+    async keys() { return [...stores.keys()]; },
+    async open(name) {
+      if (!stores.has(name)) stores.set(name, createCache());
+      return stores.get(name);
+    },
+    async delete(name) { return stores.delete(name); },
+    async match(request) {
+      globalMatchCalls += 1;
+      for (const cache of stores.values()) {
+        const response = await cache.match(request);
+        if (response) return response;
+      }
+      return undefined;
+    },
+  };
+}
+
+function evaluateServiceWorker(source, cacheStorage, fetchImpl, origin = 'https://example.test') {
+  const listeners = new Map();
+  class ScopedRequest extends Request {
+    constructor(input, init) {
+      const normalizedInput = typeof input === 'string'
+        ? new URL(input, `${origin}/`)
+        : input instanceof Request
+          ? input
+          : input.url;
+      super(normalizedInput, init);
+    }
+  }
+  const self = {
+    location: { origin },
+    clients: { claim: async () => undefined },
+    skipWaiting: async () => undefined,
+    addEventListener(type, listener) { listeners.set(type, listener); },
+  };
+  runInNewContext(source, {
+    self,
+    caches: cacheStorage,
+    fetch: fetchImpl,
+    Request: ScopedRequest,
+    Response,
+    URL,
+    Error,
+    Promise,
+  });
+  return listeners;
+}
 
 test('web app manifest is installable and icons exist', async () => {
   const manifest = JSON.parse(await readFile(resolve(dist, 'manifest.webmanifest'), 'utf8'));
@@ -19,21 +100,171 @@ test('web app manifest is installable and icons exist', async () => {
   }
 });
 
-test('service worker caches the complete app shell', async () => {
+test('content build ID is deterministic and changes with app bytes', () => {
+  const baseline = computeContentBuildId([
+    { path: 'styles.css', content: 'body { color: teal; }\n' },
+    { path: 'app.js', content: 'console.log("current");\n' },
+    { path: 'assets/icon.bin', content: Buffer.from([0, 1, 2]) },
+  ]);
+  const sameAcrossOrderingAndPlatformNewlines = computeContentBuildId([
+    { path: 'assets\\icon.bin', content: Buffer.from([0, 1, 2]) },
+    { path: 'app.js', content: 'console.log("current");\r\n' },
+    { path: 'styles.css', content: 'body { color: teal; }\r\n' },
+  ]);
+  const changedApp = computeContentBuildId([
+    { path: 'styles.css', content: 'body { color: teal; }\n' },
+    { path: 'app.js', content: 'console.log("current");!\n' },
+    { path: 'assets/icon.bin', content: Buffer.from([0, 1, 2]) },
+  ]);
+  assert.match(baseline, /^[a-f0-9]{16}$/);
+  assert.equal(sameAcrossOrderingAndPlatformNewlines, baseline);
+  assert.notEqual(changedApp, baseline);
+});
+
+test('content build ID changes with normalized service-worker template bytes', () => {
+  const baseline = computeContentBuildId([
+    { path: 'sw.js.template', content: 'const BUILD_ID = "__APP_BUILD_ID__";\ncache.match(request);\n' },
+  ]);
+  const sameAcrossPlatformNewlines = computeContentBuildId([
+    { path: 'sw.js.template', content: 'const BUILD_ID = "__APP_BUILD_ID__";\r\ncache.match(request);\r\n' },
+  ]);
+  const changedWorkerLogic = computeContentBuildId([
+    { path: 'sw.js.template', content: 'const BUILD_ID = "__APP_BUILD_ID__";\ncache.match(new Request(request));\n' },
+  ]);
+  assert.equal(sameAcrossPlatformNewlines, baseline);
+  assert.notEqual(changedWorkerLogic, baseline);
+});
+
+test('content build ID covers every required app-shell source', async () => {
+  const buildSource = await readFile(resolve(root, 'scripts', 'build.mjs'), 'utf8');
+  for (const required of [
+    "path: 'app.js'",
+    "path: 'styles.css'",
+    "path: 'index.html.template'",
+    "path: 'manifest.webmanifest'",
+    "path: 'sw.js.template'",
+    'barn-ppe.svg',
+    'chick-guard.svg',
+    'cow-measurements.svg',
+    'dilution-20l.svg',
+    'sow-body-condition.svg',
+    'icon-192.png',
+    'icon-512.png',
+    'apple-touch-icon.png',
+  ]) {
+    assert.match(buildSource, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  assert.match(buildSource, /hashEntries\.push/);
+  assert.ok(buildSource.indexOf('const serviceWorkerTemplate =') < buildSource.indexOf('const buildId = computeContentBuildId(hashEntries)'));
+  assert.match(buildSource, /serviceWorkerTemplate\.replaceAll\(buildIdPlaceholder, buildId\)/);
+  assert.match(buildSource, /replace\(\/\\r\\n\?\/g, '\\n'\)/);
+  assert.match(buildSource, /entry\.path\.replaceAll\('\\\\', '\/'\)/);
+});
+
+test('service worker caches the content-addressed complete app shell', async () => {
   const serviceWorker = await readFile(resolve(dist, 'sw.js'), 'utf8');
+  const indexHtml = await readFile(resolve(dist, 'index.html'), 'utf8');
+  const buildId = indexHtml.match(/<meta name="app-build-id" content="([a-f0-9]{16})">/)?.[1];
+  assert.ok(buildId, 'index.html must expose its content build ID');
+  assert.match(serviceWorker, new RegExp(`const CACHE_NAME = ["']livestock2-v0\\.5\\.0-${buildId}["']`));
+  assert.match(serviceWorker, new RegExp(`const BUILD_ID = ["']${buildId}["']`));
+  assert.match(indexHtml, new RegExp(`href="styles\\.css\\?v=${buildId}"`));
+  assert.match(indexHtml, new RegExp(`src="app\\.js\\?v=${buildId}"`));
+  assert.match(serviceWorker, new RegExp(`styles\\.css\\?v=${buildId}`));
+  assert.match(serviceWorker, new RegExp(`app\\.js\\?v=${buildId}`));
+  assert.doesNotMatch(serviceWorker, /livestock2-v0\.5\.0-pr5-remediation/);
   for (const required of ['index.html', 'styles.css', 'app.js', 'manifest.webmanifest', 'chick-guard.svg']) {
     assert.match(serviceWorker, new RegExp(required.replace('.', '\\.')));
   }
   assert.match(serviceWorker, /caches\.open/);
+  assert.match(serviceWorker, /new Request\(asset, \{ cache: 'reload' \}\)/);
+  assert.match(serviceWorker, /!response\.ok \|\| response\.type === 'opaque'/);
+  assert.match(serviceWorker, /const existingCacheNames = await caches\.keys\(\);/);
+  assert.match(serviceWorker, /const cacheExistedBeforeInstall = existingCacheNames\.includes\(CACHE_NAME\);/);
+  assert.match(serviceWorker, /if \(!cacheExistedBeforeInstall\) await caches\.delete\(CACHE_NAME\);/);
+  const installBlock = serviceWorker.slice(
+    serviceWorker.indexOf("self.addEventListener('install'"),
+    serviceWorker.indexOf("self.addEventListener('activate'"),
+  );
+  assert.ok(installBlock.indexOf('caches.delete(CACHE_NAME)') > installBlock.indexOf('catch (error)'));
+  assert.equal(installBlock.match(/caches\.delete\(CACHE_NAME\)/g)?.length, 1);
+  assert.doesNotMatch(serviceWorker, /cache\.addAll/);
   assert.match(serviceWorker, /event\.request\.mode === 'navigate'/);
+  assert.doesNotMatch(serviceWorker, /caches\.match\(/);
+  assert.match(serviceWorker, /const cached = await cache\.match\('\.\/index\.html'\);/);
+  assert.match(serviceWorker, /const cached = await cache\.match\(event\.request\);/);
+  assert.match(serviceWorker, /new Request\(event\.request, \{ cache: 'no-store' \}\)/);
+  assert.match(serviceWorker, /const CACHE_PREFIX = ["']livestock2-["']/);
+  assert.match(serviceWorker, /key\.startsWith\(CACHE_PREFIX\) && key !== CACHE_NAME/);
+  assert.doesNotMatch(serviceWorker, /keys\.filter\(\(key\) => key !== CACHE_NAME\)/);
+});
+
+test('failed service-worker install removes only its new build cache', async () => {
+  const serviceWorker = await readFile(resolve(dist, 'sw.js'), 'utf8');
+  const currentCacheName = serviceWorker.match(/const CACHE_NAME = "([^"]+)";/)?.[1];
+  assert.ok(currentCacheName);
+  const cacheStorage = createCacheStorage();
+  await cacheStorage.open('livestock2-v0.5.0-previous');
+  await cacheStorage.open('foreign-review-cache');
+  let fetchCount = 0;
+  const listeners = evaluateServiceWorker(serviceWorker, cacheStorage, async () => {
+    fetchCount += 1;
+    return new Response(fetchCount === 2 ? 'failed' : 'ok', { status: fetchCount === 2 ? 503 : 200 });
+  });
+  let installPromise;
+  listeners.get('install')({ waitUntil(promise) { installPromise = promise; } });
+  await assert.rejects(installPromise, /Required app-shell fetch failed/);
+  assert.deepEqual((await cacheStorage.keys()).sort(), ['foreign-review-cache', 'livestock2-v0.5.0-previous']);
+  assert.equal((await cacheStorage.keys()).includes(currentCacheName), false);
+});
+
+test('service-worker fetch reads only from the current owned cache', async () => {
+  const serviceWorker = await readFile(resolve(dist, 'sw.js'), 'utf8');
+  const currentCacheName = serviceWorker.match(/const CACHE_NAME = "([^"]+)";/)?.[1];
+  const buildId = serviceWorker.match(/const BUILD_ID = "([a-f0-9]{16})";/)?.[1];
+  assert.ok(currentCacheName);
+  assert.ok(buildId);
+  const cacheStorage = createCacheStorage();
+  const foreignCache = await cacheStorage.open('foreign-review-cache');
+  const ownedCache = await cacheStorage.open(currentCacheName);
+  const scriptUrl = `https://example.test/app.js?v=${buildId}`;
+  await foreignCache.put(scriptUrl, new Response('foreign script'));
+  await foreignCache.put('./index.html', new Response('foreign index'));
+  await ownedCache.put(scriptUrl, new Response('owned script'));
+  await ownedCache.put('./index.html', new Response('owned index'));
+  let navigationNetworkRequest;
+  const listeners = evaluateServiceWorker(serviceWorker, cacheStorage, async (request) => {
+    navigationNetworkRequest = request;
+    throw new Error('offline');
+  });
+
+  let assetResponsePromise;
+  listeners.get('fetch')({
+    request: new Request(scriptUrl),
+    respondWith(promise) { assetResponsePromise = promise; },
+  });
+  assert.equal(await (await assetResponsePromise).text(), 'owned script');
+
+  let navigationResponsePromise;
+  listeners.get('fetch')({
+    request: { method: 'GET', mode: 'navigate', url: 'https://example.test/offline' },
+    respondWith(promise) { navigationResponsePromise = promise; },
+  });
+  assert.equal(await (await navigationResponsePromise).text(), 'owned index');
+  assert.equal(navigationNetworkRequest.cache, 'no-store');
+  assert.equal(cacheStorage.globalMatchCalls, 0);
 });
 
 test('standalone review build contains code, styles, and embedded visual assets', async () => {
   const html = await readFile(resolve(dist, 'standalone-review.html'), 'utf8');
+  assert.match(html, /<style>[^<]+/);
+  assert.match(html, /<script>window\.__ASSET_DATA__/);
+  assert.match(html, /<script>[^<]*namespace LivestockApp|sourceURL=livestock2-app\.js/);
   assert.match(html, /window\.__ASSET_DATA__/);
   assert.match(html, /畜産2号トレーナー/);
   assert.match(html, /chick-guard/);
   assert.doesNotMatch(html, /https:\/\/cdn\./);
+  assert.doesNotMatch(html, /(?:src|href)=["'][^"']+\.(?:js|css)["']/);
 });
 
 test('review deployment discourages indexing and bypasses Jekyll', async () => {
@@ -42,6 +273,11 @@ test('review deployment discourages indexing and bypasses Jekyll', async () => {
   await access(resolve(dist, '.nojekyll'));
   const robots = await readFile(resolve(dist, 'robots.txt'), 'utf8');
   assert.match(robots, /Disallow: \/$/m);
+  const notice = await readFile(resolve(dist, 'REVIEW_ARTIFACT_NOTICE.txt'), 'utf8');
+  assert.match(notice, /Temporary PR review build/);
+  assert.match(notice, /not access-restricted/);
+  assert.match(notice, /7-day retention/);
+  assert.match(notice, /Not an official distribution/);
 });
 
 test('compiled application contains persistent bilingual UI support', async () => {
@@ -56,4 +292,46 @@ test('compiled application contains persistent bilingual UI support', async () =
   assert.match(app, /studySupportMode/);
   assert.match(app, /japanese-only-card/);
   assert.match(app, /renderJapaneseOnlyQuestionCard/);
+  assert.match(app, /畜産2号トレーナー_学習データ_v0\.5\.json/);
+  assert.match(app, /畜産2号トレーナー_学習履歴_v0\.5\.csv/);
+  assert.match(app, /やさしい日本語（回答前に実表示）/);
+  assert.match(app, /畜産2号トレーナー_80問レビュー_v0\.5\.json/);
+  assert.match(app, /updateViaCache:\s*['"]none['"]/);
+  assert.match(app, /registration\.update\(\)/);
+  assert.match(app, /アプリを更新できます/);
+  assert.doesNotMatch(app, /location\.reload\(\)/);
+  assert.doesNotMatch(app, /畜産2号トレーナー_[^'"\\n]+_v0\.4\.(?:json|csv)/);
+});
+
+test('temporary review distribution excludes PDFs, private keys, and local user paths', async () => {
+  const entries = await readdir(dist, { recursive: true, withFileTypes: true });
+  const files = entries.filter((entry) => entry.isFile());
+  const names = files.map((entry) => resolve(entry.parentPath, entry.name));
+  const forbiddenExtensions = /\.(?:pdf|pem|key|p12|pfx)$/i;
+  assert.equal(names.filter((name) => forbiddenExtensions.test(name)).length, 0);
+
+  const textExtensions = /\.(?:html|js|css|json|map|txt|webmanifest)$/i;
+  for (const name of names.filter((entry) => textExtensions.test(entry))) {
+    const content = await readFile(name, 'utf8');
+    assert.doesNotMatch(content, /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/);
+    assert.doesNotMatch(content, /(?:[A-Za-z]:(?:\\{1,2}|\/)Users(?:\\{1,2}|\/)|\/Users\/[^/\s]+\/|\/home\/[^/\s]+\/)/);
+  }
+});
+
+test('PR artifact is temporary and Pages deployment remains manual-only', async () => {
+  const ciWorkflow = await readFile(resolve(root, '.github', 'workflows', 'ci.yml'), 'utf8');
+  const pagesWorkflow = await readFile(resolve(root, '.github', 'workflows', 'pages.yml'), 'utf8');
+  const workflowFiles = await readdir(resolve(root, '.github', 'workflows'));
+  const packageJson = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'));
+  assert.match(packageJson.scripts['test:e2e:http'], /python e2e\/http_pwa_smoke\.py/);
+  assert.match(packageJson.scripts['test:e2e'], /npm run test:e2e:http/);
+  assert.match(ciWorkflow, /run:\s*npm run test:e2e/);
+  assert.doesNotMatch(ciWorkflow, /run:\s*python3? e2e\/http_pwa_smoke\.py/);
+  assert.match(ciWorkflow, /temporary-pr-review-build-7d-pr-/);
+  assert.match(ciWorkflow, /retention-days:\s*7/);
+  assert.doesNotMatch(ciWorkflow, /actions\/deploy-pages/);
+  assert.match(ciWorkflow, /PyMuPDF==1\.27\.2\.2/);
+  assert.deepEqual(workflowTriggers(pagesWorkflow), ['workflow_dispatch']);
+  assert.equal(workflowFiles.includes('publish-gh-pages-branch.yml'), false);
+  assert.doesNotMatch(pagesWorkflow, /gh-pages|force/i);
 });

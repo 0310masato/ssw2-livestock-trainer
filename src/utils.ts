@@ -21,6 +21,29 @@ namespace LivestockApp {
     return new Date().toISOString();
   }
 
+  export function isValidIsoTimestamp(value: unknown): value is string {
+    if (typeof value !== 'string') return false;
+    const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|([+-])(\d{2}):(\d{2}))$/.exec(value);
+    if (!match) return false;
+    const [, yearText, monthText, dayText, hourText, minuteText, secondText, , offsetHourText, offsetMinuteText] = match;
+    const year = Number(yearText);
+    const month = Number(monthText);
+    const day = Number(dayText);
+    const hour = Number(hourText);
+    const minute = Number(minuteText);
+    const second = Number(secondText);
+    const offsetHour = offsetHourText === undefined ? 0 : Number(offsetHourText);
+    const offsetMinute = offsetMinuteText === undefined ? 0 : Number(offsetMinuteText);
+    const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+    const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    return year >= 1
+      && month >= 1 && month <= 12
+      && day >= 1 && day <= daysInMonth[month - 1]
+      && hour <= 23 && minute <= 59 && second <= 59
+      && offsetHour <= 23 && offsetMinute <= 59
+      && Number.isFinite(Date.parse(value));
+  }
+
   export function dateKey(value: string | number | Date): string {
     const date = value instanceof Date ? value : new Date(value);
     const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
@@ -85,7 +108,9 @@ namespace LivestockApp {
 
   export function csvCell(value: unknown): string {
     const text = String(value ?? '');
-    return /[",\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+    const dangerous = /^[ \t\r\n]*[=+\-@]/.test(text) || /^ *[\t\r\n]/.test(text);
+    const neutralized = dangerous ? `'${text}` : text;
+    return /[",\n\r]/.test(neutralized) ? `"${neutralized.replaceAll('"', '""')}"` : neutralized;
   }
 
   export function textWithFurigana(text: string, enabled: boolean): string {
@@ -129,10 +154,32 @@ namespace LivestockApp {
     if (state.settings.reviewContentEnabled) {
       return QUESTIONS.filter((question) => ['source_checked', 'language_checked', 'approved'].includes(question.status));
     }
-    return QUESTIONS.filter((question) => question.status === 'approved');
+    return QUESTIONS.filter(isQuestionApproved);
   }
 
-  export function renderLocalizedText(text: LocalizedText, settings: UserSettings, mode: 'question' | 'choice' | 'explanation'): string {
+  export function isQuestionApproved(question: Question): boolean {
+    const review = question.review;
+    return question.status === 'approved'
+      && question.prototypeOnly === false
+      && review.content === 'pass'
+      && review.languageJa === 'pass'
+      && review.languageId === 'pass'
+      && review.legalRights === 'pass'
+      && review.furigana === 'pass'
+      && review.japaneseLearning === 'pass'
+      && review.answerLeak === 'pass'
+      && review.approvalByUser === 'approved'
+      && typeof review.reviewedAt === 'string'
+      && review.reviewedAt.length > 0
+      && isValidIsoTimestamp(review.reviewedAt);
+  }
+
+  /** @deprecated New learning screens use the explicit support policy renderers. */
+  export function renderLocalizedText(
+    text: LocalizedText,
+    settings: { showFurigana: boolean; showEasyJapanese: boolean; showIndonesian: boolean },
+    mode: 'question' | 'choice' | 'explanation',
+  ): string {
     const primary = renderJapaneseText(text, settings.showFurigana);
     if (mode === 'choice') {
       const supplements: string[] = [];

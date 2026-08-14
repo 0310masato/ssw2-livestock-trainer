@@ -274,7 +274,8 @@ tr:last-child td { border-bottom: 0; }
   .brand { font-size: 17px; }
   .brand-mark { width: 42px; height: 42px; border-radius: 14px; }
   .status-cluster .connection-status { display: none; }
-  .nav-item { padding-inline: 11px; }
+  .top-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 2px; padding-inline: 8px; overflow-x: clip; }
+  .nav-item { min-width: 0; min-height: 40px; padding: 4px 2px; white-space: normal; overflow-wrap: anywhere; font-size: 12px; line-height: 1.2; }
   .hero-panel { padding: 21px; }
   .hero-copy h1 { font-size: 28px; }
   .hero-actions, .hero-actions.centered { display: grid; grid-template-columns: 1fr; }
@@ -285,12 +286,13 @@ tr:last-child td { border-bottom: 0; }
   .support-panel { align-items: flex-start; flex-direction: column; }
   .support-panel .btn { width: 100%; }
   .question-card { padding: 18px; border-radius: 22px; }
-  .support-controls { grid-template-columns: 1fr; }
+  .support-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .support-toggle.wide { grid-column: auto; }
   .question-text { font-size: 22px; }
   .choice-button { min-height: 66px; padding: 12px; }
   .reason-grid { display: grid; grid-template-columns: 1fr; }
   .mock-navigation { display: grid; grid-template-columns: 1fr 1fr; }
+  .mock-header { position: static; }
   .number-grid { grid-template-columns: repeat(6, 1fr); }
   .review-toolbar { grid-template-columns: 1fr; }
   .review-toolbar input { grid-column: auto; }
@@ -333,7 +335,7 @@ tr:last-child td { border-bottom: 0; }
 .lesson-vocabulary { padding: 16px; border: 1px solid #ecd6b7; border-radius: 17px; background: #fffaf3; }
 .vocabulary-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
 .vocabulary-card { min-width: 0; padding: 12px; border: 1px solid #eadac2; border-radius: 13px; background: #fff; }
-.vocabulary-card ruby { display: block; font-size: 19px; font-weight: 850; }
+.vocabulary-card ruby, .vocabulary-term { display: block; font-size: 19px; font-weight: 850; }
 .vocabulary-card p { margin: 7px 0 4px; color: var(--muted); line-height: 1.45; }
 .vocabulary-card > strong { color: #9a541f; font-size: 13px; }
 .guided-choice .choice-ja { display: block; font-size: 16px; font-weight: 760; }
@@ -357,3 +359,42 @@ tr:last-child td { border-bottom: 0; }
 .pedagogy-settings { border-color: #e7caa4; background: #fffaf4; }
 @media (max-width: 800px) { .learning-flow-steps { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (max-width: 520px) { .learning-flow-steps, .vocabulary-grid { grid-template-columns: 1fr; } .learning-flow-steps li { min-height: 0; } }
+
+/* Reusable learning components */
+[data-learning-component] { min-width: 0; }
+.translation-disclosure { min-width: 0; margin-top: 12px; border: 1px solid #edcda8; border-radius: 14px; background: #fff8ef; overflow: hidden; }
+.translation-disclosure > summary { padding: 12px 14px; color: #8d4d20; font-weight: 820; cursor: pointer; }
+.translation-disclosure > .support-box { margin: 0; border-radius: 0; border-block: 1px solid #edcda8; border-right: 0; border-bottom: 0; }
+.negative-pattern { border-color: #e5b176; background: #fff8ed; }
+.negative-expression { padding: .05em .22em; border-radius: .28em; background: #ffe08a; color: #6f3d08; font-weight: 900; }
+.japanese-language-point { padding: 16px; border: 1px solid #bfd9d3; border-radius: 17px; background: #f3faf8; }
+.japanese-language-point h3 { margin: 0 0 11px; }
+.negative-language-point { border-color: #e4af72; background: #fff8ed; }
+.language-expression-list { display: grid; gap: 8px; }
+.language-expression { min-width: 0; padding: 11px 12px; border: 1px solid var(--border); border-radius: 12px; background: #fff; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 10px; align-items: start; overflow-wrap: anywhere; }
+.language-expression-copy { min-width: 0; display: grid; gap: 4px; }
+.language-expression-copy small { color: var(--muted); line-height: 1.5; }
+.language-expression-copy[lang="id"] { color: #8b4d22; }
+.language-expression-copy[lang="id"] small { color: #815237; }
+.negative-warning { margin: 11px 0 0; display: grid; gap: 4px; color: #74440f; line-height: 1.55; }
+.retry-without-support { min-width: 0; padding: 15px 16px; border: 1px dashed #83b9ad; border-radius: 17px; background: #f4fbf9; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.retry-without-support > div { min-width: 0; display: grid; gap: 4px; }
+.retry-without-support small { color: var(--muted); line-height: 1.45; }
+.retry-without-support .btn { flex: 0 1 auto; text-align: center; white-space: normal; }
+.choice-copy, .support-box, .vocabulary-card, .choice-review-item, .source-citation { min-width: 0; overflow-wrap: anywhere; }
+
+@media (max-width: 520px) {
+  .language-expression { grid-template-columns: 1fr; gap: 5px; }
+  .retry-without-support { align-items: stretch; flex-direction: column; }
+  .retry-without-support .btn { width: 100%; }
+}
+
+@media (max-width: 380px) {
+  .main-content { padding-inline: 10px; }
+  .brand-row, .review-banner { padding-inline: 10px; }
+  .question-card { padding: 15px; border-radius: 18px; }
+  .choice-button { grid-template-columns: 31px minmax(0,1fr); gap: 8px; padding-inline: 10px; }
+  .choice-letter { width: 29px; height: 29px; }
+  .lesson-goal, .question-pattern-guide, .lesson-vocabulary, .choice-review, .japanese-language-point, .retry-without-support { padding: 13px; }
+  .support-toggle, .confidence-button, .reason-button, .btn { max-width: 100%; overflow-wrap: anywhere; }
+}

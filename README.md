@@ -2,7 +2,9 @@
 
 特定技能2号「畜産農業」の受験者向けに作成した、スマートフォン中心の非公式学習支援PWAです。
 
-このリポジトリは **v0.4.0 Alpha・内部レビュー版** です。搭載する80問は公式教材との根拠照合済みですが、インドネシア語ネイティブ確認と利用者最終承認前です。問題状態は `source_checked` のままで、正式な `approved` は0問です。
+このリポジトリは **v0.5.0 Alpha・学習支援パイロット版** です。代表16問だけを新しい日本語学習支援形式へ移行し、残り64問は従来形式のまま保持しています。搭載する80問は公式教材との根拠照合済みですが、インドネシア語ネイティブ確認と利用者最終承認前です。問題状態は `source_checked` のままで、正式な `approved` は0問です。
+
+アプリ版、学習state、問題Schema、Service Worker cacheは別々の互換性境界です。各番号の役割は [バージョン表記の役割](docs/VERSIONING.md) を参照してください。
 
 ## この版で動く機能
 
@@ -14,7 +16,7 @@
 - 誤答原因の分類：知識、日本語、読み違い、計算、時間、その他
 - 間隔反復：10分後、3日、7日、14日、30日
 - 50問・60分の模擬試験
-- 日本語専門用語60語
+- 日本語専門用語63語
 - 成績・弱点分析
 - 会社管理者向け端末内ダッシュボード
 - 80問レビュー画面
@@ -73,6 +75,7 @@ npm run serve
 ## 検証
 
 ```bash
+npm run check:data-sync
 npm run typecheck
 npm run validate:content
 npm test
@@ -85,14 +88,39 @@ npm run test:e2e
 npm run verify
 ```
 
-`validate:content` は公式PDFのハッシュ、ページ数、根拠アンカーを確認するため、次のローカルパスを使用します。
+### GitHub CIの検査範囲
+
+GitHub CIには公式PDFを配置しません。Pull Requestと`main`へのpushでは次を検査します。
+
+- 生成データ同期、JSON Schema、件数、ID、参照整合、権利フラグ
+- 代表16問の必須翻訳、ふりがな、正答理由、不正解理由、出典、レビューゲート
+- TypeScript、ビルド、Node単体テスト
+- 学習支援Level 0〜3、保存、模試の日本語限定と終了後の言語復帰
+- Playwright 360px表示、横方向オーバーフロー、JavaScript page error
+- PWA配布ファイルと期限付きPRレビューartifact
+
+CI内の `validate:content` は、出典IDと台帳ページ範囲を検査します。ただし公式PDFバイナリがないため、次の2項目はレポート上で明示的に `SKIPPED` になります。
+
+- 公式PDFのハッシュとページ数
+- PDF本文を使う50件の根拠アンカー照合
+
+### 許可済みローカル環境のPDF検査
+
+上記2項目を含む完全照合は、公式PDF 2冊を同じフォルダーに置き、`SSW2_SOURCE_DIR` を設定したローカル環境だけで実行します。PDF自体はGitへ追加しません。PyMuPDFを利用でき、次のファイル名が必要です。
 
 ```text
-/mnt/data/技能測定試験（畜産農業）.pdf
-/mnt/data/衛生管理（畜産農業）.pdf
+<SSW2_SOURCE_DIR>/技能測定試験（畜産農業）.pdf
+<SSW2_SOURCE_DIR>/衛生管理（畜産農業）.pdf
 ```
 
-GitHub CIでは著作権上PDFをリポジトリへ含めず、構造・ビルド・学習ロジック・PWA構成を検査します。公式PDFとの完全照合は、許可されたローカル環境で実行します。
+PowerShell例：
+
+```powershell
+$env:SSW2_SOURCE_DIR = 'C:\controlled-source-review'
+npm run verify:pdf
+```
+
+`reports/VALIDATION_REPORT.json` の `anchorVerification.available=true`、`skipped=false`、`passed=50` を確認します。レポートの扱いと過去版の分離は [reports/README.md](reports/README.md) を参照してください。GitHub CIの成功証跡は、対象commitに紐づくActions Run URLです。
 
 ## ディレクトリ
 
@@ -118,23 +146,30 @@ dist/                配布可能なビルド
 
 ## 次の段階
 
-1. イカデさんによる20問テスト結果を反映
-2. インドネシア語ネイティブ確認
-3. 問題を `language_checked` へ昇格
-4. マサトさん最終承認後に `approved` へ昇格
-5. GitHub正本へ登録し、React＋Vite版または本構成の継続をADRで決定
-6. URL公開・Android／iPhone実機テスト
+1. 固定HEAD `cf2fd9d` の独立監査結果 `READY_FOR_HUMAN_REVIEW` を基準にする
+2. 代表16問を4問×4セットで人手レビューする（Set Aは開始可能）
+3. 代表16問の指摘と既存機能の回帰だけをPR #5内で修正する
+4. 内容確認後に通常学習のAndroid／iPhone実機テストを行い、模試はtimer境界修正済みHEADのCI確認後に行う
+5. 結果を確認後、Phase 6を別途計画する
 
-## GitHub正本とスマホ実機テスト
+この順序の詳細は [次段階の実施順序](docs/NEXT_PHASE.md) と [代表16問レビュー計画](docs/PILOT_REVIEW_PLAN.md) を参照してください。Phase 6開始、`approved` 昇格、Draft解除、merge、公開はそれぞれ別判断です。
 
-v0.4.1ではGitHub登録後の検証に必要なCI、手動Pages workflow、Android／iPhone手順を追加しています。
+## PRレビュー用ビルドとスマホ実機テスト
+
+Draft PR #5の成功したPull Request CI Runから、名前が `temporary-pr-review-build-7d-pr-` で始まるActions artifactを取得できます。PR番号とRun attemptを含みます。保持期間は7日間で、`main` push CIでは生成しません。
 
 - CI: `.github/workflows/ci.yml`
-- Pages（手動実行のみ）: `.github/workflows/pages.yml`
+- artifact: `dist`相当のビルド一式と `standalone-review.html`
 - 実機手順: `docs/SMARTPHONE_TEST.md`
-- 配信上の注意: `docs/DEPLOYMENT.md`
+- バージョン表記: `docs/VERSIONING.md`
 
-未承認問題の意図しない公開を防ぐため、Pagesはpushでは起動しません。`workflow_dispatch` を明示的に実行した場合だけ配信します。`robots.txt` と `noindex` は検索回避の補助であり、アクセス制限ではありません。
+このリポジトリはpublicであり、artifactは指定レビュアーだけに制限された保管場所ではありません。未確認翻訳を含む期限付きPR確認物で、正式な配布物、長期保管物、承認済み教材ではありません。`standalone-review.html` は単体表示確認に利用できますが、Service WorkerとPWAインストールの確認にはHTTP配信とsecure contextが必要です。PR #5のレビューでは、現在も残っているlegacy public Pagesを使用せず、今回HEADを本番URLや一般公開ホストへ反映しません。
+
+将来のGitHub Pages正本経路は `.github/workflows/pages.yml` の手動Actions Pages deployです。一方、GitHubの現在設定には `gh-pages / (root)` 由来のlegacy public Pagesと旧workflowが残っています。既存Pagesは代表16問レビューに使用しません。PR #5承認後のSource切替・旧workflow廃止・旧branchの扱いは [Issue #7](https://github.com/0310masato/ssw2-livestock-trainer/issues/7) で追跡し、別途承認前に実行しません。
+
+## 既知の制約
+
+端末内stateの連続saveは一つの画面内で順序を保ちますが、複数タブ・複数ウィンドウ・ブラウザ版とインストール版を同時に使った競合更新は未対応です。[Issue #6](https://github.com/0310masato/ssw2-livestock-trainer/issues/6) が完了するまで、学習履歴を記録するときは一つのタブまたはウィンドウだけを使用してください。
 
 ### 表示言語
 
@@ -156,3 +191,13 @@ v0.4.1ではGitHub登録後の検証に必要なCI、手動Pages workflow、Andr
 - 模擬試験は日本語のみ
 
 詳細は [docs/PEDAGOGY_SPEC.md](docs/PEDAGOGY_SPEC.md) を参照してください。
+
+### Phase 1 教材・レビュー仕様
+
+- [学習支援レベル仕様](docs/LEARNING_SUPPORT_SPEC.md)
+- [ふりがな作成・確認方針](docs/FURIGANA_POLICY.md)
+- [インドネシア語翻訳ガイド](docs/INDONESIAN_TRANSLATION_GUIDE.md)
+- [問題解説・日本語ポイント作成方針](docs/QUESTION_EXPLANATION_POLICY.md)
+- [コンテンツレビュー・チェックリスト](docs/CONTENT_REVIEW_CHECKLIST.md)
+
+このfeature branchでは代表16問だけをパイロットとしてレビューし、残り64問を含む全80問展開（Phase 6）は行いません。機械翻訳はdraftであり、日本語確認、インドネシア語ネイティブ確認、正答漏えい確認、利用者最終承認を別々のゲートとして扱います。

@@ -1,39 +1,77 @@
-# 次段階の実装計画
+# 次段階の実施順序
 
-## 直近：Alphaレビュー完了
+## 現在地
 
-1. イカデさんへ20問パイロットを渡す
-2. 問題別に「日本語」「インドネシア語」「操作」を回収
-3. 修正問題を `language_checked` にする
-4. マサトさんが承認候補を確認する
-5. 承認済み問題だけを `approved` にする
-6. 一般利用ビルドでは `reviewContentEnabled=false` を固定する
+- 正本リポジトリ：`0310masato/ssw2-livestock-trainer`
+- 作業対象：Draft PR #5、`codex/indonesian-learning-support-pilot`
+- 内容：v0.5.0 Alphaの学習支援パイロット（代表16問）
+- 公開状態：PR #5の現HEADは未公開、`approved` 0問。別系統の既存legacy public Pagesは存在するがレビューには使用しない
+- 人手確認ゲート：代表16問の6ゲートはすべてpending（合計96件）
+- パイロット外64問：`schemaVersion: "0.3.0"` のまま
 
-## GitHub正本化
+固定HEAD `cf2fd9d` は独立監査で `READY_FOR_HUMAN_REVIEW` と判定され、代表16問Set Aの人手内容レビューを開始できる。通常学習のスマホテストは内容確認後、模試スマホテストはtimer境界修正済みHEADのCI確認後に行う。レビュー完了前にDraftを解除、merge、既存Pagesへ配信、Phase 6へ着手しない。
 
-推奨リポジトリ：
+将来のPages正本経路は `.github/workflows/pages.yml` の手動 `workflow_dispatch` とする。現在のGitHub設定にはlegacy `gh-pages / (root)` 配信と旧workflowが残っているため、既存Pagesをレビューに使用しない。PR #5承認後の旧経路廃止とSource切替は [Issue #7](https://github.com/0310masato/ssw2-livestock-trainer/issues/7) で追跡し、この段階では実行しない。
 
-```text
-0310masato/ssw2-livestock-trainer
-```
+## 実施順序
 
-この実行環境のGitHubコネクタには新規リポジトリ作成アクションが露出していないため、今回の成果物はGit-ready ZIPとして渡す。リポジトリを作成後、ZIP内容を初期コミットにする。
+### 1. PR #5のレビュー準備とSet A開始
 
-## 推奨PR分割
+1. 固定HEAD `cf2fd9d` の独立監査結果と、後続技術安定化HEADのCIを分けて記録する。
+2. `public/review-checklist.csv` を代表16問レビューの正本一覧として維持する。
+3. `docs/PILOT_REVIEW_PLAN.md` に従い、4問ずつ4セットで確認する。
+4. GitHub Actions artifactの `dist` と `standalone-review.html` を内部レビュー用に取得できる状態にする。
+5. artifactは期限付きの確認物であり、公開版・長期保管物・承認済み教材ではないことをレビュアーへ伝える。
 
-- PR #1：Alpha PWA基礎・CI・内部レビュー表示
-- PR #2：80問スキーマ・コンテンツ検証
-- PR #3：学習エンジン・復習・言語支援
-- PR #4：50問模試・結果分析
-- PR #5：管理者・問題レビュー画面
-- PR #6：利用者テスト修正とapproved昇格
-- PR #7：実機検査・公開URL
+### 2. 代表16問の人手レビュー
 
-## MVPへ進む条件
+次のゲートを別々に確認する。自動検査PASSだけでレビュー状態を変更しない。
 
-- approved 80問
-- インドネシア語確認80/80
-- AndroidとiPhoneで主要操作確認
-- 1週間の学習利用で致命的な操作迷いなし
-- 模試の中断復帰とタイマーを実機確認
-- 公開範囲と権利確認を決定
+- 日本語内容・出典・正答
+- ふりがな
+- 日本語学習支援
+- インドネシア語ネイティブ確認
+- 翻訳による正答漏えい
+- 360px表示を含む操作性
+
+指摘は問題ID単位で `public/review-checklist.csv` に記録する。確認前の問題を `language_checked` や `approved` に昇格しない。
+
+### 3. 実機テスト
+
+代表16問の重大な内容不備を解消した後、Android ChromeとiPhone Safariで `docs/SMARTPHONE_TEST.md` の確認を行う。通常学習と模試を分け、模試はdeadline境界回帰を含む技術安定化HEADのCIが成功してから開始する。
+
+- 表示言語と支援Level 0〜3
+- 保存・再起動・旧state移行
+- 日本語だけで再挑戦
+- 模試中の日本語限定表示と終了後の言語復帰
+- 360px前後の横スクロール
+- JavaScriptエラー
+
+`temporary-pr-review-build-7d-pr-` で始まる期限付きPRレビューartifactを使い、既存Pagesや本番URLへ公開しない。public repository上のartifactはアクセス制限ではないため、正式配布物や承認済み教材として案内しない。PWAインストール・Service Workerの確認はAndroidの端末localhost（`adb reverse`）または別途承認されたアクセス制限付き環境で行う。
+
+### 4. PR #5内の整合修正
+
+レビュー指摘は代表16問と既存機能の回帰修正に限定する。修正後はGitHub CIと、公式PDFを配置した許可済みローカル環境の両方で再確認する。PR #5は人手ゲートが完了するまでDraftのまま維持し、merge判断は別指示とする。
+
+### 5. Phase 6（別途判断後）
+
+Phase 6は、代表16問とUIの人手レビュー、実機テスト、翻訳・ふりがな運用の妥当性を確認した後に、別の実装計画として開始する。
+
+- 残り64問を一括機械翻訳だけで完成扱いにしない。
+- 4〜8問程度の小さな単位で変換・日本語確認・ネイティブ確認を行う。
+- 教材根拠、正答漏えい、用語統一を問題ごとに確認する。
+- `approved` 昇格はコンテンツ変換とは分離し、人の最終承認後だけ行う。
+
+## PR #5を次の判断へ進める条件
+
+- 代表16問のレビュー記録と修正判断が問題ID単位で残っている。
+- Android／iPhoneの主要操作結果が記録されている。
+- GitHub CIがPASSしている。
+- 許可済みローカル環境で公式PDFのハッシュ・ページ数・根拠アンカーがPASSしている。
+- `approved` は0問のままである。
+- 残り64問のID、正答、source、status、`schemaVersion: "0.3.0"` が維持されている。
+- 公式PDFがGit差分に含まれていない。
+
+## 履歴：旧計画
+
+新規リポジトリ作成、Git-ready ZIP配布、旧PR #1〜#7への分割案は、GitHub正本とDraft PR #5が作成される前の計画であり、現在の実施手順には使用しない。必要な履歴はGitに残し、今後は上記のPR #5 → 代表16問レビュー → 実機テスト → Phase 6の順序を正本とする。
