@@ -146,11 +146,11 @@ dist/                配布可能なビルド
 
 ## 次の段階
 
-1. Draft PR #5のCIと期限付きPRレビューartifactを確認
-2. 代表16問を4問×4セットで人手レビュー
-3. 代表16問の指摘と既存機能の回帰だけをPR #5内で修正
-4. Android／iPhoneで内部レビュー用実機テスト
-5. 結果を確認後、Phase 6を別途計画
+1. 固定HEAD `cf2fd9d` の独立監査結果 `READY_FOR_HUMAN_REVIEW` を基準にする
+2. 代表16問を4問×4セットで人手レビューする（Set Aは開始可能）
+3. 代表16問の指摘と既存機能の回帰だけをPR #5内で修正する
+4. 内容確認後に通常学習のAndroid／iPhone実機テストを行い、模試はtimer境界修正済みHEADのCI確認後に行う
+5. 結果を確認後、Phase 6を別途計画する
 
 この順序の詳細は [次段階の実施順序](docs/NEXT_PHASE.md) と [代表16問レビュー計画](docs/PILOT_REVIEW_PLAN.md) を参照してください。Phase 6開始、`approved` 昇格、Draft解除、merge、公開はそれぞれ別判断です。
 
@@ -163,9 +163,9 @@ Draft PR #5の成功したPull Request CI Runから、名前が `temporary-pr-re
 - 実機手順: `docs/SMARTPHONE_TEST.md`
 - バージョン表記: `docs/VERSIONING.md`
 
-このリポジトリはpublicであり、artifactは指定レビュアーだけに制限された保管場所ではありません。未確認翻訳を含む期限付きPR確認物で、正式な配布物、長期保管物、承認済み教材ではありません。`standalone-review.html` は単体表示確認に利用できますが、Service WorkerとPWAインストールの確認にはHTTP配信とsecure contextが必要です。PR #5のレビューでは既存Pages、本番URL、一般公開ホストへ反映しません。
+このリポジトリはpublicであり、artifactは指定レビュアーだけに制限された保管場所ではありません。未確認翻訳を含む期限付きPR確認物で、正式な配布物、長期保管物、承認済み教材ではありません。`standalone-review.html` は単体表示確認に利用できますが、Service WorkerとPWAインストールの確認にはHTTP配信とsecure contextが必要です。PR #5のレビューでは、現在も残っているlegacy public Pagesを使用せず、今回HEADを本番URLや一般公開ホストへ反映しません。
 
-GitHub Pagesの正本経路は `.github/workflows/pages.yml` のActions Pages deployだけで、手動 `workflow_dispatch` からしか起動しません。PR CIやpushでは実行されず、現在は実行禁止です。`gh-pages` branch方式は使用しません。
+将来のGitHub Pages正本経路は `.github/workflows/pages.yml` の手動Actions Pages deployです。一方、GitHubの現在設定には `gh-pages / (root)` 由来のlegacy public Pagesと旧workflowが残っています。既存Pagesは代表16問レビューに使用しません。PR #5承認後のSource切替・旧workflow廃止・旧branchの扱いは [Issue #7](https://github.com/0310masato/ssw2-livestock-trainer/issues/7) で追跡し、別途承認前に実行しません。
 
 ## 既知の制約
 

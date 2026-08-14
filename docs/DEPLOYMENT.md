@@ -13,13 +13,13 @@ Draft PR #5の代表16問レビューでは、Pull Request CIの7日間保持art
 - Repository: `0310masato/ssw2-livestock-trainer`
 - Visibility: **Public**（アクセス制限なし。このPRでは変更しない）
 - Default branch: `main`
-- Pages: 問題承認前は無効のまま
+- Pages: 既存のlegacy public Pages（`gh-pages / (root)`）が残っているが、PR #5のHEADは未配信でレビューには使用しない
 
 アクセス制限付きの正本管理やスマホ向けURL配信が必要な場合は、このpublicリポジトリのartifactを制限手段とせず、別途承認したprivateリポジトリまたは認証付きホスティングを使用する。正式公開は `approved` 問題だけになった後に行う。
 
 ## Pages手順（PR #5では使用禁止）
 
-以下は将来、公開範囲と権利を別途承認した場合だけ使用できる唯一の正本手順です。現在は実行禁止です。
+以下は将来、公開範囲と権利を別途承認し、[Issue #7](https://github.com/0310masato/ssw2-livestock-trainer/issues/7) のlegacy経路廃止条件を満たした場合だけ使用する正本手順です。現在は実行禁止です。
 
 1. GitHubのRepository Settings → PagesでSourceを **GitHub Actions** にする。
 2. Actions → **Deploy review build to GitHub Pages** を開く。
@@ -29,7 +29,7 @@ Draft PR #5の代表16問レビューでは、Pull Request CIの7日間保持art
 
 ## 自動実行しない理由
 
-Pages公開の正本は `.github/workflows/pages.yml` だけで、`workflow_dispatch` の手動実行だけを許可する。Pull Request CI、push、scheduleからは起動しない。`gh-pages` branchへのforce-push方式はworkflowを削除し、[廃止した代替案](archive/GH_PAGES_BRANCH_ALTERNATIVE.md)として履歴だけを残した。PR #5のレビューではPages workflowを実行しない。
+PR #5のfeature branch上で採用する将来の正本は `.github/workflows/pages.yml` だけで、`workflow_dispatch` の手動実行だけを許可する。Pull Request CI、push、scheduleからは起動しない。ただし、GitHubのdefault branchとPages設定にはlegacy `gh-pages / (root)` 配信と旧workflowが現在も残っている。branch上の削除差分だけで無効化済みとは扱わない。PR #5のレビューでは既存Pagesも新Pages workflowも使用せず、旧workflow無効化、Pages Source切替、対象SHA確認、手動deploy、rollback確認を [Issue #7](https://github.com/0310masato/ssw2-livestock-trainer/issues/7) で別管理する。旧`gh-pages` branchの削除には別途承認を必要とする。
 
 ## CI
 
@@ -40,7 +40,7 @@ Pages公開の正本は `.github/workflows/pages.yml` だけで、`workflow_disp
 - ビルド
 - Node単体テスト
 - 360px Playwright、学習支援Level 0〜3、模試・保存回帰
-- localhostの実HTTP配信を使うPlaywright（`page.goto`、manifest・asset取得、Service Worker登録、所有cacheだけの更新、実IndexedDB再読込、オフライン再読込）
+- localhostの実HTTP配信を使うPlaywright（通常distの回答前64件・回答後64件、二つの旧版からのPWA更新、Service Worker-only失敗rollback、foreign cache分離、実IndexedDB・オフライン再読込）
 - JavaScript page error検査
 - PWA配布ファイルの存在確認
 - Pull Request時だけ、7日間保持の一時レビューartifact作成。Pages deployは起動しない

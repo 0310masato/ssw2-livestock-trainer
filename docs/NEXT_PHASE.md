@@ -5,18 +5,19 @@
 - 正本リポジトリ：`0310masato/ssw2-livestock-trainer`
 - 作業対象：Draft PR #5、`codex/indonesian-learning-support-pilot`
 - 内容：v0.5.0 Alphaの学習支援パイロット（代表16問）
-- 公開状態：未公開、`approved` 0問
+- 公開状態：PR #5の現HEADは未公開、`approved` 0問。別系統の既存legacy public Pagesは存在するがレビューには使用しない
+- 人手確認ゲート：代表16問の6ゲートはすべてpending（合計96件）
 - パイロット外64問：`schemaVersion: "0.3.0"` のまま
 
-PR #5は、人による代表16問レビューと実機テストを始められる状態へ整える段階にある。レビュー完了前にDraftを解除、merge、既存Pagesへ配信、Phase 6へ着手しない。
+固定HEAD `cf2fd9d` は独立監査で `READY_FOR_HUMAN_REVIEW` と判定され、代表16問Set Aの人手内容レビューを開始できる。通常学習のスマホテストは内容確認後、模試スマホテストはtimer境界修正済みHEADのCI確認後に行う。レビュー完了前にDraftを解除、merge、既存Pagesへ配信、Phase 6へ着手しない。
 
-Pages公開の正本経路は `.github/workflows/pages.yml` の手動 `workflow_dispatch` だけである。PR CIやpushからは起動せず、この段階では実行禁止とする。`gh-pages` branch方式は使用しない。
+将来のPages正本経路は `.github/workflows/pages.yml` の手動 `workflow_dispatch` とする。現在のGitHub設定にはlegacy `gh-pages / (root)` 配信と旧workflowが残っているため、既存Pagesをレビューに使用しない。PR #5承認後の旧経路廃止とSource切替は [Issue #7](https://github.com/0310masato/ssw2-livestock-trainer/issues/7) で追跡し、この段階では実行しない。
 
 ## 実施順序
 
-### 1. PR #5のレビュー準備
+### 1. PR #5のレビュー準備とSet A開始
 
-1. GitHub CIと、公式PDFを配置したローカル検証の範囲を分けて記録する。
+1. 固定HEAD `cf2fd9d` の独立監査結果と、後続技術安定化HEADのCIを分けて記録する。
 2. `public/review-checklist.csv` を代表16問レビューの正本一覧として維持する。
 3. `docs/PILOT_REVIEW_PLAN.md` に従い、4問ずつ4セットで確認する。
 4. GitHub Actions artifactの `dist` と `standalone-review.html` を内部レビュー用に取得できる状態にする。
@@ -37,7 +38,7 @@ Pages公開の正本経路は `.github/workflows/pages.yml` の手動 `workflow_
 
 ### 3. 実機テスト
 
-代表16問の重大な内容不備を解消した後、Android ChromeとiPhone Safariで `docs/SMARTPHONE_TEST.md` の確認を行う。
+代表16問の重大な内容不備を解消した後、Android ChromeとiPhone Safariで `docs/SMARTPHONE_TEST.md` の確認を行う。通常学習と模試を分け、模試はdeadline境界回帰を含む技術安定化HEADのCIが成功してから開始する。
 
 - 表示言語と支援Level 0〜3
 - 保存・再起動・旧state移行
