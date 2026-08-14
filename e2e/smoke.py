@@ -638,6 +638,109 @@ with sync_playwright() as p:
         checks,
     )
 
+    # Reproduce the deadline boundary deterministically. During render the mock
+    # view reads the clock once, then the ticker's initial update reads it once.
+    # A third read represents the former post-update guard that could cross from
+    # deadline - 1 ms to deadline + 1 ms and leave an ungraded draft with no
+    # active ticker.
+    page.evaluate("""() => {
+      LivestockApp.runtime.session = null;
+      LivestockApp.runtime.lastMockResult = null;
+      LivestockApp.runtime.view = 'home';
+      LivestockApp.render();
+    }""")
+    page.wait_for_timeout(80)
+    check(dom_click(page, '[data-start="mock"]'), 'mock_deadline_boundary_fixture_started', checks)
+    page.wait_for_timeout(80)
+    mock_boundary_history_before = page.evaluate("LivestockApp.runtime.state.mockHistory.length")
+    mock_deadline_boundary_setup = page.evaluate("""() => {
+      const NativeDate = window.Date;
+      const deadlineMs = NativeDate.now() + 200;
+      const beforeDeadlineMs = deadlineMs - 1;
+      const afterDeadlineMs = deadlineMs + 1;
+      let syntheticNowCalls = 0;
+      class BoundaryDate extends NativeDate {
+        constructor(...args) {
+          if (args.length === 0) {
+            syntheticNowCalls += 1;
+            super(syntheticNowCalls <= 2 ? beforeDeadlineMs : afterDeadlineMs);
+          } else {
+            super(...args);
+          }
+        }
+      }
+      LivestockApp.runtime.state.mockDraft.deadlineAt = new NativeDate(deadlineMs).toISOString();
+      window.Date = BoundaryDate;
+      try {
+        LivestockApp.render();
+      } finally {
+        window.Date = NativeDate;
+      }
+      return {
+        syntheticNowCalls,
+        draftPresent: LivestockApp.runtime.state.mockDraft !== null,
+        resultAbsent: LivestockApp.runtime.lastMockResult === null,
+        activeTickerCount: window.__activeMockIntervals.size,
+      };
+    }""")
+    check(
+        mock_deadline_boundary_setup == {
+            'syntheticNowCalls': 2,
+            'draftPresent': True,
+            'resultAbsent': True,
+            'activeTickerCount': 1,
+        },
+        'mock_deadline_boundary_uses_single_time_decision',
+        checks,
+    )
+    page.wait_for_timeout(1_200)
+    mock_deadline_boundary_result = page.evaluate("""() => ({
+      draftCleared: LivestockApp.runtime.state.mockDraft === null,
+      resultId: LivestockApp.runtime.lastMockResult?.id ?? null,
+      resultShown: document.querySelectorAll('.result-hero.exam-result').length === 1,
+      sessionCompleted: LivestockApp.runtime.session?.kind === 'mock'
+        && LivestockApp.runtime.session.completed,
+      mockHistoryCount: LivestockApp.runtime.state.mockHistory.length,
+      latestHistoryId: LivestockApp.runtime.state.mockHistory.at(-1)?.id ?? null,
+      activeTickerCount: window.__activeMockIntervals.size,
+      documentLanguage: document.documentElement.lang,
+      savedLanguage: JSON.parse(localStorage.getItem('livestock2-state-v0.4')).settings.uiLanguage,
+    })""")
+    check(
+        mock_deadline_boundary_result['draftCleared']
+        and mock_deadline_boundary_result['resultId'] is not None
+        and mock_deadline_boundary_result['resultShown']
+        and mock_deadline_boundary_result['sessionCompleted']
+        and mock_deadline_boundary_result['mockHistoryCount'] == mock_boundary_history_before + 1
+        and mock_deadline_boundary_result['latestHistoryId'] == mock_deadline_boundary_result['resultId']
+        and mock_deadline_boundary_result['activeTickerCount'] == 0
+        and mock_deadline_boundary_result['documentLanguage'] == 'id'
+        and mock_deadline_boundary_result['savedLanguage'] == 'id',
+        'mock_deadline_boundary_auto_submits_once_without_orphaned_draft',
+        checks,
+    )
+    page.wait_for_timeout(1_200)
+    mock_deadline_boundary_stable = page.evaluate("""() => ({
+      draftCleared: LivestockApp.runtime.state.mockDraft === null,
+      resultId: LivestockApp.runtime.lastMockResult?.id ?? null,
+      resultShown: document.querySelectorAll('.result-hero.exam-result').length === 1,
+      mockHistoryCount: LivestockApp.runtime.state.mockHistory.length,
+      activeTickerCount: window.__activeMockIntervals.size,
+      documentLanguage: document.documentElement.lang,
+    })""")
+    check(
+        mock_deadline_boundary_stable == {
+            'draftCleared': True,
+            'resultId': mock_deadline_boundary_result['resultId'],
+            'resultShown': True,
+            'mockHistoryCount': mock_deadline_boundary_result['mockHistoryCount'],
+            'activeTickerCount': 0,
+            'documentLanguage': 'id',
+        },
+        'mock_deadline_boundary_result_and_language_remain_stable',
+        checks,
+    )
+
     page.evaluate("LivestockApp.runtime.session = null; LivestockApp.runtime.lastMockResult = null; LivestockApp.runtime.view = 'home'; LivestockApp.render()")
     page.wait_for_timeout(100)
     page.evaluate("document.querySelector('[data-ui-language=\"ja\"]')?.click()")

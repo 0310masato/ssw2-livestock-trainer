@@ -102,9 +102,9 @@ namespace LivestockApp {
       || runtime.session?.kind !== 'mock'
       || runtime.lastMockResult
     ) return;
-    const update = () => {
+    const update = (): boolean => {
       const draft = runtime.state.mockDraft;
-      if (!draft) return;
+      if (!draft) return false;
       const remaining = mockSecondsRemaining(draft);
       const timer = document.querySelector<HTMLElement>('[data-mock-timer]');
       if (timer) timer.textContent = formatClock(remaining);
@@ -112,16 +112,18 @@ namespace LivestockApp {
         if (mockTimerHandle !== null) window.clearInterval(mockTimerHandle);
         mockTimerHandle = null;
         submitMock(true);
+        return false;
       }
+      return true;
     };
-    update();
+    const shouldStartTicker = update();
     const activeDraft = runtime.state.mockDraft;
     if (
-      !activeDraft
+      !shouldStartTicker
+      || !activeDraft
       || runtime.view !== 'study'
       || runtime.session?.kind !== 'mock'
       || runtime.lastMockResult
-      || mockSecondsRemaining(activeDraft) <= 0
     ) return;
     mockTimerHandle = window.setInterval(update, 1_000);
   }
