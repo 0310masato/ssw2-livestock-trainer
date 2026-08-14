@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { access, readFile, readdir, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { runInNewContext } from 'node:vm';
 import { computeContentBuildId } from '../scripts/build.mjs';
 
 const root = resolve(import.meta.dirname, '..');
@@ -19,6 +20,71 @@ function workflowTriggers(source) {
     if (match) triggers.push(match[1]);
   }
   return triggers;
+}
+
+function createCacheStorage(origin = 'https://example.test') {
+  const stores = new Map();
+  let globalMatchCalls = 0;
+  const keyFor = (request) => new URL(typeof request === 'string' ? request : request.url, `${origin}/`).href;
+  const createCache = () => {
+    const entries = new Map();
+    return {
+      async match(request) {
+        return entries.get(keyFor(request))?.clone();
+      },
+      async put(request, response) {
+        entries.set(keyFor(request), response.clone());
+      },
+    };
+  };
+  return {
+    get globalMatchCalls() { return globalMatchCalls; },
+    async keys() { return [...stores.keys()]; },
+    async open(name) {
+      if (!stores.has(name)) stores.set(name, createCache());
+      return stores.get(name);
+    },
+    async delete(name) { return stores.delete(name); },
+    async match(request) {
+      globalMatchCalls += 1;
+      for (const cache of stores.values()) {
+        const response = await cache.match(request);
+        if (response) return response;
+      }
+      return undefined;
+    },
+  };
+}
+
+function evaluateServiceWorker(source, cacheStorage, fetchImpl, origin = 'https://example.test') {
+  const listeners = new Map();
+  class ScopedRequest extends Request {
+    constructor(input, init) {
+      const normalizedInput = typeof input === 'string'
+        ? new URL(input, `${origin}/`)
+        : input instanceof Request
+          ? input
+          : input.url;
+      super(normalizedInput, init);
+    }
+  }
+  const self = {
+    location: { origin },
+    clients: { claim: async () => undefined },
+    skipWaiting: async () => undefined,
+    addEventListener(type, listener) { listeners.set(type, listener); },
+  };
+  runInNewContext(source, {
+    self,
+    caches: cacheStorage,
+    fetch: fetchImpl,
+    Request: ScopedRequest,
+    Response,
+    URL,
+    Error,
+    Promise,
+  });
+  return listeners;
 }
 
 test('web app manifest is installable and icons exist', async () => {
@@ -55,6 +121,20 @@ test('content build ID is deterministic and changes with app bytes', () => {
   assert.notEqual(changedApp, baseline);
 });
 
+test('content build ID changes with normalized service-worker template bytes', () => {
+  const baseline = computeContentBuildId([
+    { path: 'sw.js.template', content: 'const BUILD_ID = "__APP_BUILD_ID__";\ncache.match(request);\n' },
+  ]);
+  const sameAcrossPlatformNewlines = computeContentBuildId([
+    { path: 'sw.js.template', content: 'const BUILD_ID = "__APP_BUILD_ID__";\r\ncache.match(request);\r\n' },
+  ]);
+  const changedWorkerLogic = computeContentBuildId([
+    { path: 'sw.js.template', content: 'const BUILD_ID = "__APP_BUILD_ID__";\ncache.match(new Request(request));\n' },
+  ]);
+  assert.equal(sameAcrossPlatformNewlines, baseline);
+  assert.notEqual(changedWorkerLogic, baseline);
+});
+
 test('content build ID covers every required app-shell source', async () => {
   const buildSource = await readFile(resolve(root, 'scripts', 'build.mjs'), 'utf8');
   for (const required of [
@@ -62,6 +142,7 @@ test('content build ID covers every required app-shell source', async () => {
     "path: 'styles.css'",
     "path: 'index.html.template'",
     "path: 'manifest.webmanifest'",
+    "path: 'sw.js.template'",
     'barn-ppe.svg',
     'chick-guard.svg',
     'cow-measurements.svg',
@@ -74,6 +155,8 @@ test('content build ID covers every required app-shell source', async () => {
     assert.match(buildSource, new RegExp(required.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
   assert.match(buildSource, /hashEntries\.push/);
+  assert.ok(buildSource.indexOf('const serviceWorkerTemplate =') < buildSource.indexOf('const buildId = computeContentBuildId(hashEntries)'));
+  assert.match(buildSource, /serviceWorkerTemplate\.replaceAll\(buildIdPlaceholder, buildId\)/);
   assert.match(buildSource, /replace\(\/\\r\\n\?\/g, '\\n'\)/);
   assert.match(buildSource, /entry\.path\.replaceAll\('\\\\', '\/'\)/);
 });
@@ -96,12 +179,80 @@ test('service worker caches the content-addressed complete app shell', async () 
   assert.match(serviceWorker, /caches\.open/);
   assert.match(serviceWorker, /new Request\(asset, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /!response\.ok \|\| response\.type === 'opaque'/);
-  assert.match(serviceWorker, /await caches\.delete\(CACHE_NAME\);/);
+  assert.match(serviceWorker, /const existingCacheNames = await caches\.keys\(\);/);
+  assert.match(serviceWorker, /const cacheExistedBeforeInstall = existingCacheNames\.includes\(CACHE_NAME\);/);
+  assert.match(serviceWorker, /if \(!cacheExistedBeforeInstall\) await caches\.delete\(CACHE_NAME\);/);
+  const installBlock = serviceWorker.slice(
+    serviceWorker.indexOf("self.addEventListener('install'"),
+    serviceWorker.indexOf("self.addEventListener('activate'"),
+  );
+  assert.ok(installBlock.indexOf('caches.delete(CACHE_NAME)') > installBlock.indexOf('catch (error)'));
+  assert.equal(installBlock.match(/caches\.delete\(CACHE_NAME\)/g)?.length, 1);
   assert.doesNotMatch(serviceWorker, /cache\.addAll/);
   assert.match(serviceWorker, /event\.request\.mode === 'navigate'/);
+  assert.doesNotMatch(serviceWorker, /caches\.match\(/);
+  assert.match(serviceWorker, /const cached = await cache\.match\('\.\/index\.html'\);/);
+  assert.match(serviceWorker, /const cached = await cache\.match\(event\.request\);/);
+  assert.match(serviceWorker, /new Request\(event\.request, \{ cache: 'no-store' \}\)/);
   assert.match(serviceWorker, /const CACHE_PREFIX = ["']livestock2-["']/);
   assert.match(serviceWorker, /key\.startsWith\(CACHE_PREFIX\) && key !== CACHE_NAME/);
   assert.doesNotMatch(serviceWorker, /keys\.filter\(\(key\) => key !== CACHE_NAME\)/);
+});
+
+test('failed service-worker install removes only its new build cache', async () => {
+  const serviceWorker = await readFile(resolve(dist, 'sw.js'), 'utf8');
+  const currentCacheName = serviceWorker.match(/const CACHE_NAME = "([^"]+)";/)?.[1];
+  assert.ok(currentCacheName);
+  const cacheStorage = createCacheStorage();
+  await cacheStorage.open('livestock2-v0.5.0-previous');
+  await cacheStorage.open('foreign-review-cache');
+  let fetchCount = 0;
+  const listeners = evaluateServiceWorker(serviceWorker, cacheStorage, async () => {
+    fetchCount += 1;
+    return new Response(fetchCount === 2 ? 'failed' : 'ok', { status: fetchCount === 2 ? 503 : 200 });
+  });
+  let installPromise;
+  listeners.get('install')({ waitUntil(promise) { installPromise = promise; } });
+  await assert.rejects(installPromise, /Required app-shell fetch failed/);
+  assert.deepEqual((await cacheStorage.keys()).sort(), ['foreign-review-cache', 'livestock2-v0.5.0-previous']);
+  assert.equal((await cacheStorage.keys()).includes(currentCacheName), false);
+});
+
+test('service-worker fetch reads only from the current owned cache', async () => {
+  const serviceWorker = await readFile(resolve(dist, 'sw.js'), 'utf8');
+  const currentCacheName = serviceWorker.match(/const CACHE_NAME = "([^"]+)";/)?.[1];
+  const buildId = serviceWorker.match(/const BUILD_ID = "([a-f0-9]{16})";/)?.[1];
+  assert.ok(currentCacheName);
+  assert.ok(buildId);
+  const cacheStorage = createCacheStorage();
+  const foreignCache = await cacheStorage.open('foreign-review-cache');
+  const ownedCache = await cacheStorage.open(currentCacheName);
+  const scriptUrl = `https://example.test/app.js?v=${buildId}`;
+  await foreignCache.put(scriptUrl, new Response('foreign script'));
+  await foreignCache.put('./index.html', new Response('foreign index'));
+  await ownedCache.put(scriptUrl, new Response('owned script'));
+  await ownedCache.put('./index.html', new Response('owned index'));
+  let navigationNetworkRequest;
+  const listeners = evaluateServiceWorker(serviceWorker, cacheStorage, async (request) => {
+    navigationNetworkRequest = request;
+    throw new Error('offline');
+  });
+
+  let assetResponsePromise;
+  listeners.get('fetch')({
+    request: new Request(scriptUrl),
+    respondWith(promise) { assetResponsePromise = promise; },
+  });
+  assert.equal(await (await assetResponsePromise).text(), 'owned script');
+
+  let navigationResponsePromise;
+  listeners.get('fetch')({
+    request: { method: 'GET', mode: 'navigate', url: 'https://example.test/offline' },
+    respondWith(promise) { navigationResponsePromise = promise; },
+  });
+  assert.equal(await (await navigationResponsePromise).text(), 'owned index');
+  assert.equal(navigationNetworkRequest.cache, 'no-store');
+  assert.equal(cacheStorage.globalMatchCalls, 0);
 });
 
 test('standalone review build contains code, styles, and embedded visual assets', async () => {

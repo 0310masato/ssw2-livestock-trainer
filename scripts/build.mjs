@@ -106,39 +106,23 @@ const shellSvgNames = [
   'dilution-20l.svg', 'sow-body-condition.svg',
 ];
 const shellIconNames = ['icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
-const hashEntries = [
-  { path: 'app.js', content: js },
-  { path: 'styles.css', content: css },
-  { path: 'index.html.template', content: indexTemplate },
-  { path: 'manifest.webmanifest', content: manifestText },
-];
-for (const name of shellSvgNames) {
-  hashEntries.push({ path: `assets/${name}`, content: await readFile(resolve(root, 'public', 'assets', name), 'utf8') });
-}
-for (const name of shellIconNames) {
-  hashEntries.push({ path: name, content: await readFile(resolve(root, 'public', name)) });
-}
-const buildId = computeContentBuildId(hashEntries);
-const indexHtml = indexTemplate.replaceAll(buildIdPlaceholder, buildId);
-await writeFile(resolve(distDir, 'index.html'), indexHtml);
-await writeFile(resolve(distDir, 'manifest.webmanifest'), manifestText);
-
 const cachePrefix = 'livestock2-';
-const cacheVersion = `livestock2-v0.5.0-${buildId}`;
-const cacheFiles = [
-  './', './index.html', `./styles.css?v=${buildId}`, `./app.js?v=${buildId}`, './manifest.webmanifest',
+const cacheVersionTemplate = `livestock2-v0.5.0-${buildIdPlaceholder}`;
+const cacheFilesTemplate = [
+  './', './index.html', `./styles.css?v=${buildIdPlaceholder}`, `./app.js?v=${buildIdPlaceholder}`, './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './apple-touch-icon.png',
   ...shellSvgNames.map((name) => `./assets/${name}`),
 ];
-const serviceWorker = `const CACHE_PREFIX = ${JSON.stringify(cachePrefix)};
-const CACHE_NAME = ${JSON.stringify(cacheVersion)};
-const BUILD_ID = ${JSON.stringify(buildId)};
-const APP_SHELL = ${JSON.stringify(cacheFiles, null, 2)};
+const serviceWorkerTemplate = `const CACHE_PREFIX = ${JSON.stringify(cachePrefix)};
+const CACHE_NAME = ${JSON.stringify(cacheVersionTemplate)};
+const BUILD_ID = ${JSON.stringify(buildIdPlaceholder)};
+const APP_SHELL = ${JSON.stringify(cacheFilesTemplate, null, 2)};
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
-    await caches.delete(CACHE_NAME);
-    const cache = await caches.open(CACHE_NAME);
+    const existingCacheNames = await caches.keys();
+    const cacheExistedBeforeInstall = existingCacheNames.includes(CACHE_NAME);
     try {
+      const cache = await caches.open(CACHE_NAME);
       for (const asset of APP_SHELL) {
         const request = new Request(asset, { cache: 'reload' });
         const response = await fetch(request);
@@ -148,7 +132,7 @@ self.addEventListener('install', (event) => {
         await cache.put(request, response);
       }
     } catch (error) {
-      await caches.delete(CACHE_NAME);
+      if (!cacheExistedBeforeInstall) await caches.delete(CACHE_NAME);
       throw error;
     }
     await self.skipWaiting();
@@ -165,24 +149,49 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
   if (event.request.mode === 'navigate') {
     event.respondWith((async () => {
+      const cache = await caches.open(CACHE_NAME);
       try {
-        const response = await fetch(event.request);
+        const networkRequest = new Request(event.request, { cache: 'no-store' });
+        const response = await fetch(networkRequest);
         if (!response.ok || response.type === 'opaque') throw new Error('Navigation response is not cacheable.');
-        await (await caches.open(CACHE_NAME)).put('./index.html', response.clone());
+        await cache.put('./index.html', response.clone());
         return response;
       } catch (error) {
-        const cached = await caches.match('./index.html');
+        const cached = await cache.match('./index.html');
         if (cached) return cached;
         throw error;
       }
     })());
     return;
   }
-  event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request).then(async (response) => {
-    if (response.ok && response.type !== 'opaque') await (await caches.open(CACHE_NAME)).put(event.request, response.clone());
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    const cached = await cache.match(event.request);
+    if (cached) return cached;
+    const response = await fetch(event.request);
+    if (response.ok && response.type !== 'opaque') await cache.put(event.request, response.clone());
     return response;
-  })));
+  })());
 });\n`;
+const hashEntries = [
+  { path: 'app.js', content: js },
+  { path: 'styles.css', content: css },
+  { path: 'index.html.template', content: indexTemplate },
+  { path: 'manifest.webmanifest', content: manifestText },
+  { path: 'sw.js.template', content: serviceWorkerTemplate },
+];
+for (const name of shellSvgNames) {
+  hashEntries.push({ path: `assets/${name}`, content: await readFile(resolve(root, 'public', 'assets', name), 'utf8') });
+}
+for (const name of shellIconNames) {
+  hashEntries.push({ path: name, content: await readFile(resolve(root, 'public', name)) });
+}
+const buildId = computeContentBuildId(hashEntries);
+const indexHtml = indexTemplate.replaceAll(buildIdPlaceholder, buildId);
+await writeFile(resolve(distDir, 'index.html'), indexHtml);
+await writeFile(resolve(distDir, 'manifest.webmanifest'), manifestText);
+
+const serviceWorker = serviceWorkerTemplate.replaceAll(buildIdPlaceholder, buildId);
 await writeFile(resolve(distDir, 'sw.js'), serviceWorker);
 await writeFile(resolve(distDir, '.nojekyll'), '');
 await writeFile(resolve(distDir, 'robots.txt'), 'User-agent: *\nDisallow: /\n');
