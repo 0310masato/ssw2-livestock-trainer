@@ -63,6 +63,10 @@
     "expired_mock_resumed_via_dom": true,
     "expired_mock_grades_on_explicit_resume": true,
     "expired_mock_leaves_no_ticker_or_repeat_processing": true,
+    "mock_deadline_boundary_fixture_started": true,
+    "mock_deadline_boundary_uses_single_time_decision": true,
+    "mock_deadline_boundary_auto_submits_once_without_orphaned_draft": true,
+    "mock_deadline_boundary_result_and_language_remain_stable": true,
     "desktop_render": true,
     "desktop_no_horizontal_overflow": true,
     "no_runtime_errors": true
